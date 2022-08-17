@@ -1,12 +1,13 @@
 import os
 
 import numpy as np
+import pandas as pd
 from sklearn.datasets import fetch_openml
 from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
 
 from components.data import Oracle, SymmetricCrowdsourcingOracle
-from components.exp_logging import logger
+from components.exp_logging import ExperimentLogger
 from components.path import Path, PathElement
 from components.risk_estimation import RiskEstimator, EnsembleRiskEstimator
 
@@ -24,20 +25,6 @@ class Bandit:
         self.beta = beta
 
 
-class BanditWrapper:
-    def __init__(self):
-        self.bandit = Bandit()
-        self.rewards = {}
-
-    def sample(self):
-        return self.bandit.sample()
-
-    def update(self, update: float, path_element: int):
-        self.rewards[path_element] = update
-        self.bandit.alpha = np.sum(self.rewards.values())
-        self.bandit.beta = len(self.rewards) - np.sum(self.rewards.values())
-
-
 class BanditLabeler:
     def __init__(self,
                  t_max: int,
@@ -46,7 +33,13 @@ class BanditLabeler:
                  risk_estimator: RiskEstimator,
                  data: np.ndarray,
                  clean_labels: np.ndarray,
-                 model, budget: float, ):
+                 model, budget: float,
+                 name: str,
+                 logger: ExperimentLogger,
+                 use_validation_labels: bool = False):
+        self.use_validation_labels = use_validation_labels
+        self.name = name
+        self.logger = logger
         self.t_max = t_max
         self.n = n
         self.oracle = oracle
@@ -62,7 +55,7 @@ class BanditLabeler:
     def iterate(self):
         self._labeling()
         if len(self.path) > 1:
-            l, ts = self._estimate_reward()
+            l, ts = self._estimate_reward(use_labels=self.use_validation_labels)
             self._update_parameters(l, ts)
 
     def _labeling(self):
@@ -79,7 +72,7 @@ class BanditLabeler:
         element = PathElement(data=(x, y), time=t)
         self.path.elements.append(element)
         self.remaining_budget -= self.n * t
-        logger.track_t_n(t, self.n)
+        self.logger.track_t_n(t, self.n)
 
     def _unlabeled_data(self):
         mask = np.ones(shape=len(self.data), dtype=bool)
@@ -133,20 +126,22 @@ class BanditLabeler:
                 self.bandits[t-1].update(a, b)
 
     def run(self):
+        self.logger.track_approach(self.name)
         while self.remaining_budget > 0:
             self.iterate()
             predicted_performance = self._evaluate_path(self.path, use_true_labels=False)
             true_performance = self._evaluate_path(self.path, use_true_labels=True)
-            logger.track_true_score(true_performance)
-            logger.track_estimated_score(predicted_performance)
-            logger.track_alpha_beta(alpha=np.array([b.alpha for b in self.bandits]),
+            self.logger.track_true_score(true_performance)
+            self.logger.track_estimated_score(predicted_performance)
+            self.logger.track_alpha_beta(alpha=np.array([b.alpha for b in self.bandits]),
                                     beta=np.array([b.beta for b in self.bandits]))
-            logger.track_time()
+            self.logger.track_time()
             print("predicted performance: {}, true performance: {}".format(predicted_performance, true_performance))
             print("remaining budget: {}".format(self.remaining_budget))
-            logger.finalize_round()
+            self.logger.finalize_round()
             if true_performance >= 0.99:
                 break
+        return self.logger.get_dataframe()
 
 
 MNIST = 554
@@ -160,10 +155,12 @@ if __name__ == '__main__':
     clean_labels = clean_labels[not_na_rows]
 
     B = 1000
-    logger.track_dataset_name("mushroom" if ds == MUSHROOM else "mnist")
+    dfs = []
     for p in [0.0, 0.25, 0.5, 0.7]:
-        logger.track_noise_level(p)
         for rep in range(1):
+            logger = ExperimentLogger()
+            logger.track_dataset_name("mushroom" if ds == MUSHROOM else "mnist")
+            logger.track_noise_level(p)
             seed = rep
             rng = np.random.default_rng(seed)
             clean_labels = LabelEncoder().fit_transform(clean_labels)
@@ -182,7 +179,10 @@ if __name__ == '__main__':
                                 data=clean_data,
                                 clean_labels=clean_labels,
                                 model=predictor,
-                                budget=B)
-            alg.run()
-    df = logger.get_dataframe()
+                                budget=B,
+                                name="Bandit",
+                                logger=logger)
+            df = alg.run()
+            dfs.append(df)
+    df = pd.concat(dfs, ignore_index=True)
     df.to_csv(os.path.join(os.getcwd(), "results", "results_bandit.csv"), index=False)

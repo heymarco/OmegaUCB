@@ -38,7 +38,19 @@ def plot_t_over_budget():
     plt.show()
 
 
+def plot_score_over_number_of_labels():
+    df = load_df()
+    df["Number of labels"] = 0
+    for _, gdf in df.groupby(["rep", "noise-level"]):
+        df["Number of labels"].loc[gdf.index] = gdf["n"].cumsum()
+    print(df)
+    sns.lineplot(data=df, x="Number of labels", y="true-score", marker="o", hue="noise-level", ci=None)
+    plt.tight_layout(pad=.5)
+    plt.show()
+
+
 if __name__ == '__main__':
     plot_score_over_budget()
     plot_t_over_budget()
+    plot_score_over_number_of_labels()
 
