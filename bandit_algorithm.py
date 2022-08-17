@@ -27,7 +27,7 @@ class Bandit:
 
 class BanditLabeler:
     def __init__(self,
-                 t_max: int,
+                 costs,
                  n: int,
                  oracle: Oracle,
                  risk_estimator: RiskEstimator,
@@ -40,7 +40,7 @@ class BanditLabeler:
         self.use_validation_labels = use_validation_labels
         self.name = name
         self.logger = logger
-        self.t_max = t_max
+        self.costs = np.sort(costs)
         self.n = n
         self.oracle = oracle
         self.risk_estimator = risk_estimator
@@ -49,14 +49,14 @@ class BanditLabeler:
         self.model = model
         self.budget = budget
         self.remaining_budget = budget
-        self.bandits = [Bandit() for _ in range(t_max)]
+        self.bandits = [Bandit() for _ in self.costs]
         self.path = Path()
 
     def iterate(self):
         self._labeling()
         if len(self.path) > 1:
-            l, ts = self._estimate_reward(use_labels=self.use_validation_labels)
-            self._update_parameters(l, ts)
+            l, cs = self._estimate_reward(use_labels=self.use_validation_labels)
+            self._update_parameters(l, cs)
 
     def _labeling(self):
         theta = [b.sample() for b in self.bandits]
@@ -97,33 +97,33 @@ class BanditLabeler:
 
     def _estimate_reward(self, use_labels: bool = True):
         l = []
-        ts = []
+        cs = []
         l_now = self._evaluate_path(self.path, use_true_labels=use_labels)
         for i in range(len(self.path)):
-            t = self.path.elements[i].time
-            ts.append(t)
+            c = self.path.elements[i].time
+            cs.append(c)
             subpath = self.path.subpath_without_index(i)
             l_t = self._evaluate_path(subpath, use_true_labels=use_labels)
             rho = l_now - l_t
             reg = 0.2
-            rho = rho * (1 - reg * (t - 1) / self.t_max)
+            rho = rho * (1 - reg * (c - 1) / max(self.costs))
             l.append(rho)
-        return l, ts
+        return l, cs
 
-    def _update_parameters(self, l, ts):
-        ts = np.array(ts)
+    def _update_parameters(self, l, cs):
+        cs = np.array(cs)
         l = np.array(l)
         l = l - np.min(l)
         if np.max(l) > 0:
             l = l / np.max(l)
-        for t in np.unique(ts):
-            mask = ts == t
-            n_paths_t = len(ts[mask])
+        for i, c in enumerate(np.unique(cs)):
+            mask = cs == c
+            n_paths_t = len(cs[mask])
             reward_sum_t = float(np.sum(l[mask]))
             if reward_sum_t > 0:
                 a = reward_sum_t
                 b = n_paths_t - reward_sum_t
-                self.bandits[t-1].update(a, b)
+                self.bandits[i].update(a, b)
 
     def run(self):
         self.logger.track_approach(self.name)
@@ -173,8 +173,8 @@ if __name__ == '__main__':
                 oracle = SymmetricCrowdsourcingOracle(y=clean_labels, p=p, seed=seed)
                 risk_estimator = EnsembleRiskEstimator()
                 predictor = DecisionTreeClassifier(max_depth=5, random_state=seed)
-                alg = BanditLabeler(n=10,
-                                    t_max=5,
+                alg = BanditLabeler(n=15,
+                                    costs=np.array([1, 3, 5, 7]),
                                     oracle=oracle,
                                     risk_estimator=risk_estimator,
                                     data=clean_data,
