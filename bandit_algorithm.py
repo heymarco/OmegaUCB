@@ -156,33 +156,35 @@ if __name__ == '__main__':
 
     B = 1000
     dfs = []
-    for p in [0.0, 0.25, 0.5, 0.7]:
-        for rep in range(1):
-            logger = ExperimentLogger()
-            logger.track_dataset_name("mushroom" if ds == MUSHROOM else "mnist")
-            logger.track_noise_level(p)
-            seed = rep
-            rng = np.random.default_rng(seed)
-            clean_labels = LabelEncoder().fit_transform(clean_labels)
-            shuffled_indices = np.arange(len(clean_labels))
-            rng.shuffle(shuffled_indices)
-            clean_data = clean_data[shuffled_indices]
-            clean_labels = clean_labels[shuffled_indices]
-            logger.track_rep(rep)
-            oracle = SymmetricCrowdsourcingOracle(y=clean_labels, p=p, seed=seed)
-            risk_estimator = EnsembleRiskEstimator()
-            predictor = DecisionTreeClassifier(max_depth=5, random_state=seed)
-            alg = BanditLabeler(n=10,
-                                t_max=5,
-                                oracle=oracle,
-                                risk_estimator=risk_estimator,
-                                data=clean_data,
-                                clean_labels=clean_labels,
-                                model=predictor,
-                                budget=B,
-                                name="Bandit",
-                                logger=logger)
-            df = alg.run()
-            dfs.append(df)
+    for use_val_labels in [True, False]:
+        for p in [0.0, 0.25, 0.5, 0.7]:
+            for rep in range(1):
+                logger = ExperimentLogger()
+                logger.track_dataset_name("mushroom" if ds == MUSHROOM else "mnist")
+                logger.track_noise_level(p)
+                seed = rep
+                rng = np.random.default_rng(seed)
+                clean_labels = LabelEncoder().fit_transform(clean_labels)
+                shuffled_indices = np.arange(len(clean_labels))
+                rng.shuffle(shuffled_indices)
+                clean_data = clean_data[shuffled_indices]
+                clean_labels = clean_labels[shuffled_indices]
+                logger.track_rep(rep)
+                oracle = SymmetricCrowdsourcingOracle(y=clean_labels, p=p, seed=seed)
+                risk_estimator = EnsembleRiskEstimator()
+                predictor = DecisionTreeClassifier(max_depth=5, random_state=seed)
+                alg = BanditLabeler(n=10,
+                                    t_max=5,
+                                    oracle=oracle,
+                                    risk_estimator=risk_estimator,
+                                    data=clean_data,
+                                    clean_labels=clean_labels,
+                                    model=predictor,
+                                    budget=B,
+                                    name="Bandit-{}".format("L" if use_val_labels else "U"),
+                                    use_validation_labels=use_val_labels,
+                                    logger=logger)
+                df = alg.run()
+                dfs.append(df)
     df = pd.concat(dfs, ignore_index=True)
     df.to_csv(os.path.join(os.getcwd(), "results", "results_bandit.csv"), index=False)
