@@ -23,13 +23,13 @@ class EnsembleRiskEstimator(RiskEstimator):
             self.ensemble = DecisionTreeClassifier()
 
     def fit(self, *args, **kwargs):
-        x_train = kwargs["x_train"]
-        y_train = kwargs["y_train"]
+        x_train = args[0]
+        y_train = args[1]
         self.ensemble.fit(x_train, y_train)
 
     def predict(self, *args, **kwargs):
-        x_test = kwargs["x_test"]
-        model = kwargs["model"]
+        x_test = args[0]
+        model = args[1]
         y_model = model.predict(x_test)
         y_ensemble = self.ensemble.predict(x_test)
         agreement = np.sum(y_model == y_ensemble)

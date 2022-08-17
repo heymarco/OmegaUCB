@@ -48,8 +48,8 @@ MNIST = 554
 
 
 if __name__ == '__main__':
-    split = 0.05
-    clean_data, clean_labels = fetch_openml(data_id=MNIST, return_X_y=True, as_frame=False)
+    split = 0.01
+    clean_data, clean_labels = fetch_openml(data_id=MUSHROOM, return_X_y=True, as_frame=False)
     not_na_rows = np.any(np.isnan(clean_data), axis=1) == False
     clean_data = clean_data[not_na_rows]
     clean_labels = clean_labels[not_na_rows]
@@ -63,14 +63,14 @@ if __name__ == '__main__':
     y_train, y_test = clean_labels[:n_train], clean_labels[n_train:]
     risk_estimator = EnsembleRiskEstimator()
 
-    model = DecisionTreeClassifier()
+    model = DecisionTreeClassifier(max_depth=5)
     model.fit(x_train, y_train)
     risk_estimator.prepare(x_train=x_train, y_train=y_train)
 
     theta_mle = []
     acc_scores = []
     empirical_error = []
-    sample_range = range(10, 10000, 10)
+    sample_range = range(10, 2000, 20)
     for sample_size in tqdm(sample_range):
         sample_indices = np.random.choice(np.arange(len(x_test)), sample_size)
         acc = risk_estimator.estimate_risk(model=model, x_test=x_test[sample_indices])

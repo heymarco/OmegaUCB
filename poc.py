@@ -1,173 +1,55 @@
-import copy
-import os
-
 import numpy as np
-import pandas as pd
+from sklearn.datasets import fetch_openml
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.datasets import load_iris, load_breast_cancer, fetch_20newsgroups, fetch_20newsgroups_vectorized, \
-    load_digits
+from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
-import matplotlib.pyplot as plt
-import seaborn as sns
 
-from components.correctors import RandomForestLC, DummyLC, BinaryLC
-from components.oracles import SymmetricNoiseOracle
-from components.datasets import MajorityVotedDataset, StandardDataset
-from components.query_strategies import RandomQueryStrategy
-from components.strategies import StandardStrategy
-from experiment_logging import logger
+from components.asymptotic_regression import M
+from components.optimizer import Optimizer
+from components.data import Oracle, SymmetricCrowdsourcingOracle, LabeledPool, MajorityVotedLabeledPool
+from components.risk_estimation import RiskEstimator, EnsembleRiskEstimator
+
+MNIST = 554
+MUSHROOM = 24
 
 if __name__ == '__main__':
-    noise_level = 0.2
-    confusion_thresh = .8
-    num_queries = 100
-    reps = 3
+    split = 0.01
+    clean_data, clean_labels = fetch_openml(data_id=MUSHROOM, return_X_y=True, as_frame=False)
+    not_na_rows = np.any(np.isnan(clean_data), axis=1) == False
+    clean_data = clean_data[not_na_rows]
+    clean_labels = clean_labels[not_na_rows]
+    shuffled_indices = np.arange(len(clean_labels))
+    np.random.shuffle(shuffled_indices)
+    clean_data = clean_data[shuffled_indices]
+    clean_labels = clean_labels[shuffled_indices]
+    clean_labels = LabelEncoder().fit_transform(clean_labels)
 
-    data = load_digits()
-    x = data.data
-    y = data.target
+    seed = 0
+    n_0 = 100
+    p = 0.4
+    oracle = SymmetricCrowdsourcingOracle(y=clean_labels, p=p, seed=seed)
+    pool = MajorityVotedLabeledPool()
+    meta_model = M(m_0=1 / len(np.unique(clean_labels)),
+                   fit_m_0=False)
+    risk_estimator = EnsembleRiskEstimator()
+    predictor = DecisionTreeClassifier(random_state=seed)
+    # predictor = RandomForestClassifier(n_estimators=10)
+    optimizer = Optimizer(predictor=predictor,
+                          risk_estimator=risk_estimator,
+                          oracle=oracle,
+                          labeled_pool=pool,
+                          data=clean_data,
+                          meta_model=meta_model,
+                          B=10000,
+                          n_0=n_0,
+                          t_0=1,
+                          seed=seed)
 
-    result = []
-
-    for seed in range(reps):
-        rng = np.random.default_rng(seed)
-
-        data_indices = np.arange(len(x)).tolist()
-        rng.shuffle(data_indices)
-        train_indices = data_indices[:int(0.5 * len(data_indices))]
-        test_indices = data_indices[int(0.5 * len(data_indices)):]
-        x_train = x[train_indices]
-        y_train = y[train_indices]
-        x_test = x[test_indices]
-        y_test = y[test_indices]
-        train_indices = np.arange(len(y_train))
-
-        mv_dataset = MajorityVotedDataset(data=x_train, seed=seed)
-        standard_dataset = StandardDataset(data=x_train, seed=seed)
-        query_strategy = RandomQueryStrategy(seed)
-        oracle = SymmetricNoiseOracle(true_labels=y_train,
-                                      noise_level=noise_level,
-                                      seed=seed)
-        perfect_oracle = SymmetricNoiseOracle(true_labels=y_train,
-                                              noise_level=0.0,
-                                              seed=seed)
-        rf_corrector = RandomForestLC(confusion_thresh=confusion_thresh,
-                                      seed=seed)
-        binary_corrector = BinaryLC(num_classes=len(np.unique(y_train)),
-                                    proba_thresh=.55,
-                                    seed=seed)
-        dummy_strategy = StandardStrategy(name="traditional",
-                                          dataset=copy.deepcopy(standard_dataset),
-                                          query_strategy=copy.deepcopy(query_strategy),
-                                          oracle=copy.deepcopy(oracle),
-                                          corrector=DummyLC(),
-                                          learner=RandomForestClassifier(random_state=seed),
-                                          test_data=(x_test, y_test))
-        topline_clean = StandardStrategy(name="topline",
-                                         dataset=copy.deepcopy(standard_dataset),
-                                         query_strategy=copy.deepcopy(query_strategy),
-                                         oracle=perfect_oracle,
-                                         corrector=DummyLC(),
-                                         learner=RandomForestClassifier(random_state=seed),
-                                         test_data=(x_test, y_test))
-        relabel_strategy = StandardStrategy(name="relabel",
-                                            dataset=copy.deepcopy(standard_dataset),
-                                            query_strategy=query_strategy,
-                                            oracle=oracle,
-                                            corrector=rf_corrector,
-                                            learner=RandomForestClassifier(random_state=seed),
-                                            test_data=(x_test, y_test))
-        pseudolabel_strategy = StandardStrategy(name="pseudolabels",
-                                            dataset=copy.deepcopy(standard_dataset),
-                                            query_strategy=query_strategy,
-                                            oracle=oracle,
-                                            corrector=binary_corrector,
-                                            learner=RandomForestClassifier(random_state=seed),
-                                            test_data=(x_test, y_test))
-
-        strategies = [
-            pseudolabel_strategy,
-            relabel_strategy,
-            topline_clean,
-            dummy_strategy
-        ]
-
-        for strategy in strategies:
-            while strategy.num_queries() < num_queries:
-                strategy.execute_round()
-                logger.track_index(strategy.num_queries())
-                logger.finalize_round()
-            df = logger.get_dataframe()
-            result.append(df)
-
-    result_df = pd.concat(result, axis=0, ignore_index=True)
-    result_df.to_csv(os.path.join(os.getcwd(), "results", "poc.csv"), index=False)
-
-    #     x_train_cleaned, y_train_cleaned, queried_indices = dataset.L()
-    #
-    #     x_train_noisy = x_train[queried_indices]
-    #     y_train_noisy = np.array([dataset.noisy_label_for_instance(i)
-    #                               for i in queried_indices])
-    #     x_train_clean = x_train_noisy
-    #     y_train_clean = np.array([oracle.get_clean_label(i)
-    #                               for i in queried_indices])
-    #
-    #     non_queried_boolean = np.zeros_like(y_train)
-    #     non_queried_boolean[queried_indices] = 1
-    #     non_queried_indices = np.arange(len(y_train))[non_queried_boolean]
-    #     additional_queries = np.random.choice(non_queried_indices, num_queries - dataset.n_data())
-    #     x_train_large = np.concatenate([x_train_clean,
-    #                                     x_train[additional_queries]], axis=0)
-    #     y_train_large_clean = np.concatenate([y_train_clean,
-    #                                           y_train[additional_queries]])
-    #     y_train_large_noisy = [oracle.get_noisy_label(i) for i in additional_queries]
-    #     y_train_large_noisy = np.concatenate([y_train_noisy, y_train_large_noisy], axis=0)
-    #
-    #     model_cleaned_data = RandomForestClassifier(random_state=seed)
-    #     model_clean_data = RandomForestClassifier(random_state=seed)
-    #     model_noisy_data = RandomForestClassifier(random_state=seed)
-    #     model_clean_data_large = RandomForestClassifier(random_state=seed)
-    #     model_noisy_data_large = RandomForestClassifier(random_state=seed)
-    #
-    #     model_cleaned_data.fit(x_train_cleaned, y_train_cleaned)
-    #     model_noisy_data.fit(x_train_noisy, y_train_noisy)
-    #     model_clean_data.fit(x_train_clean, y_train_clean)
-    #     model_noisy_data_large.fit(x_train_large, y_train_large_noisy)
-    #     model_clean_data_large.fit(x_train_large, y_train_large_clean)
-    #
-    #     score_cleaned = model_cleaned_data.score(x_test, y_test)
-    #     score_noisy = model_noisy_data.score(x_test, y_test)
-    #     score_clean = model_clean_data.score(x_test, y_test)
-    #     score_noisy_large = model_noisy_data_large.score(x_test, y_test)
-    #     score_clean_large = model_clean_data_large.score(x_test, y_test)
-    #
-    #     result.append([seed, noise_level,
-    #                    score_noisy, score_noisy_large, score_cleaned, score_clean, score_clean_large,
-    #                    len(y_train_noisy), len(y_train_large_noisy), len(y_train_cleaned),
-    #                    len(y_train_clean), len(y_train_large_clean)])
-    #
-    # result_df = pd.DataFrame(result, columns=[
-    #     "rep", "noise-level", "acc (noisy)", "acc (noisy) (l)", "acc (cleaned)", "acc (clean)", "acc (clean) (l)",
-    #     "n (noisy)", "n (noisy) (l)", "n (cleaned)", "n (clean)", "n (clean) (l)"
-    # ])
-    #
-    # melted_df = result_df.melt(id_vars=["rep", "noise-level"],
-    #                            value_vars=["acc (noisy)", "acc (noisy) (l)", "acc (cleaned)",
-    #                                        "acc (clean)", "acc (clean) (l)"],
-    #                            value_name="Accuracy", var_name="Approach")
-    #
-    # print(melted_df.groupby("Approach").mean())
-    #
-    # g = sns.catplot(data=melted_df, x="Approach", y="Accuracy", kind="box")
-    # for ax in g.axes.flatten():
-    #     ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right")
-    # plt.tight_layout()
-    # plt.show()
-    #
-    #     # print("Cleaned:     {} ({})".format(round(score_cleaned, 2), len(y_train_cleaned)))
-    #     # print("Noisy:       {} ({})".format(round(score_noisy, 2), len(y_train_noisy)))
-    #     # print("Clean:       {} ({})".format(round(score_clean, 2), len(y_train_clean)))
-    #     # print("Noisy (l):   {} ({})".format(round(score_noisy_large, 2), len(y_train_large_noisy)))
-    #     # print("Clean (l):   {} ({})".format(round(score_clean_large, 2), len(y_train_large_clean)))
-    #     # print()
-    #
+    while optimizer.B > optimizer.n * optimizer.t:
+        optimizer.query_labels()
+        optimizer.iterate()
+    if optimizer.B > 0:
+        optimizer.n = int(optimizer.B / optimizer.t)
+        if optimizer.n > 0:
+            optimizer.query_labels()
+            optimizer.iterate()
