@@ -5,20 +5,25 @@ from sklearn.datasets import fetch_openml
 from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
 
-from exp_logging import logger
+from components.data import SymmetricCrowdsourcingOracle, Oracle
+from components.exp_logging import logger
 
 
-class Topline:
+class Baseline:
     def __init__(self,
                  data: np.ndarray,
                  clean_labels: np.ndarray,
                  model,
+                 oracle: Oracle,
+                 p: float,
                  n: int,
                  B: int,
                  seed: int,
                  name: str = "Topline"):
         self.n = n
         self.B = B
+        self.p = p
+        self.oracle = oracle
         self.remaining_budget = B
         self.data = data
         self.clean_labels = clean_labels
@@ -26,16 +31,22 @@ class Topline:
         self.rng = np.random.default_rng(seed)
         self.training_mask = np.zeros(shape=len(data), dtype=bool)
         self.name = name
+        self.x = []
+        self.y = []
 
     def iterate(self):
-        unlabeled = np.arange(len(self.data))[np.invert(self.training_mask)]
-        labeled_indices = self.rng.choice(unlabeled, self.n)
-        self.training_mask[labeled_indices] = True
-        x = self.data[self.training_mask]
-        y = self.clean_labels[self.training_mask]
-        self.model.fit(x, y)
-        score = self.model.score(self.data[np.invert(self.training_mask)],
-                                 self.clean_labels[np.invert(self.training_mask)])
+        for _ in range(self.n):
+            y = self.oracle.query(1)
+            x = self.data[self.oracle.queried_index()]
+            self.x.append(x)
+            self.y.append(y)
+
+        self.model.fit(self.x, self.y)
+        mask = np.ones(len(self.data), dtype=bool)
+        mask[self.oracle.queried_indices] = 0
+        x = self.data[mask]
+        y = self.clean_labels[mask]
+        score = self.model.score(x, y)
         logger.track_true_score(score)
         self.remaining_budget -= self.n
         return score
@@ -45,7 +56,9 @@ class Topline:
         while self.remaining_budget > 0:
             performance = self.iterate()
             logger.track_time()
+            logger.track_t_n(t=1, n=self.n)
             logger.finalize_round()
+            print(self.remaining_budget)
             if performance >= 0.99:
                 break
 
@@ -62,9 +75,9 @@ if __name__ == '__main__':
 
     B = 1000
     logger.track_dataset_name("mushroom" if ds == MUSHROOM else "mnist")
-    for p in [0.0]:
+    for p in [0.0, 0.25, 0.5, 0.7]:
         logger.track_noise_level(p)
-        for rep in range(1):
+        for rep in range(3):
             seed = rep
             rng = np.random.default_rng(seed)
             clean_labels = LabelEncoder().fit_transform(clean_labels)
@@ -73,13 +86,16 @@ if __name__ == '__main__':
             clean_data = clean_data[shuffled_indices]
             clean_labels = clean_labels[shuffled_indices]
             logger.track_rep(rep)
+            oracle = SymmetricCrowdsourcingOracle(y=clean_labels, p=p, seed=seed)
             predictor = DecisionTreeClassifier(max_depth=5, random_state=seed)
-            alg = Topline(n=10,
-                          data=clean_data,
-                          clean_labels=clean_labels,
-                          model=predictor,
-                          B=B,
-                          seed=seed)
+            alg = Baseline(n=10,
+                           data=clean_data,
+                           clean_labels=clean_labels,
+                           model=predictor,
+                           oracle=oracle,
+                           p=p,
+                           B=B,
+                           seed=seed)
             alg.run()
     df = logger.get_dataframe()
-    df.to_csv(os.path.join(os.getcwd(), "..", "results", "results_topline.csv"), index=False)
+    df.to_csv(os.path.join(os.getcwd(), "results", "results_baseline.csv"), index=False)

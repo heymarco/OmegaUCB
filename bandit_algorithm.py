@@ -9,7 +9,6 @@ from components.data import Oracle, SymmetricCrowdsourcingOracle
 from components.exp_logging import logger
 from components.path import Path, PathElement
 from components.risk_estimation import RiskEstimator, EnsembleRiskEstimator
-from path_algorithm import IterativePathGradientEstimator
 
 
 class Bandit:
@@ -20,9 +19,23 @@ class Bandit:
     def sample(self):
         return np.random.beta(a=self.alpha + 1, b=self.beta + 1)
 
-    def update(self, update: float):
-        self.alpha += update
-        self.beta += 1 - update
+    def update(self, alpha: float, beta: float):
+        self.alpha = alpha
+        self.beta = beta
+
+
+class BanditWrapper:
+    def __init__(self):
+        self.bandit = Bandit()
+        self.rewards = {}
+
+    def sample(self):
+        return self.bandit.sample()
+
+    def update(self, update: float, path_element: int):
+        self.rewards[path_element] = update
+        self.bandit.alpha = np.sum(self.rewards.values())
+        self.bandit.beta = len(self.rewards) - np.sum(self.rewards.values())
 
 
 class BanditLabeler:
@@ -90,27 +103,34 @@ class BanditLabeler:
         return self.risk_estimator.predict(self._unlabeled_data(), self.model)
 
     def _estimate_reward(self, use_labels: bool = True):
-        l = np.zeros(shape=self.t_max)
+        l = []
         ts = []
         l_now = self._evaluate_path(self.path, use_true_labels=use_labels)
         for i in range(len(self.path)):
             t = self.path.elements[i].time
-            ts.append(t - 1)
+            ts.append(t)
             subpath = self.path.subpath_without_index(i)
             l_t = self._evaluate_path(subpath, use_true_labels=use_labels)
             rho = l_now - l_t
             reg = 0.2
             rho = rho * (1 - reg * (t - 1) / self.t_max)
-            l[t-1] += rho
-        ts = np.unique(ts)
+            l.append(rho)
         return l, ts
 
     def _update_parameters(self, l, ts):
+        ts = np.array(ts)
+        l = np.array(l)
+        l = l - np.min(l)
         if np.max(l) > 0:
-            l = np.maximum(0, l)
             l = l / np.max(l)
-            for t in ts:
-                self.bandits[t].update(l[t])
+        for t in np.unique(ts):
+            mask = ts == t
+            n_paths_t = len(ts[mask])
+            reward_sum_t = float(np.sum(l[mask]))
+            if reward_sum_t > 0:
+                a = reward_sum_t
+                b = n_paths_t - reward_sum_t
+                self.bandits[t-1].update(a, b)
 
     def run(self):
         while self.remaining_budget > 0:
@@ -133,17 +153,17 @@ MNIST = 554
 MUSHROOM = 24
 
 if __name__ == '__main__':
-    ds = MUSHROOM
+    ds = MNIST
     clean_data, clean_labels = fetch_openml(data_id=ds, return_X_y=True, as_frame=False)
     not_na_rows = np.any(np.isnan(clean_data), axis=1) == False
     clean_data = clean_data[not_na_rows]
     clean_labels = clean_labels[not_na_rows]
 
-    B = 500
+    B = 1000
     logger.track_dataset_name("mushroom" if ds == MUSHROOM else "mnist")
-    for p in [0.25, 0.0]:
+    for p in [0.0, 0.25, 0.5, 0.7]:
         logger.track_noise_level(p)
-        for rep in range(5):
+        for rep in range(1):
             seed = rep
             rng = np.random.default_rng(seed)
             clean_labels = LabelEncoder().fit_transform(clean_labels)
@@ -154,8 +174,8 @@ if __name__ == '__main__':
             logger.track_rep(rep)
             oracle = SymmetricCrowdsourcingOracle(y=clean_labels, p=p, seed=seed)
             risk_estimator = EnsembleRiskEstimator()
-            predictor = DecisionTreeClassifier(random_state=seed)
-            alg = BanditLabeler(n=3,
+            predictor = DecisionTreeClassifier(max_depth=5, random_state=seed)
+            alg = BanditLabeler(n=10,
                                 t_max=5,
                                 oracle=oracle,
                                 risk_estimator=risk_estimator,

@@ -14,6 +14,9 @@ class ExperimentLogger:
         self._columns = columns
         self._current_row = [np.nan for _ in range(len(self._columns))]
 
+    def track_approach(self, app: str):
+        self._track_value(app, "approach")
+
     def track_rep(self, rep: int):
         self._track_value(rep, "rep")
 
