@@ -2,165 +2,40 @@ import os
 
 import numpy as np
 import pandas as pd
-from sklearn.datasets import fetch_openml
+from sklearn.datasets import fetch_openml, make_classification
 from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
 
-from components.data import Oracle, SymmetricCrowdsourcingOracle
+from components.labeling import BanditLabeling
+from components.data import SymmetricCrowdsourcingOracle
 from components.exp_logging import ExperimentLogger
-from components.path import Path, PathElement
-from components.risk_estimation import RiskEstimator, EnsembleRiskEstimator
-
-
-class Bandit:
-    def __init__(self):
-        self.alpha = 0.0
-        self.beta = 0.0
-
-    def sample(self):
-        return np.random.beta(a=self.alpha + 1, b=self.beta + 1)
-
-    def update(self, alpha: float, beta: float):
-        self.alpha = alpha
-        self.beta = beta
-
-
-class BanditLabeler:
-    def __init__(self,
-                 costs,
-                 n: int,
-                 oracle: Oracle,
-                 risk_estimator: RiskEstimator,
-                 data: np.ndarray,
-                 clean_labels: np.ndarray,
-                 model, budget: float,
-                 name: str,
-                 logger: ExperimentLogger,
-                 use_validation_labels: bool = False):
-        self.use_validation_labels = use_validation_labels
-        self.name = name
-        self.logger = logger
-        self.costs = np.sort(costs)
-        self.n = n
-        self.oracle = oracle
-        self.risk_estimator = risk_estimator
-        self.data = data
-        self.clean_labels = clean_labels
-        self.model = model
-        self.budget = budget
-        self.remaining_budget = budget
-        self.bandits = [Bandit() for _ in self.costs]
-        self.path = Path()
-
-    def iterate(self):
-        self._labeling()
-        if len(self.path) > 1:
-            l, cs = self._estimate_reward(use_labels=self.use_validation_labels)
-            self._update_parameters(l, cs)
-
-    def _labeling(self):
-        theta = [b.sample() for b in self.bandits]
-        t = int(np.argmax(theta)) + 1
-        x = []
-        y = []
-        for _ in range(self.n):
-            y.append(self.oracle.query(t))
-            y_index = self.oracle.queried_index()
-            x.append(self.data[y_index])
-        x = np.vstack(x)
-        y = np.vstack(y)
-        element = PathElement(data=(x, y), time=t)
-        self.path.elements.append(element)
-        self.remaining_budget -= self.n * t
-        self.logger.track_t_n(t, self.n)
-
-    def _unlabeled_data(self):
-        mask = np.ones(shape=len(self.data), dtype=bool)
-        mask[self.oracle.queried_indices] = False
-        return self.data[mask]
-
-    def _evaluate_path(self, path, use_true_labels: bool = True):
-        if use_true_labels:
-            x, y = path.data()
-            self.model.fit(x, y)
-            mask = np.ones(len(self.data), dtype=bool)
-            mask[self.oracle.queried_indices] = 0
-            x = self.data[mask]
-            y = self.clean_labels[mask]
-            score = self.model.score(x, y)
-            return score
-        x_full, y_full = self.path.data()
-        x, y = path.data()
-        self.risk_estimator.fit(x_full, y_full)
-        self.model.fit(x, y)
-        return self.risk_estimator.predict(self._unlabeled_data(), self.model)
-
-    def _estimate_reward(self, use_labels: bool = True):
-        l = []
-        cs = []
-        l_now = self._evaluate_path(self.path, use_true_labels=use_labels)
-        for i in range(len(self.path)):
-            c = self.path.elements[i].time
-            cs.append(c)
-            subpath = self.path.subpath_without_index(i)
-            l_t = self._evaluate_path(subpath, use_true_labels=use_labels)
-            rho = l_now - l_t
-            reg = 0.2
-            rho = rho * (1 - reg * (c - 1) / max(self.costs))
-            l.append(rho)
-        return l, cs
-
-    def _update_parameters(self, l, cs):
-        cs = np.array(cs)
-        l = np.array(l)
-        l = l - np.min(l)
-        if np.max(l) > 0:
-            l = l / np.max(l)
-        for i, c in enumerate(np.unique(cs)):
-            mask = cs == c
-            n_paths_t = len(cs[mask])
-            reward_sum_t = float(np.sum(l[mask]))
-            if reward_sum_t > 0:
-                a = reward_sum_t
-                b = n_paths_t - reward_sum_t
-                self.bandits[i].update(a, b)
-
-    def run(self):
-        self.logger.track_approach(self.name)
-        while self.remaining_budget > 0:
-            self.iterate()
-            predicted_performance = self._evaluate_path(self.path, use_true_labels=False)
-            true_performance = self._evaluate_path(self.path, use_true_labels=True)
-            self.logger.track_true_score(true_performance)
-            self.logger.track_estimated_score(predicted_performance)
-            self.logger.track_alpha_beta(alpha=np.array([b.alpha for b in self.bandits]),
-                                    beta=np.array([b.beta for b in self.bandits]))
-            self.logger.track_time()
-            print("predicted performance: {}, true performance: {}".format(predicted_performance, true_performance))
-            print("remaining budget: {}".format(self.remaining_budget))
-            self.logger.finalize_round()
-            if true_performance >= 0.99:
-                break
-        return self.logger.get_dataframe()
-
-
-MNIST = 554
-MUSHROOM = 24
+from components.risk_estimation import EnsembleRiskEstimator
+from util import MNIST, MUSHROOM
 
 if __name__ == '__main__':
     ds = MNIST
-    clean_data, clean_labels = fetch_openml(data_id=ds, return_X_y=True, as_frame=False)
+    if ds == MUSHROOM or ds == MNIST:
+        clean_data, clean_labels = fetch_openml(data_id=ds, return_X_y=True, as_frame=False)
+    else:
+        clean_data, clean_labels = make_classification(
+            n_samples=3000, n_features=5, n_redundant=0, n_informative=2, random_state=1, n_clusters_per_class=1
+        )
     not_na_rows = np.any(np.isnan(clean_data), axis=1) == False
     clean_data = clean_data[not_na_rows]
     clean_labels = clean_labels[not_na_rows]
 
-    B = 1000
+    B = 10000
     dfs = []
     for use_val_labels in [True, False]:
-        for p in [0.0, 0.25, 0.5, 0.7]:
-            for rep in range(1):
+        for p in [0.5]:
+            for rep in range(3):
                 logger = ExperimentLogger()
-                logger.track_dataset_name("mushroom" if ds == MUSHROOM else "mnist")
+                if ds == MUSHROOM:
+                    logger.track_dataset_name("mushroom")
+                elif ds == MNIST:
+                    logger.track_dataset_name("mnist")
+                else:
+                    logger.track_dataset_name("synth")
                 logger.track_noise_level(p)
                 seed = rep
                 rng = np.random.default_rng(seed)
@@ -172,19 +47,25 @@ if __name__ == '__main__':
                 logger.track_rep(rep)
                 oracle = SymmetricCrowdsourcingOracle(y=clean_labels, p=p, seed=seed)
                 risk_estimator = EnsembleRiskEstimator()
-                predictor = DecisionTreeClassifier(max_depth=5, random_state=seed)
-                alg = BanditLabeler(n=15,
-                                    costs=np.array([1, 3, 5, 7]),
-                                    oracle=oracle,
-                                    risk_estimator=risk_estimator,
-                                    data=clean_data,
-                                    clean_labels=clean_labels,
-                                    model=predictor,
-                                    budget=B,
-                                    name="Bandit-{}".format("L" if use_val_labels else "U"),
-                                    use_validation_labels=use_val_labels,
-                                    logger=logger)
+                predictor = DecisionTreeClassifier()
+                alg = BanditLabeling(n=100,
+                                     times=np.array([1, 3, 10, 30, 100]),
+                                     oracle=oracle,
+                                     risk_estimator=risk_estimator,
+                                     data=clean_data,
+                                     clean_labels=clean_labels,
+                                     model=predictor,
+                                     budget=B,
+                                     name="ThompsonSampling-{}".format("L" if use_val_labels else "U"),
+                                     use_validation_labels=use_val_labels,
+                                     logger=logger,
+                                     seed=seed)
                 df = alg.run()
                 dfs.append(df)
+                del alg
+                del oracle
+                del predictor
+                del risk_estimator
+                del logger
     df = pd.concat(dfs, ignore_index=True)
     df.to_csv(os.path.join(os.getcwd(), "results", "results_bandit.csv"), index=False)
