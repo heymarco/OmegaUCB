@@ -275,11 +275,19 @@ class AdaptiveBudgetedThompsonSampling(AbstractBandit):
                 self.cost_arms[i].update(bernoulli_cost, prop_scores[i], was_pulled=arm == i)
 
     def estimate_propensity_scores(self):
-        scores = np.array([
-            np.sum(self.rng.beta(ra.alpha + 1, ra.beta + 1, size=1000) / self.rng.beta(ca.alpha + 1, ca.beta + 1, size=1000))
-            for ra, ca in zip(self.reward_arms, self.cost_arms)
-        ])
-        return np.array(scores) / np.sum(scores)
+        alpha_reward = [a.alpha + 1 for a in self.reward_arms]
+        beta_reward = [a.beta + 1 for a in self.reward_arms]
+        alpha_cost = [a.alpha + 1 for a in self.cost_arms]
+        beta_cost = [a.beta + 1 for a in self.cost_arms]
+        scores_reward = self.rng.beta(alpha_reward, beta_reward, size=(1000, len(alpha_cost)))
+        scores_cost = self.rng.beta(alpha_cost, beta_cost, size=(1000, len(alpha_cost)))
+        scores = scores_reward / scores_cost
+        scores = np.sum(scores, axis=0)
+        # scores = np.array([
+        #     np.sum(self.rng.beta(ra.alpha + 1, ra.beta + 1, size=1000) / self.rng.beta(ca.alpha + 1, ca.beta + 1, size=1000))
+        #     for ra, ca in zip(self.reward_arms, self.cost_arms)
+        # ])
+        return scores / np.sum(scores)
 
     def __len__(self):
         return len(self.cost_arms)
