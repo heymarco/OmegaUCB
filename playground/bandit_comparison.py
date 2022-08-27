@@ -67,22 +67,35 @@ def iterate(bandits, mean_rewards, mean_costs):
 
 
 def plot_regret(df: pd.DataFrame):
-    df = df.ffill()
+    df.ffill(inplace=True)
     df["round"] = np.nan
     df["regret"] = np.nan
     df["total reward"] = np.nan
     df["oracle"] = np.nan
 
-    for _, gdf in df.groupby(["approach", "rep"]):
-        gdf["round"] = np.arange(len(gdf))
+    df["spent budget"] = (df["spent-budget"] / 5).round() * 5
+
+    for _, gdf in df.groupby(["rep", "approach", "k", "high-variance"]):
+        gdf["round"] = np.arange(1, len(gdf) + 1)
         df["round"][gdf.index] = gdf["round"]
-        gdf["oracle"] = gdf["optimal-reward"] / gdf["optimal-cost"] * gdf["cost"].cumsum()
+        gdf["oracle"] = gdf["optimal-reward"] / gdf["optimal-cost"] * gdf["spent budget"]
         df["oracle"][gdf.index] = gdf["oracle"]
-        df["total reward"][gdf.index] = gdf["reward"].cumsum()
-        df["regret"][gdf.index] = (gdf["oracle"] - gdf["reward"].cumsum()).rolling(500).mean()
-    sns.lineplot(data=df, x="spent-budget", y="regret", hue="approach", ci=None)
-    plt.axhline(0, color="black")
-    plt.tight_layout(pad=.5)
+        gdf["total reward"] = gdf["reward"].cumsum()
+        df["total reward"][gdf.index] = gdf["total reward"]
+        df["regret"][gdf.index] = gdf["oracle"] - gdf["total reward"]
+
+    df["k"] = df["k"].astype(int)
+    facet_kws = {'sharey': False, 'sharex': True}
+    g = sns.relplot(data=df, kind="line",
+                x="spent budget", y="regret",
+                hue="approach", style="k", col="high-variance",
+                height=3, aspect=1, facet_kws=facet_kws,
+                ci=None)
+    axes = g.axes.flatten()
+    for ax in axes:
+        ax.axhline(0, color="black", lw=.5)
+    # plt.tight_layout(pad=.5)
+    plt.savefig(os.path.join(os.getcwd(), "..", "figures", "bandit_comparison.pdf"))
     plt.show()
 
 
@@ -91,7 +104,7 @@ if __name__ == '__main__':
     filepath = os.path.join(os.getcwd(), "..", "results", "bandit_comparison.csv")
     if not use_results:
         high_variance = [True, False]
-        ks = [10, 100]
+        ks = [100, 10]
         B = 1000
         reps = 300
         for k in tqdm(ks, desc="k"):
