@@ -8,7 +8,7 @@ import numpy as np
 class BanditLogger:
 
     def __init__(self,
-                 columns: list = ["rep", "approach", "optimal-reward", "spent-budget",
+                 columns: list = ["rep", "approach", "k", "high-variance", "optimal-reward", "spent-budget",
                                   "optimal-cost", "reward", "cost"]):
         self._data = []
         self._columns = columns
@@ -16,6 +16,12 @@ class BanditLogger:
 
     def track_approach(self, app: str):
         self._track_value(app, "approach")
+
+    def track_high_variance(self, hv: bool):
+        self._track_value(hv, "high-variance")
+
+    def track_k(self, k: int):
+        self._track_value(k, "k")
 
     def track_rep(self, rep: int):
         self._track_value(rep, "rep")
