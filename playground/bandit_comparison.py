@@ -6,6 +6,11 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 import seaborn as sns
 
+import sys
+import os
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from components.bandit import ThompsonSampling, BudgetedThompsonSampling, AbstractBandit, AbstractArm, \
     AdaptiveBudgetedThompsonSampling
@@ -88,7 +93,10 @@ def plot_regret(df: pd.DataFrame):
 
 if __name__ == '__main__':
     use_results = False
-    filepath = os.path.join(os.getcwd(), "..", "results", "bandit_comparison.csv")
+    plot_results = False
+    directory = os.path.join(os.getcwd(), "..", "results")
+    filepath = os.path.join(directory, "bandit_comparison.csv")
+    assert os.path.exists(directory)
     if not use_results:
         high_variance = [True, False]
         ks = [10, 100]
@@ -117,4 +125,5 @@ if __name__ == '__main__':
         df = logger.get_dataframe()
         df.to_csv(filepath, index=False)
     df = pd.read_csv(filepath)
-    plot_regret(df)
+    if plot_results:
+        plot_regret(df)
