@@ -22,6 +22,7 @@ class EnsembleRiskEstimator(RiskEstimator):
         elif ensemble_type == "dt":
             self.ensemble = DecisionTreeClassifier()
 
+
     def fit(self, *args, **kwargs):
         x_train = args[0]
         y_train = args[1]

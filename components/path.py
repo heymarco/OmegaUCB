@@ -7,9 +7,11 @@ import pandas as pd
 class PathElement:
     def __init__(self,
                  data: Tuple[np.ndarray, np.ndarray],
-                 time: int):
+                 time: int,
+                 index: int):
         self.data = data
         self.time = time
+        self.arm_index = index
 
     def budget(self) -> int:
         return len(self.data[-1]) * self.time
@@ -17,7 +19,7 @@ class PathElement:
 
 class Path:
     def __init__(self,
-                 elements: List[PathElement] = []):
+                 elements: List[PathElement]):
         self.elements: List[PathElement] = elements
 
     def __len__(self):

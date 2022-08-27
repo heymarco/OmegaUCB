@@ -8,6 +8,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 from components.data import SymmetricCrowdsourcingOracle, Oracle
 from components.exp_logging import ExperimentLogger
+from util import linear_cost_function
 
 
 class Baseline:
@@ -38,6 +39,15 @@ class Baseline:
         self.name = name
         self.x = []
         self.y = []
+        self._score = []
+
+    def stop_early(self, t):
+        if len(self._score) < t:
+            return False
+        return self._score[-1] - self._score[-t] < 0.01
+
+    def cost(self, t):
+        return linear_cost_function(t)
 
     def iterate(self):
         for _ in range(self.n):
@@ -51,15 +61,18 @@ class Baseline:
         mask[self.oracle.queried_indices] = 0
         x = self.data[mask]
         y = self.clean_labels[mask]
-        score = self.model.score(x, y)
+        score = self.model.score(x[:1000], y[:1000])
         self.logger.track_true_score(score)
-        self.remaining_budget -= self.n * self.t
+        self.remaining_budget -= self.n * self.cost(self.t)
         return score
 
     def run(self):
         self.logger.track_approach(self.name)
         while self.remaining_budget > 0:
             performance = self.iterate()
+            # self._score.append(performance)
+            # if self.stop_early(3):
+            #     break
             self.logger.track_time()
             self.logger.track_t_n(t=self.t, n=self.n)
             self.logger.finalize_round()
@@ -82,10 +95,10 @@ if __name__ == '__main__':
     B = 20000
     datasets = [MNIST]
     dfs = []
-    ts = [1, 3, 5, 7]
+    ts = [1, 3, 10, 30, 100]
     for t in ts:
-        for p in [0.0, 0.25, 0.5, 0.7]:
-            for rep in range(1):
+        for p in [0.5]:
+            for rep in range(3):
                 # LOGGING
                 logger = ExperimentLogger()
                 logger.track_noise_level(p)
@@ -101,6 +114,7 @@ if __name__ == '__main__':
                 clean_labels = clean_labels[shuffled_indices]
                 oracle = SymmetricCrowdsourcingOracle(y=clean_labels, p=p, seed=seed)
                 predictor = DecisionTreeClassifier(random_state=seed)
+
                 # ALGORITHM
                 alg = Baseline(n=100,
                                t=t,
