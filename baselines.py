@@ -53,7 +53,7 @@ class Baseline:
         y = self.clean_labels[mask]
         score = self.model.score(x, y)
         self.logger.track_true_score(score)
-        self.remaining_budget -= self.n
+        self.remaining_budget -= self.n * self.t
         return score
 
     def run(self):
@@ -79,13 +79,13 @@ if __name__ == '__main__':
     clean_data = clean_data[not_na_rows]
     clean_labels = clean_labels[not_na_rows]
 
-    B = 1000
+    B = 20000
     datasets = [MNIST]
     dfs = []
     ts = [1, 3, 5, 7]
     for t in ts:
         for p in [0.0, 0.25, 0.5, 0.7]:
-            for rep in range(3):
+            for rep in range(1):
                 # LOGGING
                 logger = ExperimentLogger()
                 logger.track_noise_level(p)
@@ -100,9 +100,9 @@ if __name__ == '__main__':
                 clean_data = clean_data[shuffled_indices]
                 clean_labels = clean_labels[shuffled_indices]
                 oracle = SymmetricCrowdsourcingOracle(y=clean_labels, p=p, seed=seed)
-                predictor = DecisionTreeClassifier(max_depth=5, random_state=seed)
+                predictor = DecisionTreeClassifier(random_state=seed)
                 # ALGORITHM
-                alg = Baseline(n=10,
+                alg = Baseline(n=100,
                                t=t,
                                data=clean_data,
                                clean_labels=clean_labels,
