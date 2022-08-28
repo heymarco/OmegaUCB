@@ -35,15 +35,16 @@ def sort_setting(mean_rewards, mean_costs):
 
 def create_bandits(k: int, seed: int):
     return np.array([AdaptiveBudgetedThompsonSampling(k=k, name="ABTS", seed=seed),
-                     ThompsonSampling(k=k, name="TS with costs", seed=seed),
-                     ThompsonSampling(k=k, name="TS without costs", seed=seed),
-                     ThompsonSampling(k=1, name="Oracle", seed=seed),
+                     # ThompsonSampling(k=k, name="TS with costs", seed=seed),
+                     # ThompsonSampling(k=k, name="TS without costs", seed=seed),
+                     # ThompsonSampling(k=1, name="Oracle", seed=seed),
                      BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
                      ])
 
 
 def run_bandit(bandit: AbstractBandit, mean_rewards, mean_costs):
     arm = bandit.sample()
+    logger.track_arm(arm)
     mean_reward = mean_rewards[arm]
     mean_cost = mean_costs[arm]
     this_reward = int(np.random.uniform() < mean_reward)
@@ -93,7 +94,7 @@ def plot_regret(df: pd.DataFrame):
     facet_kws = {'sharey': False, 'sharex': True}
     g = sns.relplot(data=df, kind="line",
                 x="spent budget", y="regret",
-                hue="approach", style="k", col="high-variance",
+                hue="approach", row="k", col="high-variance",
                 height=3, aspect=1, facet_kws=facet_kws,
                 ci=None)
     axes = g.axes.flatten()
@@ -112,7 +113,7 @@ if __name__ == '__main__':
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True, False]
-        ks = [100, 10]
+        ks = [2]  # [100, 10]
         B = 1000
         reps = 300
         for k in tqdm(ks, desc="k"):

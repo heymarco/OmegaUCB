@@ -55,11 +55,12 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         self.prev_avg = np.nan
         self.this_avg = np.nan
         self.prev_doubly_total = 0
+        self.prop_scores_sqrt_total = 0
         self.pulls = 0
         self.t = 0
 
     def __len__(self):
-        return 0 if len(self.n_pulls) == 0 else self.n_pulls[-1]
+        return self.t
 
     def sample(self):
         return self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
@@ -72,24 +73,35 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         self.beta = beta
 
     def update(self, new_val: float, propensity_score: float, was_pulled: bool):
+        # Set values that must be updated continuously
         self.this_propensity = propensity_score
         self.this_reward = new_val
         self.t += 1
         self.was_pulled = was_pulled
+        # Handle startup
         if not self.startup_complete:
             self.prev_avg = new_val
-            self.was_pulled = True
+            self.this_avg = new_val
             self.pulls += 1
             self.startup_complete = True
             return
+        # Adjust values after the arm was pulled
+        # 1. update previous average
+        # 2. update current_average
+        # 3. increment number of pulls
         if was_pulled:
+            self.prev_avg = self.this_avg
             new_avg = (self.pulls * self.prev_avg + new_val) / (self.pulls + 1)
             self.this_avg = new_avg
             self.pulls += 1
-        alpha, beta = self.compute_alpha_beta_3()
+        # Update alpha and beta
+        alpha, beta = self._compute_alpha_beta_doubly_corrected()
         self.set(alpha, beta)
 
-    def compute_ipw_estimator(self):
+    def _compute_sample_average_estimator(self):
+        return self.this_avg
+
+    def _compute_ipw_estimator(self):
         indicator = np.diff(self.n_pulls, prepend=0)
         rewards = self.all_rewards * indicator
         frac = rewards / np.array(self.propensity_scores)
@@ -97,58 +109,38 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         norm_avg = avg
         return norm_avg
 
-    def compute_doubly_estimator(self):
+    def _compute_doubly_estimator(self):
         identity = self.was_pulled  # was_pulled
         this_reward = self.this_reward  # this_reward
         this_prop_score = self.this_propensity  # this_prop_score
+        this_prop_score_sqrt = np.sqrt(this_prop_score)
+        self.prop_scores_sqrt_total += this_prop_score_sqrt
         prev_avg = self.prev_avg  # prev_avg
         prev_total = self.prev_doubly_total  # self.doubly_summed[-1] if len(self.doubly_summed) else 0  # prev_total
-        new_addend = prev_avg + (this_reward - prev_avg) * identity / this_prop_score
+        new_addend = prev_avg + this_prop_score_sqrt * (this_reward - prev_avg) * identity / this_prop_score
         total = prev_total + new_addend
-        new_estimate = total / (self.t - 1)
+        new_estimate = total / self.prop_scores_sqrt_total
         self.prev_doubly_total = total
         return new_estimate
 
-    def compute_alpha_beta_3(self):
-        corrected_avg_reward = self.compute_doubly_estimator()
-        corrected_avg_reward = min(1.0, corrected_avg_reward)
-        corrected_avg_reward = max(0.0, corrected_avg_reward)
+    def _compute_alpha_beta_doubly_corrected(self):
+        corrected_avg_reward = self._compute_doubly_estimator()
+        corrected_avg_reward = min(1.0, max(0.0, corrected_avg_reward))  # averages out of [0, 1] are not possible
         alpha = self.pulls * corrected_avg_reward
         beta = self.pulls * (1 - corrected_avg_reward)
         return alpha, beta
 
-    def compute_gamma(self, new_val):
-        r_t = np.array(self.all_rewards)
-        avg_r_t = np.array(self.sample_averages)
-        indicator_func = np.diff(self.n_pulls, prepend=0)
-        pi_t = np.array(self.propensity_scores)
-        Gamma = []
-        for t in range(1, len(self.n_pulls)):
-            g = avg_r_t[t - 1] + indicator_func[t] * (r_t[t] - avg_r_t[t - 1]) / pi_t[t]
-            Gamma.append(g)
-        return np.array(Gamma)
-
-    def compute_mean(self, Gamma: np.ndarray):
-        pi_sqrt = np.sqrt(self.propensity_scores)
-        pi_sqrt_gamma = pi_sqrt * Gamma
-        numerator = np.sum(pi_sqrt_gamma)
-        pi_cum = np.sum(pi_sqrt)
-        return numerator / pi_cum
-
-    def compute_alpha_beta(self, Gamma: np.ndarray):
-        n = self.n_pulls[-1]
-        mu = self.compute_mean(Gamma)
-        alpha = mu * (n + 2) - 1
-        beta = n - alpha
+    def _compute_alpha_beta_ipw_corrected(self):
+        corrected_avg_reward = self._compute_ipw_estimator()
+        corrected_avg_reward = min(1.0, max(0.0, corrected_avg_reward))  # averages out of [0, 1] are not possible
+        alpha = self.pulls * corrected_avg_reward
+        beta = self.pulls * (1 - corrected_avg_reward)
         return alpha, beta
 
-    def compute_alpha_beta_2(self, Gamma: np.ndarray):
-        pi_sqrt = np.sqrt(self.propensity_scores)
-        pi_sqrt_gamma = pi_sqrt * Gamma
-        numerator = np.sum(pi_sqrt_gamma)
-        pi_cum = np.sum(pi_sqrt)
-        alpha = numerator / pi_cum * self.n_pulls[-1]
-        beta = self.n_pulls[-1] - alpha
+    def _compute_alpha_beta_uncorrected(self):
+        avg = self._compute_sample_average_estimator()
+        alpha = avg * self.pulls
+        beta = self.pulls * (1 - avg)
         return alpha, beta
 
 
