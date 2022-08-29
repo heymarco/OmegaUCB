@@ -106,16 +106,16 @@ def plot_regret(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    use_results = True
-    plot_results = True
+    use_results = False
+    plot_results = False
     directory = os.path.join(os.getcwd(), "..", "results")
     filepath = os.path.join(directory, "bandit_comparison.csv")
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True, False]
-        ks = [4]
+        ks = [100, 10, 4, 2]
         B = 1000
-        reps = 100
+        reps = 300
         for k in tqdm(ks, desc="k"):
             logger.track_k(k)
             for hv in tqdm(high_variance, leave=False, desc="variance"):
