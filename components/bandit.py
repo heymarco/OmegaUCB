@@ -39,7 +39,7 @@ class ArmWithBetaPosterior(AbstractArm):
 
 
 class ArmWithAdaptiveBetaPosterior(AbstractArm):
-    def __init__(self, seed: int):
+    def __init__(self, seed: int, ci: str):
         self.rng = np.random.default_rng(seed)
         self.alpha = 0.0
         self.beta = 0.0
@@ -54,6 +54,7 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         self.prop_scores_sqrt_total = 0
         self.pulls = 0
         self.t = 0
+        self._ci = ci
 
     def __len__(self):
         return self.t
@@ -98,10 +99,11 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         return np.sqrt(-1 / (2 * self.pulls) * np.log(alpha / 2))
 
     def _compute_sample_average_estimator(self):
-        add_ci = True
-        ci = self.hoeffding_ci()
-        avg = self.this_avg if not add_ci else self.this_avg + ci
-        return min(1.0, avg)
+        add_ci = self._ci == "add"
+        subtract_ci = self._ci == "subtract"
+        ci = self.hoeffding_ci() if add_ci or subtract_ci else 0.0
+        avg = self.this_avg + ci if add_ci else self.this_avg - ci
+        return min(1.0, max(0.0, avg))
 
     def _compute_doubly_estimator(self):
         identity = self.was_pulled
@@ -230,9 +232,11 @@ class BudgetedThompsonSampling(AbstractBandit):
 
 
 class AdaptiveBudgetedThompsonSampling(AbstractBandit):
-    def __init__(self, k: int, name: str, seed: int):
-        self.reward_arms = [ArmWithAdaptiveBetaPosterior(arm_index) for arm_index in range(k)]
-        self.cost_arms = [ArmWithAdaptiveBetaPosterior(k + arm_index) for arm_index in range(k)]
+    def __init__(self, k: int, name: str, seed: int, ci_reward: str, ci_cost: str):
+        self.ci_reward = ci_reward
+        self.ci_cost = ci_cost
+        self.reward_arms = [ArmWithAdaptiveBetaPosterior(arm_index, ci=ci_reward) for arm_index in range(k)]
+        self.cost_arms = [ArmWithAdaptiveBetaPosterior(k + arm_index, ci=ci_cost) for arm_index in range(k)]
         super(AdaptiveBudgetedThompsonSampling, self).__init__(k, name, seed)
 
     def sample(self) -> int:
@@ -249,7 +253,7 @@ class AdaptiveBudgetedThompsonSampling(AbstractBandit):
         self.cost_arms[arm].set(alpha_c, beta_c)
 
     def update(self, arm: int, reward: float, cost: float, estimate_props: bool = False):
-        prop_scores = self.estimate_propensity_scores() if estimate_props else [0.0 for _ in range(len(self.reward_arms))]
+        prop_scores = self.estimate_propensity_scores() if estimate_props else np.zeros(len(self.reward_arms), dtype=float)
         for i in range(len(self.cost_arms)):
             if reward == 1 or reward == 0:
                 # Bernoulli reward
@@ -265,15 +269,6 @@ class AdaptiveBudgetedThompsonSampling(AbstractBandit):
                 self.cost_arms[i].update(bernoulli_cost, prop_scores[i], was_pulled=arm == i)
 
     def estimate_propensity_scores(self):
-        # alpha_reward = [a.alpha + 1 for a in self.reward_arms]
-        # beta_reward = [a.beta + 1 for a in self.reward_arms]
-        # alpha_cost = [a.alpha + 1 for a in self.cost_arms]
-        # beta_cost = [a.beta + 1 for a in self.cost_arms]
-        # scores_reward = self.rng.beta(alpha_reward, beta_reward, size=(1000, len(alpha_cost)))
-        # scores_cost = self.rng.beta(alpha_cost, beta_cost, size=(1000, len(alpha_cost)))
-        # scores = scores_reward / scores_cost
-        # scores = np.sum(scores, axis=0)
-        scores = []
         selected_arms = np.argmax([
             self.rng.beta(ra.alpha + 1, ra.beta + 1, size=1000) / self.rng.beta(ca.alpha + 1, ca.beta + 1, size=1000)
             for ra, ca in zip(self.reward_arms, self.cost_arms)
