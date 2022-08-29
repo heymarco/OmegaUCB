@@ -43,10 +43,6 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         self.rng = np.random.default_rng(seed)
         self.alpha = 0.0
         self.beta = 0.0
-        self.propensity_scores = []
-        self.sample_averages = []
-        self.all_rewards = []
-        self.n_pulls = []
         self.startup_complete = False
         self.doubly_summed = []
         self.was_pulled = False
@@ -95,46 +91,48 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             self.this_avg = new_avg
             self.pulls += 1
         # Update alpha and beta
-        alpha, beta = self._compute_alpha_beta_doubly_corrected()
+        alpha, beta = self._compute_alpha_beta_uncorrected()
         self.set(alpha, beta)
 
-    def _compute_sample_average_estimator(self):
-        return self.this_avg
+    def hoeffding_ci(self, alpha=0.05):
+        return np.sqrt(-1 / (2 * self.pulls) * np.log(alpha / 2))
 
-    def _compute_ipw_estimator(self):
-        indicator = np.diff(self.n_pulls, prepend=0)
-        rewards = self.all_rewards * indicator
-        frac = rewards / np.array(self.propensity_scores)
-        avg = np.average(frac)
-        norm_avg = avg
-        return norm_avg
+    def _compute_sample_average_estimator(self):
+        add_ci = True
+        ci = self.hoeffding_ci()
+        avg = self.this_avg if not add_ci else self.this_avg + ci
+        return min(1.0, avg)
 
     def _compute_doubly_estimator(self):
-        identity = self.was_pulled  # was_pulled
-        this_reward = self.this_reward  # this_reward
-        this_prop_score = self.this_propensity  # this_prop_score
+        identity = self.was_pulled
+        this_reward = self.this_reward
+        this_prop_score = self.this_propensity + 1e-5
         this_prop_score_sqrt = np.sqrt(this_prop_score)
         self.prop_scores_sqrt_total += this_prop_score_sqrt
-        prev_avg = self.prev_avg  # prev_avg
-        prev_total = self.prev_doubly_total  # self.doubly_summed[-1] if len(self.doubly_summed) else 0  # prev_total
-        new_addend = prev_avg + this_prop_score_sqrt * (this_reward - prev_avg) * identity / this_prop_score
-        total = prev_total + new_addend
-        new_estimate = total / self.prop_scores_sqrt_total
+        prev_avg = self.prev_avg
+        prev_total = self.prev_doubly_total
+        Gamma = prev_avg + (this_reward - prev_avg) * identity / this_prop_score
+        use_adaptive_weights = False
+        if use_adaptive_weights:
+            new_addend = this_prop_score_sqrt * Gamma
+            total = prev_total + new_addend
+            new_estimate = total / self.prop_scores_sqrt_total
+        else:
+            new_addend = Gamma
+            total = prev_total + new_addend
+            new_estimate = total / self.t
         self.prev_doubly_total = total
         return new_estimate
 
     def _compute_alpha_beta_doubly_corrected(self):
         corrected_avg_reward = self._compute_doubly_estimator()
         corrected_avg_reward = min(1.0, max(0.0, corrected_avg_reward))  # averages out of [0, 1] are not possible
-        alpha = self.pulls * corrected_avg_reward
-        beta = self.pulls * (1 - corrected_avg_reward)
-        return alpha, beta
-
-    def _compute_alpha_beta_ipw_corrected(self):
-        corrected_avg_reward = self._compute_ipw_estimator()
-        corrected_avg_reward = min(1.0, max(0.0, corrected_avg_reward))  # averages out of [0, 1] are not possible
-        alpha = self.pulls * corrected_avg_reward
-        beta = self.pulls * (1 - corrected_avg_reward)
+        current_alpha = self.alpha
+        current_beta = self.beta
+        alpha = current_alpha + corrected_avg_reward
+        beta = current_beta + (1 - corrected_avg_reward)
+        # alpha = self.pulls * corrected_avg_reward
+        # beta = self.pulls * (1 - corrected_avg_reward)
         return alpha, beta
 
     def _compute_alpha_beta_uncorrected(self):
@@ -267,19 +265,24 @@ class AdaptiveBudgetedThompsonSampling(AbstractBandit):
                 self.cost_arms[i].update(bernoulli_cost, prop_scores[i], was_pulled=arm == i)
 
     def estimate_propensity_scores(self):
-        alpha_reward = [a.alpha + 1 for a in self.reward_arms]
-        beta_reward = [a.beta + 1 for a in self.reward_arms]
-        alpha_cost = [a.alpha + 1 for a in self.cost_arms]
-        beta_cost = [a.beta + 1 for a in self.cost_arms]
-        scores_reward = self.rng.beta(alpha_reward, beta_reward, size=(1000, len(alpha_cost)))
-        scores_cost = self.rng.beta(alpha_cost, beta_cost, size=(1000, len(alpha_cost)))
-        scores = scores_reward / scores_cost
-        scores = np.sum(scores, axis=0)
-        # scores = np.array([
-        #     np.sum(self.rng.beta(ra.alpha + 1, ra.beta + 1, size=1000) / self.rng.beta(ca.alpha + 1, ca.beta + 1, size=1000))
-        #     for ra, ca in zip(self.reward_arms, self.cost_arms)
-        # ])
-        return scores / np.sum(scores)
+        # alpha_reward = [a.alpha + 1 for a in self.reward_arms]
+        # beta_reward = [a.beta + 1 for a in self.reward_arms]
+        # alpha_cost = [a.alpha + 1 for a in self.cost_arms]
+        # beta_cost = [a.beta + 1 for a in self.cost_arms]
+        # scores_reward = self.rng.beta(alpha_reward, beta_reward, size=(1000, len(alpha_cost)))
+        # scores_cost = self.rng.beta(alpha_cost, beta_cost, size=(1000, len(alpha_cost)))
+        # scores = scores_reward / scores_cost
+        # scores = np.sum(scores, axis=0)
+        scores = []
+        selected_arms = np.argmax([
+            self.rng.beta(ra.alpha + 1, ra.beta + 1, size=1000) / self.rng.beta(ca.alpha + 1, ca.beta + 1, size=1000)
+            for ra, ca in zip(self.reward_arms, self.cost_arms)
+        ], axis=0)
+        arms, counts = np.unique(selected_arms, return_counts=True)
+        result = np.zeros(len(self.reward_arms))
+        result[arms] = counts
+        result = result / np.sum(result)
+        return result
 
     def __len__(self):
         return len(self.cost_arms)
