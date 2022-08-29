@@ -249,7 +249,7 @@ class AdaptiveBudgetedThompsonSampling(AbstractBandit):
         self.cost_arms[arm].set(alpha_c, beta_c)
 
     def update(self, arm: int, reward: float, cost: float, estimate_props: bool = False):
-        prop_scores =  self.estimate_propensity_scores() if estimate_props else 0.0
+        prop_scores = self.estimate_propensity_scores() if estimate_props else [0.0 for _ in range(len(self.reward_arms))]
         for i in range(len(self.cost_arms)):
             if reward == 1 or reward == 0:
                 # Bernoulli reward
