@@ -106,7 +106,7 @@ def plot_regret(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    use_results = False
+    use_results = True
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filepath = os.path.join(directory, "bandit_comparison.csv")
