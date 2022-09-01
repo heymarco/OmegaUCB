@@ -99,6 +99,9 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
     def hoeffding_ci(self, alpha=0.05):
         return np.sqrt(-1 / (2 * self.pulls) * np.log(alpha / 2))
 
+    def baseline_ci(self):
+        return 1 / self.pulls
+
     def wilson_ci(self, alpha=0.05):
         n = self.pulls
         ns = self.this_avg * n
@@ -117,6 +120,8 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             return self.wilson_ci()
         elif self._ci == "combined":
             return self.combined_ci()
+        elif self._ci == "baseline":
+            return self.baseline_ci()
         elif self._ci is None:
             return 0.0
         else:
