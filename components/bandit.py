@@ -93,7 +93,7 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             self.this_avg = new_avg
             self.pulls += 1
             # Update alpha and beta
-            alpha, beta = self._compute_alpha_beta_uncorrected()
+            alpha, beta = self._compute_alpha_beta()
             self.set(alpha, beta)
 
     def hoeffding_ci(self, alpha=0.05):
@@ -116,10 +116,6 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
     def get_ci(self):
         if self._ci == "hoeffding":
             return self.hoeffding_ci()
-        elif self._ci == "wilson":
-            return self.wilson_ci()
-        elif self._ci == "combined":
-            return self.combined_ci()
         elif self._ci == "baseline":
             return self.baseline_ci()
         elif self._ci is None:
@@ -127,49 +123,29 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         else:
             raise ValueError
 
+    def _compute_wilson_estimator(self, alpha=0.05):
+        ns = self.this_avg * self.pulls
+        n = self.pulls
+        z = 1.96 if alpha == 0.05 else stats.norm.interval(1 - alpha)
+        z2 = z ** 2
+        return (ns + 0.5 * z2) / (n + z2)
+
     def _compute_sample_average_estimator(self):
         ci = self.get_ci()
         avg = self.this_avg + ci
         return min(1.0, max(0.0, avg))
 
-    def _compute_doubly_estimator(self):
-        identity = self.was_pulled
-        this_reward = self.this_reward
-        this_prop_score = self.this_propensity + 1e-5
-        this_prop_score_sqrt = np.sqrt(this_prop_score)
-        self.prop_scores_sqrt_total += this_prop_score_sqrt
-        prev_avg = self.prev_avg
-        prev_total = self.prev_doubly_total
-        Gamma = prev_avg + (this_reward - prev_avg) * identity / this_prop_score
-        use_adaptive_weights = False
-        if use_adaptive_weights:
-            new_addend = this_prop_score_sqrt * Gamma
-            total = prev_total + new_addend
-            new_estimate = total / self.prop_scores_sqrt_total
+    def _compute_alpha_beta(self):
+        if self._ci == "wilson (full)":
+            avg = self._compute_wilson_estimator() + self.wilson_ci()
+        elif self._ci == "wilson":
+            avg = self._compute_wilson_estimator()
         else:
-            new_addend = Gamma
-            total = prev_total + new_addend
-            new_estimate = total / self.t
-        self.prev_doubly_total = total
-        return new_estimate
-
-    def _compute_alpha_beta_doubly_corrected(self):
-        corrected_avg_reward = self._compute_doubly_estimator()
-        corrected_avg_reward = min(1.0, max(0.0, corrected_avg_reward))  # averages out of [0, 1] are not possible
-        current_alpha = self.alpha
-        current_beta = self.beta
-        alpha = current_alpha + corrected_avg_reward
-        beta = current_beta + (1 - corrected_avg_reward)
-        # alpha = self.pulls * corrected_avg_reward
-        # beta = self.pulls * (1 - corrected_avg_reward)
-        return alpha, beta
-
-    def _compute_alpha_beta_uncorrected(self):
-        avg = self._compute_sample_average_estimator()
+            avg = self.this_avg + self.get_ci()
+        avg = min(1.0, max(0.0, avg))
         alpha = avg * self.pulls
         beta = self.pulls * (1 - avg)
         return alpha, beta
-
 
 class AbstractBandit(ABC):
     def __init__(self, k: int, name: str, seed: int):

@@ -19,6 +19,10 @@ if __name__ == '__main__':
         z = stats.norm.interval(1 - alpha)[1]
         return 2 / (n + z ** 2) * np.sqrt((ns * nf) / n + z ** 2 / 4)
 
+    def wilson_estimate(n: int, ns: int, alpha=0.05):
+        z = stats.norm.interval(1 - alpha)[1]
+        return (ns + 0.5 * z ** 2) / (n + z ** 2)
+
     def combined_ci(n: int, alpha=0.01):
         return min(markov_ci(n, alpha), hoeffding_ci(n, alpha))
 
@@ -34,7 +38,7 @@ if __name__ == '__main__':
     ns = [3, 10, 30, 100, 1000]
     ps = np.arange(5, 50) / 50
     result = []
-    n_samples = 100
+    n_samples = 30
     mean_reward = 0.5
     metric_types = ["mean", "mean", "mean", "mean", "std.",
                     "std.", "std.", "E[r/c] / bias", "E[r/c] / bias", "E[r/c] / bias",
@@ -56,10 +60,10 @@ if __name__ == '__main__':
                 original_alpha_rew = np.sum(rewards)
                 original_beta_rew = n - np.sum(rewards)
 
-                sqrt_alpha = min(n, np.sum(bernoulli_trials) + n * wilson_ci(n, np.sum(bernoulli_trials)))
-                sqrt_beta = n - min(n, np.sum(bernoulli_trials) + n * wilson_ci(n, np.sum(bernoulli_trials)))
-                sqrt_alpha_rew = min(n, np.sum(rewards) + n * wilson_ci(n, np.sum(bernoulli_trials)))
-                sqrt_beta_rew = n - min(n, np.sum(rewards) + n * wilson_ci(n, np.sum(bernoulli_trials)))
+                sqrt_alpha = min(n, n * wilson_estimate(n, np.sum(bernoulli_trials)))
+                sqrt_beta = n - min(n, n * wilson_estimate(n, np.sum(bernoulli_trials)))
+                sqrt_alpha_rew = min(n, n * wilson_estimate(n, np.sum(rewards)))
+                sqrt_beta_rew = n - min(n, n * wilson_estimate(n, np.sum(rewards)))
 
                 ci_alpha = min(n, np.sum(bernoulli_trials) + n * hoeffding_ci(n))
                 ci_beta = n - sqrt_alpha

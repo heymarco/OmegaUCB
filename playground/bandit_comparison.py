@@ -34,10 +34,12 @@ def sort_setting(mean_rewards, mean_costs):
 
 
 def create_bandits(k: int, seed: int):
-    return np.array([AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding)", seed=seed, ci_reward="hoeffding", ci_cost="hoeffding"),
-                     AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson)", seed=seed, ci_reward="wilson", ci_cost="wilson"),
-                     AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (baseline)", seed=seed, ci_reward="baseline",
-                                                      ci_cost="baseline"),
+    return np.array([AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding)", seed=seed,
+                                                      ci_reward="hoeffding", ci_cost="hoeffding"),
+                     AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson)", seed=seed,
+                                                      ci_reward="wilson", ci_cost="wilson"),
+                     AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson full)", seed=seed,
+                                                      ci_reward="wilson (full)", ci_cost="wilson (full)"),
                      # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed, ci_reward="combined", ci_cost="combined"),
                      # ThompsonSampling(k=k, name="TS with costs", seed=seed),
                      # ThompsonSampling(k=k, name="TS without costs", seed=seed),
