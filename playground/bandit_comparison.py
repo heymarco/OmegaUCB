@@ -34,10 +34,9 @@ def sort_setting(mean_rewards, mean_costs):
 
 
 def create_bandits(k: int, seed: int):
-    return np.array([AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (+,+)", seed=seed, ci_reward="add", ci_cost="add"),
-                     AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (+,-)", seed=seed, ci_reward="add", ci_cost="subtract"),
-                     AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (-,-)", seed=seed, ci_reward="subtract", ci_cost="subtract"),
-                     AdaptiveBudgetedThompsonSampling(k=k, name="ABTS, (-,+)", seed=seed, ci_reward="subtract", ci_cost="add"),
+    return np.array([AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding)", seed=seed, ci_reward="hoeffding", ci_cost="hoeffding"),
+                     AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson)", seed=seed, ci_reward="wilson", ci_cost="wilson"),
+                     # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed, ci_reward="combined", ci_cost="combined"),
                      # ThompsonSampling(k=k, name="TS with costs", seed=seed),
                      # ThompsonSampling(k=k, name="TS without costs", seed=seed),
                      BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
@@ -81,7 +80,7 @@ def plot_regret(df: pd.DataFrame):
     df["total reward"] = np.nan
     df["oracle"] = np.nan
 
-    df["spent budget"] = (df["spent-budget"] / 5).round() * 5
+    df["spent budget"] = (df["spent-budget"] / 10).round() * 10
 
     for _, gdf in df.groupby(["rep", "approach", "k", "high-variance"]):
         gdf["round"] = np.arange(1, len(gdf) + 1)
@@ -108,16 +107,16 @@ def plot_regret(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    use_results = True
+    use_results = False
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
-    filepath = os.path.join(directory, "bandit_comparison.csv")
+    filepath = os.path.join(directory, "bandit_comparison_ci.csv")
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True, False]
-        ks = [4]
+        ks = [4, 10, 100]
         B = 1000
-        reps = 100
+        reps = 300
         for k in tqdm(ks, desc="k"):
             logger.track_k(k)
             for hv in tqdm(high_variance, leave=False, desc="variance"):

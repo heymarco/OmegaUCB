@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
+from scipy import stats
 
 
 class AbstractArm(ABC):
@@ -98,11 +99,32 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
     def hoeffding_ci(self, alpha=0.05):
         return np.sqrt(-1 / (2 * self.pulls) * np.log(alpha / 2))
 
+    def wilson_ci(self, alpha=0.05):
+        n = self.pulls
+        ns = self.this_avg * n
+        nf = n - ns
+        z = 1.96 if alpha == 0.05 else stats.norm.interval(1 - alpha)[1]
+        z2 = np.power(z, 2)
+        return 2 / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
+
+    def combined_ci(self, alpha=0.01):
+        return min(self.wilson_ci(alpha), self.hoeffding_ci(alpha))
+
+    def get_ci(self):
+        if self._ci == "hoeffding":
+            return self.hoeffding_ci()
+        elif self._ci == "wilson":
+            return self.wilson_ci()
+        elif self._ci == "combined":
+            return self.combined_ci()
+        elif self._ci is None:
+            return 0.0
+        else:
+            raise ValueError
+
     def _compute_sample_average_estimator(self):
-        add_ci = self._ci == "add"
-        subtract_ci = self._ci == "subtract"
-        ci = self.hoeffding_ci() if add_ci or subtract_ci else 0.0
-        avg = self.this_avg + ci if add_ci else self.this_avg - ci
+        ci = self.get_ci()
+        avg = self.this_avg + ci
         return min(1.0, max(0.0, avg))
 
     def _compute_doubly_estimator(self):
