@@ -92,9 +92,9 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             new_avg = (self.pulls * self.prev_avg + new_val) / (self.pulls + 1)
             self.this_avg = new_avg
             self.pulls += 1
-        # Update alpha and beta
-        alpha, beta = self._compute_alpha_beta_uncorrected()
-        self.set(alpha, beta)
+            # Update alpha and beta
+            alpha, beta = self._compute_alpha_beta_uncorrected()
+            self.set(alpha, beta)
 
     def hoeffding_ci(self, alpha=0.05):
         return np.sqrt(-1 / (2 * self.pulls) * np.log(alpha / 2))
@@ -281,19 +281,12 @@ class AdaptiveBudgetedThompsonSampling(AbstractBandit):
 
     def update(self, arm: int, reward: float, cost: float, estimate_props: bool = False):
         prop_scores = self.estimate_propensity_scores() if estimate_props else np.zeros(len(self.reward_arms), dtype=float)
-        for i in range(len(self.cost_arms)):
-            if reward == 1 or reward == 0:
-                # Bernoulli reward
-                self.reward_arms[i].update(reward, prop_scores[i], was_pulled=arm == i)
-            else:
-                bernoulli_reward = int(self.rng.uniform() < reward)
-                self.reward_arms[i].update(bernoulli_reward, prop_scores[i], was_pulled=arm == i)
-            if cost == 1 or cost == 0:
-                # Bernoulli cost
-                self.cost_arms[i].update(cost, prop_scores[i], was_pulled=arm == i)
-            else:
-                bernoulli_cost = int(self.rng.uniform() < cost)
-                self.cost_arms[i].update(bernoulli_cost, prop_scores[i], was_pulled=arm == i)
+        if not (reward == 1 or reward == 0):
+            reward = int(self.rng.uniform() < reward)
+        if cost == 1 or cost == 0:
+            cost = int(self.rng.uniform() < cost)
+        [self.reward_arms[i].update(reward, prop_scores[i], was_pulled=arm == i) for i in range(len(self.reward_arms))]
+        [self.cost_arms[i].update(cost, prop_scores[i], was_pulled=arm == i) for i in range(len(self.cost_arms))]
 
     def estimate_propensity_scores(self):
         selected_arms = np.argmax([
