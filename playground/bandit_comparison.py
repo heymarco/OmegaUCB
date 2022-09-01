@@ -45,34 +45,23 @@ def create_bandits(k: int, seed: int):
                      ])
 
 
-def run_bandit(bandit: AbstractBandit, mean_rewards, mean_costs):
+def run_bandit(bandit: AbstractBandit, mean_rewards, mean_costs, rng):
     arm = bandit.sample()
     logger.track_arm(arm)
     mean_reward = mean_rewards[arm]
     mean_cost = mean_costs[arm]
-    this_reward = int(np.random.uniform() < mean_reward)
-    this_cost = int(np.random.uniform() < mean_cost)
+    this_reward = int(rng.uniform() < mean_reward)
+    this_cost = int(rng.uniform() < mean_cost)
     if isinstance(bandit, ThompsonSampling):
         if bandit.name == "TS with costs":
             normalized_reward = (1 + this_reward - this_cost) / 2  # gives 0 if mean_reward is much smaller than mean cost and 1 if mean cost is much smaller than mean reward
-            this_normalized_reward = int(np.random.uniform() < normalized_reward)
+            this_normalized_reward = int(rng.uniform() < normalized_reward)
             bandit.update(arm, this_normalized_reward)
         else:
             bandit.update(arm, this_reward)
     if isinstance(bandit, BudgetedThompsonSampling) or isinstance(bandit, AdaptiveBudgetedThompsonSampling):
         bandit.update(arm, this_reward, this_cost)
     return this_reward, this_cost
-
-
-def iterate(bandits, mean_rewards, mean_costs):
-    logger.track_optimal_reward(mean_rewards[0])
-    logger.track_optimal_cost(mean_costs[0])
-    for bandit in bandits:
-        reward, cost = run_bandit(bandit, mean_rewards, mean_costs)
-        logger.track_reward(reward)
-        logger.track_cost(cost)
-        logger.track_approach(bandit.name)
-        logger.finalize_round()
 
 
 def plot_regret(df: pd.DataFrame):
@@ -116,9 +105,9 @@ if __name__ == '__main__':
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True, False]
-        ks = [10]
+        ks = [100, 10, 4]
         B = 3000
-        reps = 100
+        reps = 300
         for k in tqdm(ks, desc="k"):
             logger.track_k(k)
             for hv in tqdm(high_variance, leave=False, desc="variance"):
@@ -132,8 +121,9 @@ if __name__ == '__main__':
                     for bandit in tqdm(create_bandits(k, rep), leave=False, desc="Bandits"):
                         B_t = B
                         logger.track_approach(bandit.name)
+                        rng = np.random.default_rng(rep)
                         while B_t > 0:
-                            r, c = run_bandit(bandit, mean_rewards, mean_costs)
+                            r, c = run_bandit(bandit, mean_rewards, mean_costs, rng)
                             B_t -= c
                             logger.track_spent_budget(B - B_t)
                             logger.track_reward(r)
