@@ -9,12 +9,14 @@ import seaborn as sns
 import sys
 import os
 
+from util import run_async
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from components.bandit import ThompsonSampling, BudgetedThompsonSampling, AbstractBandit, AbstractArm, \
     AdaptiveBudgetedThompsonSampling
-from components.bandit_logging import logger
+from components.bandit_logging import BanditLogger
 
 
 def create_setting(k: int, high_variance: bool, seed: int):
@@ -47,7 +49,7 @@ def create_bandits(k: int, seed: int):
                      ])
 
 
-def run_bandit(bandit: AbstractBandit, mean_rewards, mean_costs, rng):
+def iterate(bandit: AbstractBandit, mean_rewards, mean_costs, rng, logger):
     arm = bandit.sample()
     logger.track_arm(arm)
     mean_reward = mean_rewards[arm]
@@ -96,6 +98,29 @@ def plot_regret(df: pd.DataFrame):
     plt.show()
 
 
+def run_bandit(bandit, B, mean_rewards, mean_costs, seed, hv):
+    B_t = B
+    logger = BanditLogger()
+    logger.track_approach(bandit.name)
+    logger.track_k(len(bandit))
+    logger.track_high_variance(hv)
+    logger.track_optimal_cost(mean_costs[0])
+    logger.track_optimal_reward(mean_rewards[0])
+    logger.track_rep(seed)
+    rng = np.random.default_rng(seed)
+    r_sum = 0
+    while B_t > 0:
+        r, c = iterate(bandit, mean_rewards, mean_costs, rng, logger)
+        B_t -= c
+        r_sum += r
+        if (B_t % 10) == 1:
+            logger.track_spent_budget(B - B_t)
+            logger.track_reward(r_sum)
+            logger.track_cost(c)
+            logger.finalize_round()
+    return logger.get_dataframe()
+
+
 if __name__ == '__main__':
     use_results = False
     plot_results = True
@@ -107,31 +132,16 @@ if __name__ == '__main__':
         ks = [100, 10]
         B = 10000
         reps = 300
+        dfs = []
         for k in tqdm(ks, desc="k"):
-            logger.track_k(k)
             for hv in tqdm(high_variance, leave=False, desc="variance"):
-                logger.track_high_variance(hv)
                 for rep in tqdm(range(reps), leave=False, desc="rep"):
                     mean_rewards, mean_costs = create_setting(k=k, high_variance=hv, seed=rep)
                     mean_rewards, mean_costs = sort_setting(mean_rewards, mean_costs)
-                    logger.track_optimal_cost(mean_costs[0])
-                    logger.track_optimal_reward(mean_rewards[0])
-                    logger.track_rep(rep)
-                    for bandit in tqdm(create_bandits(k, rep), leave=False, desc="Bandits"):
-                        B_t = B
-                        logger.track_approach(bandit.name)
-                        rng = np.random.default_rng(rep)
-                        r_sum = 0
-                        while B_t > 0:
-                            r, c = run_bandit(bandit, mean_rewards, mean_costs, rng)
-                            B_t -= c
-                            r_sum += r
-                            if (B_t % 10) == 1:
-                                logger.track_spent_budget(B - B_t)
-                                logger.track_reward(r_sum)
-                                logger.track_cost(c)
-                                logger.finalize_round()
-        df = logger.get_dataframe()
+                    args_list = [[b, B, mean_rewards, mean_costs, rep, hv] for b in create_bandits(k, rep)]
+                    results = run_async(run_bandit, args_list, njobs=len(args_list))
+                    dfs = dfs + results
+        df = pd.concat(dfs)
         df.to_csv(filepath, index=False)
     if plot_results:
         df = pd.read_csv(filepath)
