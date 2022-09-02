@@ -9,14 +9,13 @@ import seaborn as sns
 import sys
 import os
 
-from components.bandits.mrcb import MRCBBandit
-
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from components.bandit import AdaptiveBudgetedThompsonSampling
 from components.bandits.thompson import ThompsonSampling
-from components.bandits.abstract import AbstractArm, AbstractBandit
+from components.bandits.abstract import AbstractBandit
+from components.bandits.mrcb import MRCBBandit
 from components.bandits.bts import BudgetedThompsonSampling
 from components.bandit_logging import BanditLogger
 from util import run_async
