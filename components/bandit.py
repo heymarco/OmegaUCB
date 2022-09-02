@@ -1,42 +1,7 @@
-from abc import ABC, abstractmethod
-
 import numpy as np
 from scipy import stats
 
-
-class AbstractArm(ABC):
-    @abstractmethod
-    def sample(self):
-        raise NotImplementedError
-
-    @abstractmethod
-    def set(self, *args, **kwargs):
-        raise NotImplementedError
-
-    @abstractmethod
-    def update(self, *args, **kwargs):
-        raise NotImplementedError
-
-
-class ArmWithBetaPosterior(AbstractArm):
-    def __init__(self, seed: int):
-        self.alpha = 0.0
-        self.beta = 0.0
-        self.rng = np.random.default_rng(seed)
-
-    def sample(self):
-        return self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
-
-    def mean(self):
-        return (self.alpha + 1) / (self.alpha + self.beta + 2)
-
-    def set(self, alpha: float, beta: float):
-        self.alpha = alpha
-        self.beta = beta
-
-    def update(self, new_val: float):
-        self.alpha += new_val
-        self.beta += 1 - new_val
+from components.bandits.abstract import AbstractArm, AbstractBandit
 
 
 class ArmWithAdaptiveBetaPosterior(AbstractArm):
@@ -133,93 +98,6 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         alpha = avg * self.pulls
         beta = self.pulls * (1 - avg)
         return alpha, beta
-
-
-class AbstractBandit(ABC):
-    def __init__(self, k: int, name: str, seed: int):
-        self.name = name
-        self.k = k
-        self.rng = np.random.default_rng(seed)
-
-    @abstractmethod
-    def sample(self):
-        raise NotImplementedError
-
-    @abstractmethod
-    def update(self, *args, **kwargs):
-        raise NotImplementedError
-
-    @abstractmethod
-    def set(self, *args, **kwargs):
-        raise NotImplementedError
-
-    @abstractmethod
-    def __len__(self):
-        raise NotImplementedError
-
-
-class ThompsonSampling(AbstractBandit):
-    def __init__(self, k: int, name: str, seed: int):
-        self.arms = [ArmWithBetaPosterior(seed + arm_index) for arm_index in range(k)]
-        super(ThompsonSampling, self).__init__(k, name, seed)
-
-    def sample(self) -> int:
-        samples = [a.sample() for a in self.arms]
-        return int(np.argmax(samples))
-
-    def set(self, arm: int, alpha: float, beta: float):
-        self.arms[arm].set(alpha, beta)
-
-    def update(self, arm: int, reward: float):
-        if reward == 1 or reward == 0:
-            # Bernoulli reward
-            self.arms[arm].update(reward)
-        else:
-            bernoulli_reward = int(self.rng.uniform() < reward)
-            self.arms[arm].update(bernoulli_reward)
-
-    def alphas(self):
-        return np.array([a.alpha for a in self.arms])
-
-    def betas(self):
-        return np.array([a.beta for a in self.arms])
-
-    def __len__(self):
-        return len(self.arms)
-
-
-class BudgetedThompsonSampling(AbstractBandit):
-    def __init__(self, k: int, name: str, seed: int):
-        self.reward_arms = [ArmWithBetaPosterior(seed + arm_index) for arm_index in range(k)]
-        self.cost_arms = [ArmWithBetaPosterior(seed + k + arm_index) for arm_index in range(k)]
-        super(BudgetedThompsonSampling, self).__init__(k, name, seed)
-
-    def sample(self) -> int:
-        reward_samples = [a.sample() for a in self.reward_arms]
-        cost_samples = [a.sample() for a in self.cost_arms]
-        reward_cost_ratio = np.array(reward_samples) / np.array(cost_samples)
-        return int(np.argmax(reward_cost_ratio))
-
-    def set(self, arm: int, alpha_r: float, beta_r: float, alpha_c: float, beta_c: float):
-        self.reward_arms[arm].set(alpha_r, beta_r)
-        self.cost_arms[arm].set(alpha_c, beta_c)
-
-    def update(self, arm: int, reward: float, cost: float):
-        if reward == 1 or reward == 0:
-            # Bernoulli reward
-            self.reward_arms[arm].update(reward)
-        else:
-            bernoulli_reward = int(self.rng.uniform() < reward)
-            self.reward_arms[arm].update(bernoulli_reward)
-        if cost == 1 or cost == 0:
-            # Bernoulli cost
-            self.cost_arms[arm].update(cost)
-        else:
-            bernoulli_cost = int(self.rng.uniform() < cost)
-            self.cost_arms[arm].update(bernoulli_cost)
-
-    def __len__(self):
-        return len(self.cost_arms)
 
 
 class AdaptiveBudgetedThompsonSampling(AbstractBandit):

@@ -1,6 +1,6 @@
 import numpy as np
 
-from components.bandit import ThompsonSampling
+from components.bandits.thompson import ThompsonSampling
 from components.data import Oracle
 from components.exp_logging import ExperimentLogger
 from components.path import Path, PathElement

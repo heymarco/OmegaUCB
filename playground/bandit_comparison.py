@@ -9,11 +9,15 @@ import seaborn as sns
 import sys
 import os
 
+from components.bandits.mrcb import MRCBBandit
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from components.bandit import ThompsonSampling, BudgetedThompsonSampling, AbstractBandit, AbstractArm, \
-    AdaptiveBudgetedThompsonSampling
+from components.bandit import AdaptiveBudgetedThompsonSampling
+from components.bandits.thompson import ThompsonSampling
+from components.bandits.abstract import AbstractArm, AbstractBandit
+from components.bandits.bts import BudgetedThompsonSampling
 from components.bandit_logging import BanditLogger
 from util import run_async
 
@@ -34,10 +38,11 @@ def sort_setting(mean_rewards, mean_costs):
 
 
 def create_bandits(k: int, seed: int):
-    return np.array([AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding)", seed=seed,
+    return np.array([MRCBBandit(k=k, name="MRCB", seed=seed),
+                     AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding)", seed=seed,
                                                       ci_reward="hoeffding", ci_cost="hoeffding"),
-                     AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed,
-                                                      ci_reward="combined", ci_cost="combined"),
+                     # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed,
+                     #                                  ci_reward="combined", ci_cost="combined"),
                      AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson full)", seed=seed,
                                                       ci_reward="wilson (full)", ci_cost="wilson (full)"),
                      # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed, ci_reward="combined", ci_cost="combined"),
@@ -54,6 +59,7 @@ def iterate(bandit: AbstractBandit, mean_rewards, mean_costs, rng, logger):
     mean_cost = mean_costs[arm]
     this_reward = int(rng.uniform() < mean_reward)
     this_cost = int(rng.uniform() < mean_cost)
+    rng.multinomial()
     if isinstance(bandit, ThompsonSampling):
         if bandit.name == "TS with costs":
             normalized_reward = (1 + this_reward - this_cost) / 2  # gives 0 if mean_reward is much smaller than mean cost and 1 if mean cost is much smaller than mean reward
@@ -61,7 +67,7 @@ def iterate(bandit: AbstractBandit, mean_rewards, mean_costs, rng, logger):
             bandit.update(arm, this_normalized_reward)
         else:
             bandit.update(arm, this_reward)
-    if isinstance(bandit, BudgetedThompsonSampling) or isinstance(bandit, AdaptiveBudgetedThompsonSampling):
+    else:
         bandit.update(arm, this_reward, this_cost)
     return this_reward, this_cost
 
@@ -69,7 +75,7 @@ def iterate(bandit: AbstractBandit, mean_rewards, mean_costs, rng, logger):
 def prepare_df(df: pd.DataFrame):
     df.ffill(inplace=True)
     df["total reward"] = df["reward"]
-    df["spent budget"] = (df["spent-budget"] / 100).round() * 100
+    df["spent budget"] = (df["spent-budget"] / 10).round() * 10
     df["regret"] = np.nan
     df["oracle"] = np.nan
     for _, gdf in df.groupby(["rep", "approach", "k", "high-variance"]):
@@ -120,16 +126,16 @@ def run_bandit(bandit, B, mean_rewards, mean_costs, seed, hv):
 
 
 if __name__ == '__main__':
-    use_results = False
+    use_results = True
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filepath = os.path.join(directory, "bandit_comparison_ci.csv")
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True, False]
-        ks = [100, 10]
+        ks = [10]
         B = 10000
-        reps = 300
+        reps = 100
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
