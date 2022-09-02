@@ -45,20 +45,14 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         self.alpha = 0.0
         self.beta = 0.0
         self.startup_complete = False
-        self.doubly_summed = []
-        self.was_pulled = False
         self.this_reward = np.nan
-        self.this_propensity = np.nan
         self.prev_avg = np.nan
         self.this_avg = np.nan
-        self.prev_doubly_total = 0
-        self.prop_scores_sqrt_total = 0
         self.pulls = 0
-        self.t = 0
         self._ci = ci
 
     def __len__(self):
-        return self.t
+        return self.pulls
 
     def sample(self):
         return self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
@@ -70,29 +64,18 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         self.alpha = alpha
         self.beta = beta
 
-    def update(self, new_val: float, propensity_score: float, was_pulled: bool):
-        # Set values that must be updated continuously
-        self.this_propensity = propensity_score
+    def update(self, new_val: float, was_pulled: bool):
         self.this_reward = new_val
-        self.t += 1
-        self.was_pulled = was_pulled
-        # Handle startup
         if not self.startup_complete:
             self.prev_avg = new_val
             self.this_avg = new_val
             self.pulls += 1
             self.startup_complete = True
-            return
-        # Adjust values after the arm was pulled
-        # 1. update previous average
-        # 2. update current_average
-        # 3. increment number of pulls
-        if was_pulled:
+        else:
             self.prev_avg = self.this_avg
             new_avg = (self.pulls * self.prev_avg + new_val) / (self.pulls + 1)
             self.this_avg = new_avg
             self.pulls += 1
-            # Update alpha and beta
             alpha, beta = self._compute_alpha_beta()
             self.set(alpha, beta)
 
@@ -140,12 +123,17 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             avg = self._compute_wilson_estimator() + self.wilson_ci()
         elif self._ci == "wilson":
             avg = self._compute_wilson_estimator()
+        elif self._ci == "combined":
+            we = self._compute_wilson_estimator() + self.wilson_ci()
+            he = self.this_avg + self.hoeffding_ci()
+            avg = min(we, he)
         else:
             avg = self.this_avg + self.get_ci()
         avg = min(1.0, max(0.0, avg))
         alpha = avg * self.pulls
         beta = self.pulls * (1 - avg)
         return alpha, beta
+
 
 class AbstractBandit(ABC):
     def __init__(self, k: int, name: str, seed: int):
@@ -255,25 +243,13 @@ class AdaptiveBudgetedThompsonSampling(AbstractBandit):
         self.reward_arms[arm].set(alpha_r, beta_r)
         self.cost_arms[arm].set(alpha_c, beta_c)
 
-    def update(self, arm: int, reward: float, cost: float, estimate_props: bool = False):
-        prop_scores = self.estimate_propensity_scores() if estimate_props else np.zeros(len(self.reward_arms), dtype=float)
+    def update(self, arm: int, reward: float, cost: float):
         if not (reward == 1 or reward == 0):
             reward = int(self.rng.uniform() < reward)
         if cost == 1 or cost == 0:
             cost = int(self.rng.uniform() < cost)
-        [self.reward_arms[i].update(reward, prop_scores[i], was_pulled=arm == i) for i in range(len(self.reward_arms))]
-        [self.cost_arms[i].update(cost, prop_scores[i], was_pulled=arm == i) for i in range(len(self.cost_arms))]
-
-    def estimate_propensity_scores(self):
-        selected_arms = np.argmax([
-            self.rng.beta(ra.alpha + 1, ra.beta + 1, size=1000) / self.rng.beta(ca.alpha + 1, ca.beta + 1, size=1000)
-            for ra, ca in zip(self.reward_arms, self.cost_arms)
-        ], axis=0)
-        arms, counts = np.unique(selected_arms, return_counts=True)
-        result = np.zeros(len(self.reward_arms))
-        result[arms] = counts
-        result = result / np.sum(result)
-        return result
+        self.reward_arms[arm].update(reward, was_pulled=True)
+        self.cost_arms[arm].update(cost, was_pulled=True)
 
     def __len__(self):
         return len(self.cost_arms)

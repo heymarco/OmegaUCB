@@ -113,6 +113,7 @@ if __name__ == '__main__':
 
     df = pd.DataFrame(result, columns=["n", "average cost", "value", "type", "method"])
     df = df[df["type"] != "mean + bias"]
+    df = df[df["method"] != "original"]
     df = df.groupby(["n", "average cost", "type", "method"]).mean()
 
     sns.relplot(data=df, x="average cost", y="value",

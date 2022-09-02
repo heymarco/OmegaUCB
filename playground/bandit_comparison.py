@@ -36,8 +36,8 @@ def sort_setting(mean_rewards, mean_costs):
 def create_bandits(k: int, seed: int):
     return np.array([AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding)", seed=seed,
                                                       ci_reward="hoeffding", ci_cost="hoeffding"),
-                     AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson)", seed=seed,
-                                                      ci_reward="wilson", ci_cost="wilson"),
+                     AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed,
+                                                      ci_reward="combined", ci_cost="combined"),
                      AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson full)", seed=seed,
                                                       ci_reward="wilson (full)", ci_cost="wilson (full)"),
                      # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed, ci_reward="combined", ci_cost="combined"),
@@ -66,25 +66,22 @@ def run_bandit(bandit: AbstractBandit, mean_rewards, mean_costs, rng):
     return this_reward, this_cost
 
 
-def plot_regret(df: pd.DataFrame):
+def prepare_df(df: pd.DataFrame):
     df.ffill(inplace=True)
-    df["round"] = np.nan
+    df["total reward"] = df["reward"]
+    df["spent budget"] = (df["spent-budget"] / 100).round() * 100
     df["regret"] = np.nan
-    df["total reward"] = np.nan
     df["oracle"] = np.nan
-
-    df["spent budget"] = (df["spent-budget"] / 10).round() * 10
-
     for _, gdf in df.groupby(["rep", "approach", "k", "high-variance"]):
-        gdf["round"] = np.arange(1, len(gdf) + 1)
-        df["round"][gdf.index] = gdf["round"]
         gdf["oracle"] = gdf["optimal-reward"] / gdf["optimal-cost"] * gdf["spent budget"]
         df["oracle"][gdf.index] = gdf["oracle"]
-        gdf["total reward"] = gdf["reward"].cumsum()
-        df["total reward"][gdf.index] = gdf["total reward"]
         df["regret"][gdf.index] = gdf["oracle"] - gdf["total reward"]
-
     df["k"] = df["k"].astype(int)
+    return df
+
+
+def plot_regret(df: pd.DataFrame):
+
     facet_kws = {'sharey': False, 'sharex': True}
     g = sns.relplot(data=df, kind="line",
                 x="spent budget", y="regret",
@@ -107,8 +104,8 @@ if __name__ == '__main__':
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True, False]
-        ks = [100, 10, 4]
-        B = 3000
+        ks = [100, 10]
+        B = 10000
         reps = 300
         for k in tqdm(ks, desc="k"):
             logger.track_k(k)
@@ -124,15 +121,19 @@ if __name__ == '__main__':
                         B_t = B
                         logger.track_approach(bandit.name)
                         rng = np.random.default_rng(rep)
+                        r_sum = 0
                         while B_t > 0:
                             r, c = run_bandit(bandit, mean_rewards, mean_costs, rng)
                             B_t -= c
-                            logger.track_spent_budget(B - B_t)
-                            logger.track_reward(r)
-                            logger.track_cost(c)
-                            logger.finalize_round()
+                            r_sum += r
+                            if (B_t % 10) == 1:
+                                logger.track_spent_budget(B - B_t)
+                                logger.track_reward(r_sum)
+                                logger.track_cost(c)
+                                logger.finalize_round()
         df = logger.get_dataframe()
         df.to_csv(filepath, index=False)
-    df = pd.read_csv(filepath)
     if plot_results:
+        df = pd.read_csv(filepath)
+        df = prepare_df(df)
         plot_regret(df)
