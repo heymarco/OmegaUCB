@@ -58,7 +58,6 @@ def iterate(bandit: AbstractBandit, mean_rewards, mean_costs, rng, logger):
     mean_cost = mean_costs[arm]
     this_reward = int(rng.uniform() < mean_reward)
     this_cost = int(rng.uniform() < mean_cost)
-    rng.multinomial()
     if isinstance(bandit, ThompsonSampling):
         if bandit.name == "TS with costs":
             normalized_reward = (1 + this_reward - this_cost) / 2  # gives 0 if mean_reward is much smaller than mean cost and 1 if mean cost is much smaller than mean reward
