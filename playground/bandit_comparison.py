@@ -9,15 +9,13 @@ import seaborn as sns
 import sys
 import os
 
-from util import run_async
-
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from components.bandit import ThompsonSampling, BudgetedThompsonSampling, AbstractBandit, AbstractArm, \
     AdaptiveBudgetedThompsonSampling
 from components.bandit_logging import BanditLogger
-
+from util import run_async
 
 def create_setting(k: int, high_variance: bool, seed: int):
     rng = np.random.default_rng(seed)
