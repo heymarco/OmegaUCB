@@ -49,12 +49,12 @@ def create_bandits(k: int, seed: int):
                                          ci_reward="hoeffding", ci_cost="hoeffding"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed,
         #                                  ci_reward="combined", ci_cost="combined"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson full)", seed=seed,
-        #                                  ci_reward="wilson (full)", ci_cost="wilson (full)"),
+        AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson full)", seed=seed,
+                                         ci_reward="wilson (full)", ci_cost="wilson (full)"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed, ci_reward="combined", ci_cost="combined"),
         # ThompsonSampling(k=k, name="TS with costs", seed=seed),
         # ThompsonSampling(k=k, name="TS without costs", seed=seed),
-        # BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
+        BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
     ])
 
 
@@ -144,8 +144,8 @@ def get_best_arm_stats(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    use_results = False
-    plot_results = False
+    use_results = True
+    plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filepath = os.path.join(directory, "bandit_comparison_ci.csv")
     assert os.path.exists(directory)
@@ -153,7 +153,7 @@ if __name__ == '__main__':
         high_variance = [True, False]
         ks = [10]
         B = 3000
-        reps = 100
+        reps = 300
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
@@ -168,5 +168,5 @@ if __name__ == '__main__':
     if plot_results:
         df = pd.read_csv(filepath)
         df = prepare_df(df)
-        get_best_arm_stats(df)
-        # plot_regret(df)
+        # get_best_arm_stats(df)
+        plot_regret(df)
