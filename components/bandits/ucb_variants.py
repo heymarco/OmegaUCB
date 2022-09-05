@@ -14,7 +14,7 @@ class UCBArm(AbstractArm):
         self._cmin = 1e-5
 
     def _epsilon(self):
-        return self.alpha * np.log(self.t - 1) / self.pulls
+        return self.alpha * np.sqrt(np.log(self.t - 1) / self.pulls)
 
     def sample(self):
         cost = max(self._cmin, self._avg_cost)
