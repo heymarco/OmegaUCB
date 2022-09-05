@@ -44,6 +44,7 @@ def create_bandits(k: int, seed: int):
         UCB(k=k, name="i-UCB", type="i", seed=seed),
         UCB(k=k, name="c-UCB", type="c", seed=seed),
         UCB(k=k, name="m-UCB", type="m", seed=seed),
+        UCB(k=k, name="w-UCB", type="w", seed=seed),
         # UCBMBBandit(k=k, name="UCB-MB", seed=seed),
         AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding)", seed=seed,
                                          ci_reward="hoeffding", ci_cost="hoeffding"),
@@ -144,7 +145,7 @@ def get_best_arm_stats(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    use_results = True
+    use_results = False
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filepath = os.path.join(directory, "bandit_comparison_ci.csv")
