@@ -146,7 +146,7 @@ def get_best_arm_stats(df: pd.DataFrame):
 
 if __name__ == '__main__':
     use_results = False
-    plot_results = True
+    plot_results = False
     directory = os.path.join(os.getcwd(), "..", "results")
     filepath = os.path.join(directory, "bandit_comparison_ci.csv")
     assert os.path.exists(directory)
