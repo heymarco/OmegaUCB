@@ -32,9 +32,14 @@ class UCBArm(AbstractArm):
 
     def update(self, new_cost, new_reward, was_pulled):
         self.t += 1
+        if self.pulls == 0 and not was_pulled:
+            return
         self.pulls += 1 if was_pulled else self.pulls
         self._avg_cost = ((self.pulls - 1) * self._avg_cost + new_cost) / self.pulls
         self._avg_reward = ((self.pulls - 1) * self._avg_reward + new_cost) / self.pulls
+
+    def startup_complete(self):
+        return self.pulls > 0
 
 
 class UCB(AbstractBandit):
@@ -44,6 +49,8 @@ class UCB(AbstractBandit):
         self.arms = [UCBArm(type) for _ in range(k)]
 
     def sample(self):
+        if not self.startup_complete():
+            return [i for i, a in enumerate(self.arms) if not a.startup_complete()][0]
         samples = [a.sample() for a in self.arms]
         return np.argmax(samples)
 
@@ -56,3 +63,6 @@ class UCB(AbstractBandit):
 
     def __len__(self):
         return len(self.arms)
+
+    def startup_complete(self):
+        return np.alltrue([a.startup_complete() for a in self.arms])
