@@ -62,7 +62,7 @@ class UCBArm(AbstractArm):
             ci_rew = self._wilson_reward_ci()
             ci_cost = self._wilson_cost_ci()
             top = min(self._wilson_reward_estimate() + ci_rew, 1)
-            bottom = max(self._wilson_cost_estimate() + ci_cost, 1e-10)
+            bottom = max(self._wilson_cost_estimate() - ci_cost, 1e-10)
             return top / bottom
         else:
             raise ValueError
