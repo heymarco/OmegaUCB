@@ -17,8 +17,11 @@ from components.bandits.thompson import ThompsonSampling
 from components.bandits.abstract import AbstractBandit
 from components.bandits.mrcb import MRCBBandit
 from components.bandits.bts import BudgetedThompsonSampling
+from components.bandits.ucbmb import UCBMBBandit
+from components.bandits.ucb_variants import UCB
 from components.bandit_logging import BanditLogger
 from util import run_async
+
 
 def create_setting(k: int, high_variance: bool, seed: int):
     rng = np.random.default_rng(seed)
@@ -37,18 +40,22 @@ def sort_setting(mean_rewards, mean_costs):
 
 
 def create_bandits(k: int, seed: int):
-    return np.array([MRCBBandit(k=k, name="MRCB", seed=seed),
-                     AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding)", seed=seed,
-                                                      ci_reward="hoeffding", ci_cost="hoeffding"),
-                     # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed,
-                     #                                  ci_reward="combined", ci_cost="combined"),
-                     AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson full)", seed=seed,
-                                                      ci_reward="wilson (full)", ci_cost="wilson (full)"),
-                     # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed, ci_reward="combined", ci_cost="combined"),
-                     # ThompsonSampling(k=k, name="TS with costs", seed=seed),
-                     # ThompsonSampling(k=k, name="TS without costs", seed=seed),
-                     BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
-                     ])
+    return np.array([
+        UCB(k=k, name="i-UCB", type="i", seed=seed),
+        UCB(k=k, name="c-UCB", type="c", seed=seed),
+        UCB(k=k, name="m-UCB", type="m", seed=seed),
+        # UCBMBBandit(k=k, name="UCB-MB", seed=seed),
+        AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding)", seed=seed,
+                                         ci_reward="hoeffding", ci_cost="hoeffding"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed,
+        #                                  ci_reward="combined", ci_cost="combined"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson full)", seed=seed,
+        #                                  ci_reward="wilson (full)", ci_cost="wilson (full)"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed, ci_reward="combined", ci_cost="combined"),
+        # ThompsonSampling(k=k, name="TS with costs", seed=seed),
+        # ThompsonSampling(k=k, name="TS without costs", seed=seed),
+        # BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
+    ])
 
 
 def iterate(bandit: AbstractBandit, mean_rewards, mean_costs, rng, logger):
@@ -60,7 +67,8 @@ def iterate(bandit: AbstractBandit, mean_rewards, mean_costs, rng, logger):
     this_cost = int(rng.uniform() < mean_cost)
     if isinstance(bandit, ThompsonSampling):
         if bandit.name == "TS with costs":
-            normalized_reward = (1 + this_reward - this_cost) / 2  # gives 0 if mean_reward is much smaller than mean cost and 1 if mean cost is much smaller than mean reward
+            normalized_reward = (
+                                            1 + this_reward - this_cost) / 2  # gives 0 if mean_reward is much smaller than mean cost and 1 if mean cost is much smaller than mean reward
             this_normalized_reward = int(rng.uniform() < normalized_reward)
             bandit.update(arm, this_normalized_reward)
         else:
@@ -73,7 +81,7 @@ def iterate(bandit: AbstractBandit, mean_rewards, mean_costs, rng, logger):
 def prepare_df(df: pd.DataFrame):
     df.ffill(inplace=True)
     df["total reward"] = df["reward"]
-    df["spent budget"] = (df["spent-budget"] / 10).round() * 10
+    df["spent budget"] = (df["spent-budget"] / 100).round() * 100
     df["regret"] = np.nan
     df["oracle"] = np.nan
     for _, gdf in df.groupby(["rep", "approach", "k", "high-variance"]):
@@ -85,13 +93,12 @@ def prepare_df(df: pd.DataFrame):
 
 
 def plot_regret(df: pd.DataFrame):
-
     facet_kws = {'sharey': False, 'sharex': True}
     g = sns.relplot(data=df, kind="line",
-                x="spent budget", y="regret",
-                hue="approach", row="k", col="high-variance",
-                height=3, aspect=1, facet_kws=facet_kws,
-                ci=None)
+                    x="spent budget", y="regret",
+                    hue="approach", row="k", col="high-variance",
+                    height=3, aspect=1, facet_kws=facet_kws,
+                    ci=None)
     axes = g.axes.flatten()
     for ax in axes:
         ax.axhline(0, color="black", lw=.5)
@@ -123,6 +130,19 @@ def run_bandit(bandit, B, mean_rewards, mean_costs, seed, hv):
     return logger.get_dataframe()
 
 
+def get_best_arm_stats(df: pd.DataFrame):
+    df["best arm identified"] = None
+    for _, gdf in df.groupby(["approach", "rep", "k", "high-variance"]):
+        best_arm = int(gdf["arm"].mode())
+        gdf["best arm identified"] = best_arm
+        df["best arm identified"][gdf.index] = best_arm == 0
+    print(df["best arm identified"])
+    sns.catplot(data=df, x="approach", y="best arm identified",
+                col="high-variance", row="k",
+                kind="count", ci=None)
+    plt.show()
+
+
 if __name__ == '__main__':
     use_results = True
     plot_results = True
@@ -132,7 +152,7 @@ if __name__ == '__main__':
     if not use_results:
         high_variance = [True, False]
         ks = [10]
-        B = 10000
+        B = 3000
         reps = 100
         dfs = []
         for k in tqdm(ks, desc="k"):
@@ -148,4 +168,5 @@ if __name__ == '__main__':
     if plot_results:
         df = pd.read_csv(filepath)
         df = prepare_df(df)
-        plot_regret(df)
+        get_best_arm_stats(df)
+        # plot_regret(df)
