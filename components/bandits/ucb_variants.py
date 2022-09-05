@@ -8,21 +8,23 @@ class UCBArm(AbstractArm):
         self.alpha = alpha
         self.pulls = 0
         self.t = 0
-        self._avg_cost = np.nan
-        self._avg_reward = np.nan
+        self._avg_cost = 0
+        self._avg_reward = 0
         self._type = type
+        self._cmin = 1e-5
 
     def _epsilon(self):
         return self.alpha * np.log(self.t - 1) / self.pulls
 
     def sample(self):
+        cost = max(self._cmin, self._avg_cost)
         if self._type == "i":
-            return self._avg_reward / self._avg_cost + self._epsilon()
+            return self._avg_reward / cost + self._epsilon()
         elif self._type == "c":
-            return (self._avg_reward + self._epsilon()) / self._avg_cost
+            return (self._avg_reward + self._epsilon()) / cost
         elif self._type == "m":
             top = min(self._avg_reward + self._epsilon(), 1)
-            bottom = max(self._avg_cost - self._epsilon(), 1e-10)
+            bottom = max(cost - self._epsilon(), 1e-10)
             return top / bottom
         else:
             raise ValueError
@@ -34,9 +36,10 @@ class UCBArm(AbstractArm):
         self.t += 1
         if self.pulls == 0 and not was_pulled:
             return
-        self.pulls += 1 if was_pulled else self.pulls
-        self._avg_cost = ((self.pulls - 1) * self._avg_cost + new_cost) / self.pulls
-        self._avg_reward = ((self.pulls - 1) * self._avg_reward + new_cost) / self.pulls
+        if was_pulled:
+            self.pulls += 1
+            self._avg_cost = ((self.pulls - 1) * self._avg_cost + new_cost) / self.pulls
+            self._avg_reward = ((self.pulls - 1) * self._avg_reward + new_reward) / self.pulls
 
     def startup_complete(self):
         return self.pulls > 0
