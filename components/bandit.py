@@ -58,8 +58,11 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         z2 = np.power(z, 2)
         return 2 / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
 
-    def combined_ci(self, alpha=0.01):
-        return min(self.wilson_ci(alpha), self.hoeffding_ci(alpha))
+    def jeffrey_ci(self, alpha=0.05):
+        n = self.pulls
+        x = self.this_avg * n
+        low, high = stats.beta.interval(alpha=alpha, a=0.5 + x, b=0.5 + n - x)
+        return high
 
     def get_ci(self):
         if self._ci == "hoeffding":
@@ -88,6 +91,8 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             avg = self._compute_wilson_estimator() + self.wilson_ci()
         elif self._ci == "wilson":
             avg = self._compute_wilson_estimator()
+        elif self._ci == "jeffrey":
+            avg = self.jeffrey_ci()
         elif self._ci == "combined":
             we = self._compute_wilson_estimator() + self.wilson_ci()
             he = self.this_avg + self.hoeffding_ci()
