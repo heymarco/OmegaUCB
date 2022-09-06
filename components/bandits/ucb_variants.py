@@ -10,10 +10,13 @@ class UCBArm(AbstractArm):
         self.wilson_alpha = alpha_wilson
         self.pulls = 0
         self.t = 0
+        self._prev_pulls = 0
         self._avg_cost = 0
         self._avg_reward = 0
         self._type = type
         self._cmin = 1e-5
+        self._rew = 0
+        self._cost = 0
 
     def _epsilon(self):
         return self.alpha * np.sqrt(np.log(self.t - 1) / self.pulls)
@@ -48,6 +51,24 @@ class UCBArm(AbstractArm):
         z2 = np.power(z, 2)
         return 2 / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
 
+    def _jeffrey_estimate_cost(self):
+        if self.pulls == self._prev_pulls and self.pulls > 1:
+            return self._cost
+        n = self.pulls
+        x = self._avg_cost * n
+        low, high = stats.beta.interval(alpha=0.05, a=0.5 + x, b=0.5 + n - x)
+        self._cost = low
+        return low
+
+    def _jeffrey_estimate_reward(self):
+        if self.pulls == self._prev_pulls and self.pulls > 1:
+            return self._rew
+        n = self.pulls
+        x = self._avg_reward * n
+        low, high = stats.beta.interval(alpha=0.05, a=0.5 + x, b=0.5 + n - x)
+        self._rew = high
+        return high
+
     def sample(self):
         cost = max(self._cmin, self._avg_cost)
         if self._type == "i":
@@ -64,6 +85,10 @@ class UCBArm(AbstractArm):
             top = min(self._wilson_reward_estimate() + ci_rew, 1)
             bottom = max(self._wilson_cost_estimate() - ci_cost, 1e-10)
             return top / bottom
+        elif self._type == "j":
+            rew = self._jeffrey_estimate_reward()
+            cost = self._jeffrey_estimate_cost()
+            return rew / cost
         else:
             raise ValueError
 
@@ -72,6 +97,7 @@ class UCBArm(AbstractArm):
 
     def update(self, new_cost, new_reward, was_pulled):
         self.t += 1
+        self._prev_pulls = self.pulls
         if self.pulls == 0 and not was_pulled:
             return
         if was_pulled:

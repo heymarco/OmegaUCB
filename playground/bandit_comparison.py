@@ -33,6 +33,13 @@ def create_setting(k: int, high_variance: bool, seed: int):
     return mean_rewards, mean_costs
 
 
+def create_max_variance_setting(k: int, seed: int):
+    rng = np.random.default_rng(seed)
+    mean_rewards = rng.uniform(size=k)
+    mean_costs = rng.uniform(size=k)
+    return mean_rewards, mean_costs
+
+
 def sort_setting(mean_rewards, mean_costs):
     ratio = mean_rewards / mean_costs
     sorted_indices = np.argsort(ratio)[::-1]
@@ -41,6 +48,7 @@ def sort_setting(mean_rewards, mean_costs):
 
 def create_bandits(k: int, seed: int):
     return np.array([
+        UCB(k=k, name="j-UCB", type="j", seed=seed),
         UCB(k=k, name="i-UCB", type="i", seed=seed),
         UCB(k=k, name="c-UCB", type="c", seed=seed),
         UCB(k=k, name="m-UCB", type="m", seed=seed),
@@ -55,7 +63,7 @@ def create_bandits(k: int, seed: int):
         # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed, ci_reward="combined", ci_cost="combined"),
         # ThompsonSampling(k=k, name="TS with costs", seed=seed),
         # ThompsonSampling(k=k, name="TS without costs", seed=seed),
-        BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
+        # BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
     ])
 
 
@@ -94,6 +102,8 @@ def prepare_df(df: pd.DataFrame):
 
 
 def plot_regret(df: pd.DataFrame):
+    # df = df[df["approach"] != "i-UCB"]
+    # df = df[df["approach"] != "c-UCB"]
     facet_kws = {'sharey': False, 'sharex': True}
     g = sns.relplot(data=df, kind="line",
                     x="spent budget", y="regret",
@@ -146,20 +156,20 @@ def get_best_arm_stats(df: pd.DataFrame):
 
 if __name__ == '__main__':
     use_results = False
-    plot_results = False
+    plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filepath = os.path.join(directory, "bandit_comparison_ci.csv")
     assert os.path.exists(directory)
     if not use_results:
-        high_variance = [True, False]
+        high_variance = [True]
         ks = [10]
         B = 3000
-        reps = 300
+        reps = 30
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
                 for rep in tqdm(range(reps), leave=False, desc="rep"):
-                    mean_rewards, mean_costs = create_setting(k=k, high_variance=hv, seed=rep)
+                    mean_rewards, mean_costs = create_max_variance_setting(k, seed=rep)
                     mean_rewards, mean_costs = sort_setting(mean_rewards, mean_costs)
                     args_list = [[b, B, mean_rewards, mean_costs, rep, hv] for b in create_bandits(k, rep)]
                     results = run_async(run_bandit, args_list, njobs=len(args_list))
