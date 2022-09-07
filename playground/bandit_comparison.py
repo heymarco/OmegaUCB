@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 
 import numpy as np
@@ -172,12 +173,24 @@ if __name__ == '__main__':
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
-                for rep in tqdm(range(reps), leave=False, desc="rep"):
+                all_args = []
+                for rep in range(reps):
                     mean_rewards, mean_costs = create_max_variance_setting(k, seed=rep)
                     mean_rewards, mean_costs = sort_setting(mean_rewards, mean_costs)
                     args_list = [[b, B, mean_rewards, mean_costs, rep, hv] for b in create_bandits(k, rep)]
-                    results = run_async(run_bandit, args_list, njobs=len(args_list))
+                    all_args.append(args_list)
+                num_bandits = len(create_bandits(k, 0))
+                for b_index in tqdm(range(num_bandits), leave=False, desc="Bandit"):
+                    args_for_bandit = [a[b_index] for a in all_args]
+                    results = run_async(run_bandit, args_for_bandit, njobs=multiprocessing.cpu_count() - 1)
                     dfs = dfs + results
+
+                # for rep in tqdm(range(reps), leave=False, desc="rep"):
+                #     mean_rewards, mean_costs = create_max_variance_setting(k, seed=rep)
+                #     mean_rewards, mean_costs = sort_setting(mean_rewards, mean_costs)
+                #     args_list = [[b, B, mean_rewards, mean_costs, rep, hv] for b in create_bandits(k, rep)]
+                #     results = run_async(run_bandit, args_list, njobs=len(args_list))
+                #     dfs = dfs + results
         df = pd.concat(dfs)
         df.to_csv(filepath, index=False)
     if plot_results:
