@@ -68,7 +68,7 @@ def create_bandits(k: int, seed: int):
         # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed, ci_reward="combined", ci_cost="combined"),
         # ThompsonSampling(k=k, name="TS with costs", seed=seed),
         # ThompsonSampling(k=k, name="TS without costs", seed=seed),
-        # BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
+        BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
     ])
 
 
@@ -167,9 +167,9 @@ if __name__ == '__main__':
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True]
-        ks = [10]
-        B = 1000
-        reps = 30
+        ks = [100, 10]
+        B = 10000
+        reps = 100
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
