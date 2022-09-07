@@ -167,7 +167,7 @@ if __name__ == '__main__':
     if not use_results:
         high_variance = [True]
         ks = [10]
-        B = 10000
+        B = 1000
         reps = 30
         dfs = []
         for k in tqdm(ks, desc="k"):
