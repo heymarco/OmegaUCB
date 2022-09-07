@@ -19,6 +19,7 @@ from components.bandits.mrcb import MRCBBandit
 from components.bandits.bts import BudgetedThompsonSampling
 from components.bandits.ucbmb import UCBMBBandit
 from components.bandits.ucb_variants import UCB
+from components.bandits.kl_bucb import KLBUCB
 from components.bandit_logging import BanditLogger
 from util import run_async
 
@@ -33,10 +34,10 @@ def create_setting(k: int, high_variance: bool, seed: int):
     return mean_rewards, mean_costs
 
 
-def create_max_variance_setting(k: int, seed: int):
+def create_max_variance_setting(k: int, seed: int, low=0.02, high=0.98):
     rng = np.random.default_rng(seed)
-    mean_rewards = rng.uniform(size=k)
-    mean_costs = rng.uniform(size=k)
+    mean_rewards = rng.uniform(size=k, low=low, high=high)
+    mean_costs = rng.uniform(size=k, low=low, high=high)
     return mean_rewards, mean_costs
 
 
@@ -48,18 +49,21 @@ def sort_setting(mean_rewards, mean_costs):
 
 def create_bandits(k: int, seed: int):
     return np.array([
-        UCB(k=k, name="j-UCB", type="j", seed=seed),
+        KLBUCB(k=k, name="KLBUCB", seed=seed),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding-t)", seed=seed,
+        #                                  ci_reward="hoeffding-t", ci_cost="hoeffding-t"),
+        # UCB(k=k, name="j-UCB", type="j", seed=seed),
         UCB(k=k, name="i-UCB", type="i", seed=seed),
         UCB(k=k, name="c-UCB", type="c", seed=seed),
         UCB(k=k, name="m-UCB", type="m", seed=seed),
         UCB(k=k, name="w-UCB", type="w", seed=seed),
         # UCBMBBandit(k=k, name="UCB-MB", seed=seed),
-        AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding)", seed=seed,
-                                         ci_reward="hoeffding", ci_cost="hoeffding"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding)", seed=seed,
+        #                                  ci_reward="hoeffding", ci_cost="hoeffding"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed,
         #                                  ci_reward="combined", ci_cost="combined"),
-        AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson full)", seed=seed,
-                                         ci_reward="wilson (full)", ci_cost="wilson (full)"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson full)", seed=seed,
+        #                                  ci_reward="wilson (full)", ci_cost="wilson (full)"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed, ci_reward="combined", ci_cost="combined"),
         # ThompsonSampling(k=k, name="TS with costs", seed=seed),
         # ThompsonSampling(k=k, name="TS without costs", seed=seed),
@@ -102,8 +106,8 @@ def prepare_df(df: pd.DataFrame):
 
 
 def plot_regret(df: pd.DataFrame):
-    # df = df[df["approach"] != "i-UCB"]
-    # df = df[df["approach"] != "c-UCB"]
+    df = df[df["approach"] != "ABTS (hoeffding)"]
+    df = df[df["approach"] != "ABTS (hoeffding-t)"]
     facet_kws = {'sharey': False, 'sharex': True}
     g = sns.relplot(data=df, kind="line",
                     x="spent budget", y="regret",
@@ -156,14 +160,14 @@ def get_best_arm_stats(df: pd.DataFrame):
 
 if __name__ == '__main__':
     use_results = False
-    plot_results = True
+    plot_results = False
     directory = os.path.join(os.getcwd(), "..", "results")
     filepath = os.path.join(directory, "bandit_comparison_ci.csv")
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True]
         ks = [10]
-        B = 3000
+        B = 10000
         reps = 30
         dfs = []
         for k in tqdm(ks, desc="k"):

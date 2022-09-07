@@ -15,6 +15,7 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         self.this_avg = np.nan
         self.pulls = 0
         self._ci = ci
+        self.t = 0
 
     def __len__(self):
         return self.pulls
@@ -31,6 +32,7 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
 
     def update(self, new_val: float, was_pulled: bool):
         self.this_reward = new_val
+        self.t += 1
         if not self.startup_complete:
             self.prev_avg = new_val
             self.this_avg = new_val
@@ -46,6 +48,9 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
 
     def hoeffding_ci(self, alpha=0.05):
         return np.sqrt(-1 / (2 * self.pulls) * np.log(alpha / 2))
+
+    def hoeffding_ci_t(self):
+        return np.sqrt(np.log(self.t) / self.pulls)
 
     def baseline_ci(self):
         return 1 / self.pulls
@@ -67,6 +72,8 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
     def get_ci(self):
         if self._ci == "hoeffding":
             return self.hoeffding_ci()
+        elif self._ci == "hoeffding-t":
+            return self.hoeffding_ci_t()
         elif self._ci == "baseline":
             return self.baseline_ci()
         elif self._ci is None:
@@ -131,8 +138,8 @@ class AdaptiveBudgetedThompsonSampling(AbstractBandit):
             reward = int(self.rng.uniform() < reward)
         if cost == 1 or cost == 0:
             cost = int(self.rng.uniform() < cost)
-        self.reward_arms[arm].update(reward, was_pulled=True)
-        self.cost_arms[arm].update(cost, was_pulled=True)
+        [(r.update(reward, was_pulled=arm == i), c.update(cost, was_pulled=arm == i))
+         for (i, (r, c)) in enumerate(zip(self.reward_arms, self.cost_arms))]
 
     def __len__(self):
         return len(self.cost_arms)
