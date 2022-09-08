@@ -24,7 +24,10 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         return max(1e-5, min(1 - 1e-5, alpha))  # avoid singularities
 
     def sample(self):
-        return self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
+        s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
+        if self._ci == "damped":
+            s = 1 / self.t * 0.5 + (1 - 1 / self.t) * s
+        return s
 
     def mean(self):
         return (self.alpha + 1) / (self.alpha + self.beta + 2)
@@ -70,7 +73,7 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             return self.hoeffding_ci()
         elif self._ci == "hoeffding-t":
             return self.hoeffding_ci_t()
-        elif self._ci == "baseline":
+        elif self._ci == "baseline" or self._ci == "damped":
             return self.baseline_ci()
         elif self._ci is None:
             return 0.0
