@@ -20,6 +20,9 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
     def __len__(self):
         return self.pulls
 
+    def exp_decay_alpha(self, alpha_max=0.1, k=0.01):
+        return alpha_max * (1 - np.exp(-k * (self.t - 1)))
+
     def sample(self):
         return self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
 
@@ -33,16 +36,18 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
     def update(self, new_val: float, was_pulled: bool):
         self.this_reward = new_val
         self.t += 1
-        if not self.startup_complete:
-            self.prev_avg = new_val
-            self.this_avg = new_val
-            self.pulls += 1
-            self.startup_complete = True
-        else:
-            self.prev_avg = self.this_avg
-            new_avg = (self.pulls * self.prev_avg + new_val) / (self.pulls + 1)
-            self.this_avg = new_avg
-            self.pulls += 1
+        if was_pulled:
+            if not self.startup_complete:
+                self.prev_avg = new_val
+                self.this_avg = new_val
+                self.pulls += 1
+                self.startup_complete = True
+            else:
+                self.prev_avg = self.this_avg
+                new_avg = (self.pulls * self.prev_avg + new_val) / (self.pulls + 1)
+                self.this_avg = new_avg
+                self.pulls += 1
+        if self.startup_complete:
             alpha, beta = self._compute_alpha_beta()
             self.set(alpha, beta)
 
@@ -54,14 +59,6 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
 
     def baseline_ci(self):
         return 1 / self.pulls
-
-    def wilson_ci(self, alpha=0.05):
-        n = self.pulls
-        ns = self.this_avg * n
-        nf = n - ns
-        z = 1.96 if alpha == 0.05 else stats.norm.interval(1 - alpha)[1]
-        z2 = np.power(z, 2)
-        return 2 / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
 
     def jeffrey_ci(self, alpha=0.05):
         n = self.pulls
@@ -81,12 +78,30 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         else:
             raise ValueError
 
-    def _compute_wilson_estimator(self, alpha=0.05):
+    def compute_wilson_avg(self, alpha):
         ns = self.this_avg * self.pulls
         n = self.pulls
-        z = 1.96 if alpha == 0.05 else stats.norm.interval(1 - alpha)
+        z = 1.96 if alpha == 0.05 else stats.norm.interval(1 - alpha)[1]
         z2 = z ** 2
-        return (ns + 0.5 * z2) / (n + z2)
+        estimate = (ns + 0.5 * z2) / (n + z2)
+        return estimate
+
+    def compute_wilson_avg_t(self, alpha_max=0.1):
+        alpha = self.exp_decay_alpha(alpha_max=alpha_max)  #  1 / (1 + self.t * np.log(self.t) ** 2)
+        return self.compute_wilson_avg(alpha)
+
+    def compute_wilson(self, alpha=0.5):
+        ns = self.this_avg * self.pulls
+        n = self.pulls
+        z = 1.96 if alpha == 0.05 else stats.norm.interval(1 - alpha)[1]
+        z2 = z ** 2
+        estimate = (ns + 0.5 * z2) / (n + z2)
+        ci = 2 / (n + z2) * np.sqrt((ns * (n - ns)) / n + z2 / 4)
+        return estimate + ci
+
+    def compute_wilson_t(self, alpha_max=0.1):
+        alpha = self.exp_decay_alpha(alpha_max=alpha_max)  # 1 / (1 + self.t * np.log(self.t) ** 2)
+        return self.compute_wilson(alpha)
 
     def _compute_sample_average_estimator(self):
         ci = self.get_ci()
@@ -94,16 +109,16 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         return min(1.0, max(0.0, avg))
 
     def _compute_alpha_beta(self):
-        if self._ci == "wilson (full)":
-            avg = self._compute_wilson_estimator() + self.wilson_ci()
+        if self._ci == "wilson-ci":
+            avg = self.compute_wilson()
+        elif self._ci == "wilson-ci-t":
+            avg = self.compute_wilson_t()
         elif self._ci == "wilson":
-            avg = self._compute_wilson_estimator()
-        elif self._ci == "jeffrey":
+            avg = self.compute_wilson_avg(self.alpha)
+        elif self._ci == "wilson-t":
+            avg = self.compute_wilson_avg_t()
+        elif self._ci == "jeffrey-ci":
             avg = self.jeffrey_ci()
-        elif self._ci == "combined":
-            we = self._compute_wilson_estimator() + self.wilson_ci()
-            he = self.this_avg + self.hoeffding_ci()
-            avg = min(we, he)
         else:
             avg = self.this_avg + self.get_ci()
         avg = min(1.0, max(0.0, avg))
@@ -121,6 +136,8 @@ class AdaptiveBudgetedThompsonSampling(AbstractBandit):
         super(AdaptiveBudgetedThompsonSampling, self).__init__(k, name, seed)
 
     def sample(self) -> int:
+        if np.any([not a.startup_complete for a in self.reward_arms]):
+            return [i for i, a in enumerate(self.reward_arms) if not a.startup_complete][0]
         arm_lengths = [len(a) == 0 for a in self.reward_arms]
         if np.any(arm_lengths):
             return [i for i in range(len(arm_lengths)) if arm_lengths[i]][0]
