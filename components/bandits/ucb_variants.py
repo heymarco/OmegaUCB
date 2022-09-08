@@ -5,9 +5,8 @@ from components.bandits.abstract import AbstractArm, AbstractBandit
 
 
 class UCBArm(AbstractArm):
-    def __init__(self, type: str, alpha=0.25, alpha_wilson=0.05):
+    def __init__(self, type: str, alpha=0.25):
         self.alpha = alpha
-        self.wilson_alpha = alpha_wilson
         self.pulls = 0
         self.t = 0
         self._prev_pulls = 0
@@ -18,20 +17,23 @@ class UCBArm(AbstractArm):
         self._rew = 0
         self._cost = 0
 
+    def _wilson_alpha(self):
+        return 2 / self.t ** 2
+
     def _epsilon(self):
         return self.alpha * np.sqrt(np.log(self.t - 1) / self.pulls)
 
     def _wilson_reward_estimate(self):
         ns = self._avg_reward * self.pulls
         n = self.pulls
-        z = 1.96 if self.wilson_alpha == 0.05 else stats.norm.interval(1 - self.wilson_alpha)
+        z = 1.96 if self._wilson_alpha() == 0.05 else stats.norm.interval(1 - self._wilson_alpha())[1]
         z2 = z ** 2
         return (ns + 0.5 * z2) / (n + z2)
 
     def _wilson_cost_estimate(self):
         ns = self._avg_cost * self.pulls
         n = self.pulls
-        z = 1.96 if self.wilson_alpha == 0.05 else stats.norm.interval(1 - self.wilson_alpha)
+        z = 1.96 if self._wilson_alpha() == 0.05 else stats.norm.interval(1 - self._wilson_alpha())[0]
         z2 = z ** 2
         return (ns + 0.5 * z2) / (n + z2)
 
@@ -39,7 +41,7 @@ class UCBArm(AbstractArm):
             n = self.pulls
             ns = self._avg_reward * n
             nf = n - ns
-            z = 1.96 if self.wilson_alpha == 0.05 else stats.norm.interval(1 - self.wilson_alpha)[1]
+            z = 1.96 if self._wilson_alpha() == 0.05 else stats.norm.interval(1 - self._wilson_alpha())[1]
             z2 = np.power(z, 2)
             return 2 / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
 
@@ -47,7 +49,7 @@ class UCBArm(AbstractArm):
         n = self.pulls
         ns = self._avg_cost * n
         nf = n - ns
-        z = 1.96 if self.wilson_alpha == 0.05 else stats.norm.interval(1 - self.wilson_alpha)[1]
+        z = 1.96 if self._wilson_alpha() == 0.05 else stats.norm.interval(1 - self._wilson_alpha())[1]
         z2 = np.power(z, 2)
         return 2 / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
 

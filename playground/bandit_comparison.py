@@ -50,22 +50,26 @@ def sort_setting(mean_rewards, mean_costs):
 
 def create_bandits(k: int, seed: int):
     return np.array([
-        KLBUCB(k=k, name="KLBUCB", seed=seed),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding-t)", seed=seed,
-        #                                  ci_reward="hoeffding-t", ci_cost="hoeffding-t"),
-        # UCB(k=k, name="j-UCB", type="j", seed=seed),
-        UCB(k=k, name="i-UCB", type="i", seed=seed),
-        UCB(k=k, name="c-UCB", type="c", seed=seed),
-        UCB(k=k, name="m-UCB", type="m", seed=seed),
-        UCB(k=k, name="w-UCB", type="w", seed=seed),
+        # UCB(k=k, name="w-UCB", type="w", seed=seed),
+        # KLBUCB(k=k, name="KLBUCB", seed=seed),
+        # # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding-t)", seed=seed,
+        # #                                  ci_reward="hoeffding-t", ci_cost="hoeffding-t"),
+        # # UCB(k=k, name="j-UCB", type="j", seed=seed),
+        # UCB(k=k, name="i-UCB", type="i", seed=seed),
+        # UCB(k=k, name="c-UCB", type="c", seed=seed),
+        # UCB(k=k, name="m-UCB", type="m", seed=seed),
         # UCBMBBandit(k=k, name="UCB-MB", seed=seed),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding)", seed=seed,
-        #                                  ci_reward="hoeffding", ci_cost="hoeffding"),
+        AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-ci-t)", seed=seed,
+                                         ci_reward="wilson-ci-t", ci_cost="wilson-ci-t"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed,
         #                                  ci_reward="combined", ci_cost="combined"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson full)", seed=seed,
-        #                                  ci_reward="wilson (full)", ci_cost="wilson (full)"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed, ci_reward="combined", ci_cost="combined"),
+        AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-ci)", seed=seed,
+                                         ci_reward="wilson-ci", ci_cost="wilson-ci"),
+        AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson)", seed=seed,
+                                         ci_reward="wilson", ci_cost="wilson"),
+
+        AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-t)", seed=seed,
+                                         ci_reward="wilson-t", ci_cost="wilson-t"),
         # ThompsonSampling(k=k, name="TS with costs", seed=seed),
         # ThompsonSampling(k=k, name="TS without costs", seed=seed),
         BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
@@ -107,8 +111,8 @@ def prepare_df(df: pd.DataFrame):
 
 
 def plot_regret(df: pd.DataFrame):
-    df = df[df["approach"] != "ABTS (hoeffding)"]
-    df = df[df["approach"] != "ABTS (hoeffding-t)"]
+    df = df[df["approach"] != "ABTS (wilson)"]
+    # df = df[df["approach"] != "ABTS (hoeffding)"]
     facet_kws = {'sharey': False, 'sharex': True}
     g = sns.relplot(data=df, kind="line",
                     x="spent budget", y="regret",
@@ -167,15 +171,15 @@ if __name__ == '__main__':
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True]
-        ks = [100, 10]
-        B = 10000
+        ks = [10]
+        B = 2000
         reps = 100
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
                 all_args = []
                 for rep in range(reps):
-                    mean_rewards, mean_costs = create_max_variance_setting(k, seed=rep)
+                    mean_rewards, mean_costs = create_setting(k, seed=rep, high_variance=True)
                     mean_rewards, mean_costs = sort_setting(mean_rewards, mean_costs)
                     args_list = [[b, B, mean_rewards, mean_costs, rep, hv] for b in create_bandits(k, rep)]
                     all_args.append(args_list)
@@ -184,13 +188,6 @@ if __name__ == '__main__':
                     args_for_bandit = [a[b_index] for a in all_args]
                     results = run_async(run_bandit, args_for_bandit, njobs=multiprocessing.cpu_count() - 1)
                     dfs = dfs + results
-
-                # for rep in tqdm(range(reps), leave=False, desc="rep"):
-                #     mean_rewards, mean_costs = create_max_variance_setting(k, seed=rep)
-                #     mean_rewards, mean_costs = sort_setting(mean_rewards, mean_costs)
-                #     args_list = [[b, B, mean_rewards, mean_costs, rep, hv] for b in create_bandits(k, rep)]
-                #     results = run_async(run_bandit, args_list, njobs=len(args_list))
-                #     dfs = dfs + results
         df = pd.concat(dfs)
         df.to_csv(filepath, index=False)
     if plot_results:
