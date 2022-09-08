@@ -21,7 +21,7 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
 
     def exp_decay_alpha(self, alpha_max=0.1, k=0.01):
         alpha = alpha_max * (1 - np.exp(-k * (self.t - 1)))
-        return max(1e-10, min(1 - 1e-10, alpha))  # avoid singularities
+        return max(1e-5, min(1 - 1e-5, alpha))  # avoid singularities
 
     def sample(self):
         return self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
