@@ -173,8 +173,8 @@ if __name__ == '__main__':
     if not use_results:
         high_variance = [True]
         ks = [10]
-        B = 2000
-        reps = 100
+        B = 10000
+        reps = 300
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):

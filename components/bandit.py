@@ -73,9 +73,9 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             return self.hoeffding_ci()
         elif self._ci == "hoeffding-t":
             return self.hoeffding_ci_t()
-        elif self._ci == "baseline" or self._ci == "damped":
+        elif self._ci == "baseline":
             return self.baseline_ci()
-        elif self._ci is None:
+        elif self._ci is None or self._ci == "damped":
             return 0.0
         else:
             raise ValueError
