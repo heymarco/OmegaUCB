@@ -26,7 +26,7 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
     def sample(self):
         s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
         if self._ci == "damped":
-            s = 1 / self.t * 0.5 + (1 - 1 / self.t) * s
+            s = 1 / self.pulls * 0.5 + (1 - 1 / self.pulls) * s
         return s
 
     def mean(self):
