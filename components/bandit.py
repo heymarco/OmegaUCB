@@ -83,6 +83,8 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         z = 1.96 if alpha == 0.05 else stats.norm.interval(1 - alpha)[1]
         z2 = z ** 2
         estimate = (ns + 0.5 * z2) / (n + z2)
+        if np.isnan(estimate):
+            print("")
         return estimate
 
     def compute_wilson_avg_t(self, alpha_max=0.1):
@@ -96,6 +98,8 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         z2 = z ** 2
         estimate = (ns + 0.5 * z2) / (n + z2)
         ci = 2 / (n + z2) * np.sqrt((ns * (n - ns)) / n + z2 / 4)
+        if np.isnan(estimate):
+            print("")
         return estimate + ci
 
     def compute_wilson_t(self, alpha_max=0.1):
@@ -113,7 +117,7 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         elif self._ci == "wilson-ci-t":
             avg = self.compute_wilson_t()
         elif self._ci == "wilson":
-            avg = self.compute_wilson_avg(self.alpha)
+            avg = self.compute_wilson_avg(alpha=0.05)
         elif self._ci == "wilson-t":
             avg = self.compute_wilson_avg_t()
         elif self._ci == "jeffrey-ci":
