@@ -65,11 +65,12 @@ def create_bandits(k: int, seed: int):
         #                                  ci_reward="combined", ci_cost="combined"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-ci)", seed=seed,
         #                                  ci_reward="wilson-ci", ci_cost="wilson-ci"),
-        AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson)", seed=seed,
-                                         ci_reward="wilson", ci_cost="wilson"),
-
-        AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-t)", seed=seed,
-                                         ci_reward="wilson-t", ci_cost="wilson-t"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson)", seed=seed,
+        #                                  ci_reward="wilson", ci_cost="wilson"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-t)", seed=seed,
+        #                                  ci_reward="wilson-t", ci_cost="wilson-t"),
+        AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (damped)", seed=seed,
+                                         ci_reward="damped", ci_cost="damped"),
         # ThompsonSampling(k=k, name="TS with costs", seed=seed),
         # ThompsonSampling(k=k, name="TS without costs", seed=seed),
         BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
@@ -111,7 +112,7 @@ def prepare_df(df: pd.DataFrame):
 
 
 def plot_regret(df: pd.DataFrame):
-    df = df[df["approach"] != "ABTS (wilson)"]
+    # df = df[df["approach"] != "ABTS (wilson)"]
     # df = df[df["approach"] != "ABTS (hoeffding)"]
     facet_kws = {'sharey': False, 'sharex': True}
     g = sns.relplot(data=df, kind="line",
@@ -165,7 +166,7 @@ def get_best_arm_stats(df: pd.DataFrame):
 
 if __name__ == '__main__':
     use_results = False
-    plot_results = False
+    plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filepath = os.path.join(directory, "bandit_comparison_ci.csv")
     assert os.path.exists(directory)
