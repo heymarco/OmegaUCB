@@ -20,7 +20,8 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         return self.pulls
 
     def exp_decay_alpha(self, alpha_max=0.1, k=0.01):
-        return alpha_max * (1 - np.exp(-k * (self.t - 1)))
+        alpha = alpha_max * (1 - np.exp(-k * (self.t - 1)))
+        return max(1e-10, min(1 - 1e-10, alpha))  # avoid singularities
 
     def sample(self):
         return self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
@@ -79,7 +80,7 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
     def compute_wilson_avg(self, alpha):
         ns = self.this_avg * self.pulls
         n = self.pulls
-        z = 1.96 if alpha == 0.05 else stats.norm.interval(min(1 - alpha, 1 - 1e-10))[1]
+        z = 1.96 if alpha == 0.05 else stats.norm.interval(1 - alpha)[1]
         z2 = z ** 2
         estimate = (ns + 0.5 * z2) / (n + z2)
         return estimate
@@ -91,12 +92,10 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
     def compute_wilson(self, alpha=0.05):
         ns = self.this_avg * self.pulls
         n = self.pulls
-        z = 1.96 if alpha == 0.05 else stats.norm.interval(min(1 - alpha, 1 - 1e-10))[1]
+        z = 1.96 if alpha == 0.05 else stats.norm.interval(1 - alpha)[1]
         z2 = z ** 2
         estimate = (ns + 0.5 * z2) / (n + z2)
         ci = 2 / (n + z2) * np.sqrt((ns * (n - ns)) / n + z2 / 4)
-        if np.isnan(ci):
-            print("test")
         return estimate + ci
 
     def compute_wilson_t(self, alpha_max=0.1):
