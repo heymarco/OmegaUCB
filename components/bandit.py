@@ -10,7 +10,6 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         self.alpha = 0.0
         self.beta = 0.0
         self.startup_complete = False
-        self.this_reward = np.nan
         self.prev_avg = np.nan
         self.this_avg = np.nan
         self.pulls = 0
@@ -34,7 +33,6 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         self.beta = beta
 
     def update(self, new_val: float, was_pulled: bool):
-        self.this_reward = new_val
         self.t += 1
         if was_pulled:
             if not self.startup_complete:
@@ -81,7 +79,7 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
     def compute_wilson_avg(self, alpha):
         ns = self.this_avg * self.pulls
         n = self.pulls
-        z = 1.96 if alpha == 0.05 else stats.norm.interval(1 - alpha)[1]
+        z = 1.96 if alpha == 0.05 else stats.norm.interval(min(1 - alpha, 1 - 1e-10))[1]
         z2 = z ** 2
         estimate = (ns + 0.5 * z2) / (n + z2)
         return estimate
@@ -90,13 +88,15 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         alpha = self.exp_decay_alpha(alpha_max=alpha_max)  #  1 / (1 + self.t * np.log(self.t) ** 2)
         return self.compute_wilson_avg(alpha)
 
-    def compute_wilson(self, alpha=0.5):
+    def compute_wilson(self, alpha=0.05):
         ns = self.this_avg * self.pulls
         n = self.pulls
-        z = 1.96 if alpha == 0.05 else stats.norm.interval(1 - alpha)[1]
+        z = 1.96 if alpha == 0.05 else stats.norm.interval(min(1 - alpha, 1 - 1e-10))[1]
         z2 = z ** 2
         estimate = (ns + 0.5 * z2) / (n + z2)
         ci = 2 / (n + z2) * np.sqrt((ns * (n - ns)) / n + z2 / 4)
+        if np.isnan(ci):
+            print("test")
         return estimate + ci
 
     def compute_wilson_t(self, alpha_max=0.1):
