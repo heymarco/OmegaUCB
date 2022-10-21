@@ -172,7 +172,7 @@ def get_best_arm_stats(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    use_results = True
+    use_results = False
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filepath = os.path.join(directory, "bandit_comparison_ci.csv")
@@ -180,8 +180,8 @@ if __name__ == '__main__':
     if not use_results:
         high_variance = [True, False]
         ks = [100, 50, 10, 3]
-        B = 2000
-        reps = 300
+        B = 5000
+        reps = 500
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
