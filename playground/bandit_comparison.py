@@ -57,9 +57,9 @@ def create_bandits(k: int, seed: int):
         # KLBUCB(k=k, name="KLBUCB", seed=seed),
         # # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding-t)", seed=seed,
         # #                                  ci_reward="hoeffding-t", ci_cost="hoeffding-t"),
-        # # UCB(k=k, name="j-UCB", type="j", seed=seed),
-        # UCB(k=k, name="i-UCB", type="i", seed=seed),
-        # UCB(k=k, name="c-UCB", type="c", seed=seed),
+        UCB(k=k, name="j-UCB", type="j", seed=seed),
+        UCB(k=k, name="i-UCB", type="i", seed=seed),
+        UCB(k=k, name="c-UCB", type="c", seed=seed),
         UCB(k=k, name="m-UCB", type="m", seed=seed),
         # UCBMBBandit(k=k, name="UCB-MB", seed=seed),
         # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-ci-t)", seed=seed,
@@ -76,10 +76,10 @@ def create_bandits(k: int, seed: int):
         #                                  ci_reward="damped", ci_cost="damped"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="BTS (qdamped)", seed=seed,
         #                                  ci_reward="qdamped", ci_cost="qdamped"),
-        AdaptiveBudgetedThompsonSampling(k=k, name="Jeffrey", seed=seed,
-                                         ci_reward="jeffrey", ci_cost="jeffrey"),
         AdaptiveBudgetedThompsonSampling(k=k, name="Wilson", seed=seed,
                                          ci_reward="wilson", ci_cost="wilson"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="Jeffrey", seed=seed,
+        #                                  ci_reward="jeffrey", ci_cost="jeffrey"),
         # ThompsonSampling(k=k, name="TS with costs", seed=seed),
         # ThompsonSampling(k=k, name="TS without costs", seed=seed),
         BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
@@ -181,9 +181,9 @@ if __name__ == '__main__':
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True, False]
-        ks = [100, 50, 10, 3]
-        B = 5000
-        reps = 500
+        ks = [50, 10, 3]
+        B = 3000
+        reps = 300
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
