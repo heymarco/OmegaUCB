@@ -176,7 +176,7 @@ if __name__ == '__main__':
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True, False]
-        ks = [50, 10, 2]
+        ks = [100, 50, 10, 3]
         B = 2000
         reps = 300
         dfs = []
