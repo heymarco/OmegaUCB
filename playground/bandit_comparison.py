@@ -57,9 +57,9 @@ def create_bandits(k: int, seed: int):
         # KLBUCB(k=k, name="KLBUCB", seed=seed),
         # # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding-t)", seed=seed,
         # #                                  ci_reward="hoeffding-t", ci_cost="hoeffding-t"),
-        # # UCB(k=k, name="j-UCB", type="j", seed=seed),
-        # UCB(k=k, name="i-UCB", type="i", seed=seed),
-        # UCB(k=k, name="c-UCB", type="c", seed=seed),
+        UCB(k=k, name="j-UCB", type="j", seed=seed),
+        UCB(k=k, name="i-UCB", type="i", seed=seed),
+        UCB(k=k, name="c-UCB", type="c", seed=seed),
         UCB(k=k, name="m-UCB", type="m", seed=seed),
         # UCBMBBandit(k=k, name="UCB-MB", seed=seed),
         # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-ci-t)", seed=seed,
@@ -82,7 +82,7 @@ def create_bandits(k: int, seed: int):
                                          ci_reward="wilson", ci_cost="wilson"),
         # ThompsonSampling(k=k, name="TS with costs", seed=seed),
         # ThompsonSampling(k=k, name="TS without costs", seed=seed),
-        BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
+        # BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
     ])
 
 
@@ -109,13 +109,13 @@ def iterate(bandit: AbstractBandit, mean_rewards, mean_costs, rng, logger):
 def prepare_df(df: pd.DataFrame):
     df.ffill(inplace=True)
     df["total reward"] = df["reward"]
-    df["spent budget"] = (df["spent-budget"] / 100).round() * 100
+    df["spent budget"] = df["spent-budget"]  # (df["spent-budget"] / 100).round() * 100
     df["regret"] = np.nan
     df["oracle"] = np.nan
     for _, gdf in df.groupby(["rep", "approach", "k", "high-variance"]):
         gdf["oracle"] = gdf["optimal-reward"] / gdf["optimal-cost"] * gdf["spent-budget"]
         df["oracle"][gdf.index] = gdf["oracle"]
-        df["regret"][gdf.index] = gdf["oracle"] - gdf["total reward"]
+        df["regret"][gdf.index] = (gdf["oracle"] - gdf["total reward"]) / gdf["oracle"].iloc[-1]
     df["k"] = df["k"].astype(int)
     return df
 
@@ -174,16 +174,16 @@ def get_best_arm_stats(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    use_results = True
+    use_results = False
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filepath = os.path.join(directory, "bandit_comparison_ci.csv")
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True, False]
-        ks = [100, 50, 10, 3]
+        ks = [3, 10]
         B = 2000
-        reps = 300
+        reps = 10
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
