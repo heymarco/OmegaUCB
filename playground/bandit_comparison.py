@@ -82,7 +82,7 @@ def create_bandits(k: int, seed: int):
         #                                  ci_reward="jeffrey", ci_cost="jeffrey"),
         # ThompsonSampling(k=k, name="TS with costs", seed=seed),
         # ThompsonSampling(k=k, name="TS without costs", seed=seed),
-        BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
+        # BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
     ])
 
 
@@ -109,13 +109,13 @@ def iterate(bandit: AbstractBandit, mean_rewards, mean_costs, rng, logger):
 def prepare_df(df: pd.DataFrame):
     df.ffill(inplace=True)
     df["total reward"] = df["reward"]
-    df["spent budget"] = (df["spent-budget"] / 100).round() * 100
+    df["spent budget"] = df["spent-budget"]  # (df["spent-budget"] / 100).round() * 100
     df["regret"] = np.nan
     df["oracle"] = np.nan
     for _, gdf in df.groupby(["rep", "approach", "k", "high-variance"]):
         gdf["oracle"] = gdf["optimal-reward"] / gdf["optimal-cost"] * gdf["spent-budget"]
         df["oracle"][gdf.index] = gdf["oracle"]
-        df["regret"][gdf.index] = gdf["oracle"] - gdf["total reward"]
+        df["regret"][gdf.index] = (gdf["oracle"] - gdf["total reward"]) / gdf["oracle"].iloc[-1]
     df["k"] = df["k"].astype(int)
     return df
 
@@ -183,7 +183,7 @@ if __name__ == '__main__':
         high_variance = [True, False]
         ks = [50, 10, 3]
         B = 3000
-        reps = 300
+        reps = 10
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
