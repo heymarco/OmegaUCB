@@ -5,7 +5,8 @@ from components.bandits.abstract import AbstractArm, AbstractBandit
 
 
 class UCBArm(AbstractArm):
-    def __init__(self, type: str, alpha=0.25):
+    def __init__(self, type: str, alpha=0.25, confidence=0.95):
+        self.confidence = confidence
         self.alpha = alpha
         self.pulls = 0
         self.t = 0
@@ -18,7 +19,7 @@ class UCBArm(AbstractArm):
         self._cost = 0
 
     def _wilson_alpha(self):
-        return 2 / self.t ** 2
+        return 1 - self.confidence
 
     def _epsilon(self):
         return self.alpha * np.sqrt(np.log(self.t - 1) / self.pulls)
@@ -26,14 +27,14 @@ class UCBArm(AbstractArm):
     def _wilson_reward_estimate(self):
         ns = self._avg_reward * self.pulls
         n = self.pulls
-        z = 1.96 if self._wilson_alpha() == 0.05 else stats.norm.interval(1 - self._wilson_alpha())[1]
+        z = stats.norm.interval(1 - self._wilson_alpha())[1]
         z2 = z ** 2
         return (ns + 0.5 * z2) / (n + z2)
 
     def _wilson_cost_estimate(self):
         ns = self._avg_cost * self.pulls
         n = self.pulls
-        z = 1.96 if self._wilson_alpha() == 0.05 else stats.norm.interval(1 - self._wilson_alpha())[0]
+        z = stats.norm.interval(1 - self._wilson_alpha())[0]
         z2 = z ** 2
         return (ns + 0.5 * z2) / (n + z2)
 
@@ -41,7 +42,7 @@ class UCBArm(AbstractArm):
             n = self.pulls
             ns = self._avg_reward * n
             nf = n - ns
-            z = 1.96 if self._wilson_alpha() == 0.05 else stats.norm.interval(1 - self._wilson_alpha())[1]
+            z = stats.norm.interval(1 - self._wilson_alpha())[1]
             z2 = np.power(z, 2)
             return z / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
 
@@ -49,27 +50,25 @@ class UCBArm(AbstractArm):
         n = self.pulls
         ns = self._avg_cost * n
         nf = n - ns
-        z = 1.96 if self._wilson_alpha() == 0.05 else stats.norm.interval(1 - self._wilson_alpha())[1]
+        z = stats.norm.interval(1 - self._wilson_alpha())[1]
         z2 = np.power(z, 2)
         return z / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
 
-    def _jeffrey_estimate_cost(self):
+    def update_jeffrey_estimate_cost(self):
         if self.pulls == self._prev_pulls and self.pulls > 1:
             return self._cost
         n = self.pulls
         x = self._avg_cost * n
-        low, high = stats.beta.interval(alpha=0.05, a=0.5 + x, b=0.5 + n - x)
+        low, high = stats.beta.interval(alpha=self.confidence, a=0.5 + x, b=0.5 + n - x)
         self._cost = low
-        return low
 
-    def _jeffrey_estimate_reward(self):
+    def update_jeffrey_estimate_reward(self):
         if self.pulls == self._prev_pulls and self.pulls > 1:
             return self._rew
         n = self.pulls
         x = self._avg_reward * n
-        low, high = stats.beta.interval(alpha=0.05, a=0.5 + x, b=0.5 + n - x)
+        low, high = stats.beta.interval(alpha=self.confidence, a=0.5 + x, b=0.5 + n - x)
         self._rew = high
-        return high
 
     def sample(self):
         cost = max(self._cmin, self._avg_cost)
@@ -88,8 +87,8 @@ class UCBArm(AbstractArm):
             bottom = max(self._wilson_cost_estimate() - ci_cost, 1e-10)
             return top / bottom
         elif self._type == "j":
-            rew = self._jeffrey_estimate_reward()
-            cost = self._jeffrey_estimate_cost()
+            rew = self._rew
+            cost = self._cost
             return rew / cost
         else:
             raise ValueError
@@ -106,6 +105,9 @@ class UCBArm(AbstractArm):
             self.pulls += 1
             self._avg_cost = ((self.pulls - 1) * self._avg_cost + new_cost) / self.pulls
             self._avg_reward = ((self.pulls - 1) * self._avg_reward + new_reward) / self.pulls
+            if self._type == "j":
+                self.update_jeffrey_estimate_cost()
+                self.update_jeffrey_estimate_reward()
 
     def startup_complete(self):
         return self.pulls > 0
