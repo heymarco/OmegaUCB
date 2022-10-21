@@ -28,10 +28,10 @@ from util import run_async
 def create_setting(k: int, high_variance: bool, seed: int):
     rng = np.random.default_rng(seed)
     if high_variance:
-        low = rng.uniform(high=0.5)
+        low = rng.uniform(low=0.1, high=0.5)
         high = low + max(0.9 - low, 0.5)  # at least a range of 0.5
     else:
-        low = rng.uniform(high=0.8)
+        low = rng.uniform(low=0.1, high=0.8)
         high = low + 0.2
     mean_rewards = rng.uniform(low, high, size=k)
     mean_costs = rng.uniform(low, high, size=k)
