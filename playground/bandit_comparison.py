@@ -27,9 +27,12 @@ from util import run_async
 
 def create_setting(k: int, high_variance: bool, seed: int):
     rng = np.random.default_rng(seed)
-    scale = 0.8 if high_variance else 0.2
-    low = (1 - scale) / 2
-    high = 1 - low
+    if high_variance:
+        low = rng.uniform(high=0.5)
+        high = low + max(0.9 - low, 0.5)  # at least a range of 0.5
+    else:
+        low = rng.uniform(high=0.8)
+        high = low + 0.2
     mean_rewards = rng.uniform(low, high, size=k)
     mean_costs = rng.uniform(low, high, size=k)
     return mean_rewards, mean_costs
@@ -169,7 +172,7 @@ def get_best_arm_stats(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    use_results = False
+    use_results = True
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filepath = os.path.join(directory, "bandit_comparison_ci.csv")
