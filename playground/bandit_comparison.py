@@ -76,6 +76,8 @@ def create_bandits(k: int, seed: int):
         #                                  ci_reward="damped", ci_cost="damped"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="BTS (qdamped)", seed=seed,
         #                                  ci_reward="qdamped", ci_cost="qdamped"),
+        AdaptiveBudgetedThompsonSampling(k=k, name="Jeffrey", seed=seed,
+                                         ci_reward="jeffrey", ci_cost="jeffrey"),
         AdaptiveBudgetedThompsonSampling(k=k, name="Wilson", seed=seed,
                                          ci_reward="wilson", ci_cost="wilson"),
         # ThompsonSampling(k=k, name="TS with costs", seed=seed),
@@ -111,7 +113,7 @@ def prepare_df(df: pd.DataFrame):
     df["regret"] = np.nan
     df["oracle"] = np.nan
     for _, gdf in df.groupby(["rep", "approach", "k", "high-variance"]):
-        gdf["oracle"] = gdf["optimal-reward"] / gdf["optimal-cost"] * gdf["spent budget"]
+        gdf["oracle"] = gdf["optimal-reward"] / gdf["optimal-cost"] * gdf["spent-budget"]
         df["oracle"][gdf.index] = gdf["oracle"]
         df["regret"][gdf.index] = gdf["oracle"] - gdf["total reward"]
     df["k"] = df["k"].astype(int)
