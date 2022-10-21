@@ -2,7 +2,7 @@ from multiprocessing import Pool
 from time import sleep
 
 import numpy as np
-
+from scipy import stats
 
 MNIST = 554
 MUSHROOM = 24
@@ -25,3 +25,9 @@ def run_async(function, args_list, njobs, sleep_time_s = 0.05):
     results = [results[i].get() for i in range(len(results))]
     pool.close()
     return results
+
+
+def reg_beta(x, a, b, k=100):
+    n = a + b
+    reg = k / n ** 2
+    return stats.beta.pdf(x, a + reg, b + reg)

@@ -5,7 +5,8 @@ from components.bandits.abstract import AbstractArm, AbstractBandit
 
 
 class ArmWithAdaptiveBetaPosterior(AbstractArm):
-    def __init__(self, seed: int, ci: str):
+    def __init__(self, seed: int, ci: str, is_cost_arm: bool):
+        self.is_cost_arm = is_cost_arm
         self.rng = np.random.default_rng(seed)
         self.alpha = 0.0
         self.beta = 0.0
@@ -27,6 +28,13 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
         if self._ci == "damped":
             s = 1 / self.pulls * 0.5 + (1 - 1 / self.pulls) * s
+        elif self._ci == "qdamped":
+            s = 0.5 + (1 - 1 / (1 + self.pulls) ** 2) * (s - 0.5)
+        elif self._ci == "regbeta":
+            reg = (1 / self.pulls) ** 2
+            s = self.rng.beta(a=self.alpha + 1 + reg, b=self.beta + 1 + reg)
+        elif self._ci == "wilson":
+            s = self.compute_wilson()
         return s
 
     def mean(self):
@@ -75,7 +83,7 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             return self.hoeffding_ci_t()
         elif self._ci == "baseline":
             return self.baseline_ci()
-        elif self._ci is None or self._ci == "damped":
+        elif self._ci is None or self._ci == "damped" or self._ci == "qdamped" or self._ci == "regbeta" or self._ci == "wilson":
             return 0.0
         else:
             raise ValueError
@@ -100,10 +108,12 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         z = 1.96 if alpha == 0.05 else stats.norm.interval(1 - alpha)[1]
         z2 = z ** 2
         estimate = (ns + 0.5 * z2) / (n + z2)
-        ci = 2 / (n + z2) * np.sqrt((ns * (n - ns)) / n + z2 / 4)
+        ci = z / (n + z2) * np.sqrt((ns * (n - ns)) / n + z2 / 4)
         if np.isnan(estimate):
             print("")
-        return estimate + ci
+        if self.is_cost_arm:
+            ci *= -1
+        return max(estimate + ci, 1e-10)
 
     def compute_wilson_t(self, alpha_max=0.1):
         alpha = self.exp_decay_alpha(alpha_max=alpha_max)  # 1 / (1 + self.t * np.log(self.t) ** 2)
@@ -115,9 +125,7 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         return min(1.0, max(0.0, avg))
 
     def _compute_alpha_beta(self):
-        if self._ci == "wilson-ci":
-            avg = self.compute_wilson()
-        elif self._ci == "wilson-ci-t":
+        if self._ci == "wilson-ci-t":
             avg = self.compute_wilson_t()
         elif self._ci == "wilson":
             avg = self.compute_wilson_avg(alpha=0.05)
@@ -137,16 +145,13 @@ class AdaptiveBudgetedThompsonSampling(AbstractBandit):
     def __init__(self, k: int, name: str, seed: int, ci_reward: str, ci_cost: str):
         self.ci_reward = ci_reward
         self.ci_cost = ci_cost
-        self.reward_arms = [ArmWithAdaptiveBetaPosterior(arm_index, ci=ci_reward) for arm_index in range(k)]
-        self.cost_arms = [ArmWithAdaptiveBetaPosterior(k + arm_index, ci=ci_cost) for arm_index in range(k)]
+        self.reward_arms = [ArmWithAdaptiveBetaPosterior(arm_index, ci=ci_reward, is_cost_arm=False) for arm_index in range(k)]
+        self.cost_arms = [ArmWithAdaptiveBetaPosterior(k + arm_index, ci=ci_cost, is_cost_arm=True) for arm_index in range(k)]
         super(AdaptiveBudgetedThompsonSampling, self).__init__(k, name, seed)
 
     def sample(self) -> int:
         if np.any([not a.startup_complete for a in self.reward_arms]):
             return [i for i, a in enumerate(self.reward_arms) if not a.startup_complete][0]
-        arm_lengths = [len(a) == 0 for a in self.reward_arms]
-        if np.any(arm_lengths):
-            return [i for i in range(len(arm_lengths)) if arm_lengths[i]][0]
         reward_samples = [a.sample() for a in self.reward_arms]
         cost_samples = [a.sample() for a in self.cost_arms]
         reward_cost_ratio = np.array(reward_samples) / np.array(cost_samples)
