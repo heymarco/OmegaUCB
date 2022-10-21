@@ -35,6 +35,8 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             s = self.rng.beta(a=self.alpha + 1 + reg, b=self.beta + 1 + reg)
         elif self._ci == "wilson":
             s = self.compute_wilson()
+        elif self._ci == "jeffrey":
+            s = self.jeffrey_ci()
         return s
 
     def mean(self):
@@ -74,7 +76,7 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         n = self.pulls
         x = self.this_avg * n
         low, high = stats.beta.interval(alpha=alpha, a=0.5 + x, b=0.5 + n - x)
-        return high
+        return low if self.is_cost_arm else high
 
     def get_ci(self):
         if self._ci == "hoeffding":
@@ -83,7 +85,7 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             return self.hoeffding_ci_t()
         elif self._ci == "baseline":
             return self.baseline_ci()
-        elif self._ci is None or self._ci == "damped" or self._ci == "qdamped" or self._ci == "regbeta" or self._ci == "wilson":
+        elif self._ci is None or self._ci == "damped" or self._ci == "qdamped" or self._ci == "regbeta" or self._ci == "wilson" or self._ci == "jeffrey":
             return 0.0
         else:
             raise ValueError
@@ -131,8 +133,6 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             avg = self.compute_wilson_avg(alpha=0.05)
         elif self._ci == "wilson-t":
             avg = self.compute_wilson_avg_t()
-        elif self._ci == "jeffrey-ci":
-            avg = self.jeffrey_ci()
         else:
             avg = self.this_avg + self.get_ci()
         avg = min(1.0, max(0.0, avg))
