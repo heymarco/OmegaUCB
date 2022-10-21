@@ -15,6 +15,11 @@ class ArmWithBetaPosterior(AbstractArm):
     def mean(self):
         return (self.alpha + 1) / (self.alpha + self.beta + 2)
 
+    def variance(self):
+        a = self.alpha + 1
+        b = self.beta + 1
+        return (a * b) / ((a + b) ** 2 * (a + b + 1))
+
     def set(self, alpha: float, beta: float):
         self.alpha = alpha
         self.beta = beta

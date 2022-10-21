@@ -43,7 +43,7 @@ class UCBArm(AbstractArm):
             nf = n - ns
             z = 1.96 if self._wilson_alpha() == 0.05 else stats.norm.interval(1 - self._wilson_alpha())[1]
             z2 = np.power(z, 2)
-            return 2 / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
+            return z / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
 
     def _wilson_cost_ci(self):
         n = self.pulls
@@ -51,7 +51,7 @@ class UCBArm(AbstractArm):
         nf = n - ns
         z = 1.96 if self._wilson_alpha() == 0.05 else stats.norm.interval(1 - self._wilson_alpha())[1]
         z2 = np.power(z, 2)
-        return 2 / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
+        return z / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
 
     def _jeffrey_estimate_cost(self):
         if self.pulls == self._prev_pulls and self.pulls > 1:

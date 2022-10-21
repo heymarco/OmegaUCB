@@ -35,7 +35,7 @@ def create_setting(k: int, high_variance: bool, seed: int):
     return mean_rewards, mean_costs
 
 
-def create_max_variance_setting(k: int, seed: int, low=0.02, high=0.98):
+def create_max_variance_setting(k: int, seed: int, low=0.1, high=0.9):
     rng = np.random.default_rng(seed)
     mean_rewards = rng.uniform(size=k, low=low, high=high)
     mean_costs = rng.uniform(size=k, low=low, high=high)
@@ -57,7 +57,7 @@ def create_bandits(k: int, seed: int):
         # # UCB(k=k, name="j-UCB", type="j", seed=seed),
         # UCB(k=k, name="i-UCB", type="i", seed=seed),
         # UCB(k=k, name="c-UCB", type="c", seed=seed),
-        # UCB(k=k, name="m-UCB", type="m", seed=seed),
+        UCB(k=k, name="m-UCB", type="m", seed=seed),
         # UCBMBBandit(k=k, name="UCB-MB", seed=seed),
         # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-ci-t)", seed=seed,
         #                                  ci_reward="wilson-ci-t", ci_cost="wilson-ci-t"),
@@ -69,8 +69,12 @@ def create_bandits(k: int, seed: int):
         #                                  ci_reward="wilson", ci_cost="wilson"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-t)", seed=seed,
         #                                  ci_reward="wilson-t", ci_cost="wilson-t"),
-        AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (damped)", seed=seed,
-                                         ci_reward="damped", ci_cost="damped"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="BTS (damped)", seed=seed,
+        #                                  ci_reward="damped", ci_cost="damped"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="BTS (qdamped)", seed=seed,
+        #                                  ci_reward="qdamped", ci_cost="qdamped"),
+        AdaptiveBudgetedThompsonSampling(k=k, name="Wilson", seed=seed,
+                                         ci_reward="wilson", ci_cost="wilson"),
         # ThompsonSampling(k=k, name="TS with costs", seed=seed),
         # ThompsonSampling(k=k, name="TS without costs", seed=seed),
         BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
@@ -171,18 +175,18 @@ if __name__ == '__main__':
     filepath = os.path.join(directory, "bandit_comparison_ci.csv")
     assert os.path.exists(directory)
     if not use_results:
-        high_variance = [True]
-        ks = [10]
-        B = 10000
+        high_variance = [True, False]
+        ks = [50, 10, 2]
+        B = 2000
         reps = 300
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
                 all_args = []
                 for rep in range(reps):
-                    mean_rewards, mean_costs = create_setting(k, seed=rep, high_variance=True)
+                    mean_rewards, mean_costs = create_setting(k, seed=rep + 500, high_variance=hv)
                     mean_rewards, mean_costs = sort_setting(mean_rewards, mean_costs)
-                    args_list = [[b, B, mean_rewards, mean_costs, rep, hv] for b in create_bandits(k, rep)]
+                    args_list = [[b, B, mean_rewards, mean_costs, rep + 500, hv] for b in create_bandits(k, rep + 500)]
                     all_args.append(args_list)
                 num_bandits = len(create_bandits(k, 0))
                 for b_index in tqdm(range(num_bandits), leave=False, desc="Bandit"):
