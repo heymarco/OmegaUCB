@@ -82,7 +82,7 @@ def create_bandits(k: int, seed: int):
         #                                  ci_reward="jeffrey", ci_cost="jeffrey"),
         # ThompsonSampling(k=k, name="TS with costs", seed=seed),
         # ThompsonSampling(k=k, name="TS without costs", seed=seed),
-        # BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
+        BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
     ])
 
 
@@ -182,8 +182,8 @@ if __name__ == '__main__':
     if not use_results:
         high_variance = [True, False]
         ks = [50, 10, 3]
-        B = 3000
-        reps = 10
+        B = 30000
+        reps = 200
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
