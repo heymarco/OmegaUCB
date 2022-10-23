@@ -27,14 +27,14 @@ class UCBArm(AbstractArm):
     def _wilson_reward_estimate(self):
         ns = self._avg_reward * self.pulls
         n = self.pulls
-        z = stats.norm.interval(1 - self._wilson_alpha())[1]
+        z = stats.norm.interval(self.confidence)[1]
         z2 = z ** 2
         return (ns + 0.5 * z2) / (n + z2)
 
     def _wilson_cost_estimate(self):
         ns = self._avg_cost * self.pulls
         n = self.pulls
-        z = stats.norm.interval(1 - self._wilson_alpha())[0]
+        z = stats.norm.interval(self.confidence)[0]
         z2 = z ** 2
         return (ns + 0.5 * z2) / (n + z2)
 
@@ -42,7 +42,7 @@ class UCBArm(AbstractArm):
             n = self.pulls
             ns = self._avg_reward * n
             nf = n - ns
-            z = stats.norm.interval(1 - self._wilson_alpha())[1]
+            z = stats.norm.interval(self.confidence)[1]
             z2 = np.power(z, 2)
             return z / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
 
@@ -50,7 +50,7 @@ class UCBArm(AbstractArm):
         n = self.pulls
         ns = self._avg_cost * n
         nf = n - ns
-        z = stats.norm.interval(1 - self._wilson_alpha())[1]
+        z = stats.norm.interval(self.confidence)[1]
         z2 = np.power(z, 2)
         return z / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
 
@@ -80,13 +80,7 @@ class UCBArm(AbstractArm):
             top = min(self._avg_reward + self._epsilon(), 1)
             bottom = max(cost - self._epsilon(), 1e-10)
             return top / bottom
-        elif self._type == "w":
-            ci_rew = self._wilson_reward_ci()
-            ci_cost = self._wilson_cost_ci()
-            top = min(self._wilson_reward_estimate() + ci_rew, 1)
-            bottom = max(self._wilson_cost_estimate() - ci_cost, 1e-10)
-            return top / bottom
-        elif self._type == "j":
+        elif self._type == "j" or self._type == "w":
             rew = self._rew
             cost = self._cost
             return rew / cost
@@ -108,6 +102,11 @@ class UCBArm(AbstractArm):
             if self._type == "j":
                 self.update_jeffrey_estimate_cost()
                 self.update_jeffrey_estimate_reward()
+            elif self._type == "w":
+                ci_rew = self._wilson_reward_ci()
+                ci_cost = self._wilson_cost_ci()
+                self._rew = min(self._wilson_reward_estimate() + ci_rew, 1)
+                self._cost = max(self._wilson_cost_estimate() - ci_cost, 1e-10)
 
     def startup_complete(self):
         return self.pulls > 0
