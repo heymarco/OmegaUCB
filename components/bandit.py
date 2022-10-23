@@ -14,7 +14,7 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         self.prev_avg = np.nan
         self.this_avg = np.nan
         self.pulls = 0
-        self._ci = ci
+        self.type = ci
         self.t = 0
 
     def __len__(self):
@@ -25,18 +25,19 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
         return max(1e-5, min(1 - 1e-5, alpha))  # avoid singularities
 
     def sample(self):
+        mean = (self.alpha + 1) / (self.alpha + self.beta + 2)
         s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
-        if self._ci == "damped":
-            s = 1 / self.pulls * 0.5 + (1 - 1 / self.pulls) * s
-        elif self._ci == "qdamped":
-            s = 0.5 + (1 - 1 / (1 + self.pulls) ** 2) * (s - 0.5)
-        elif self._ci == "regbeta":
-            reg = (1 / self.pulls) ** 2
-            s = self.rng.beta(a=self.alpha + 1 + reg, b=self.beta + 1 + reg)
-        elif self._ci == "wilson":
-            s = self.compute_wilson()
-        elif self._ci == "jeffrey":
-            s = self.jeffrey_ci()
+        if self.type == "wilson":
+            s = self.wilson()
+        elif self.type == "jeffrey":
+            s = self.jeffrey()
+        elif self.type == "optimistic":
+            if self.is_cost_arm and s > mean:
+                while s > mean:
+                    s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
+            elif (not self.is_cost_arm) and s < mean:
+                while s < mean:
+                    s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
         return s
 
     def mean(self):
@@ -63,32 +64,11 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             alpha, beta = self._compute_alpha_beta()
             self.set(alpha, beta)
 
-    def hoeffding_ci(self, alpha=0.05):
-        return np.sqrt(-1 / (2 * self.pulls) * np.log(alpha / 2))
-
-    def hoeffding_ci_t(self):
-        return np.sqrt(np.log(self.t) / self.pulls)
-
-    def baseline_ci(self):
-        return 1 / self.pulls
-
-    def jeffrey_ci(self, alpha=0.05):
+    def jeffrey(self, alpha=0.05):
         n = self.pulls
         x = self.this_avg * n
         low, high = stats.beta.interval(alpha=alpha, a=0.5 + x, b=0.5 + n - x)
         return low if self.is_cost_arm else high
-
-    def get_ci(self):
-        if self._ci == "hoeffding":
-            return self.hoeffding_ci()
-        elif self._ci == "hoeffding-t":
-            return self.hoeffding_ci_t()
-        elif self._ci == "baseline":
-            return self.baseline_ci()
-        elif self._ci is None or self._ci == "damped" or self._ci == "qdamped" or self._ci == "regbeta" or self._ci == "wilson" or self._ci == "jeffrey":
-            return 0.0
-        else:
-            raise ValueError
 
     def compute_wilson_avg(self, alpha):
         ns = self.this_avg * self.pulls
@@ -100,44 +80,20 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             print("")
         return estimate
 
-    def compute_wilson_avg_t(self, alpha_max=0.1):
-        alpha = self.exp_decay_alpha(alpha_max=alpha_max)  #  1 / (1 + self.t * np.log(self.t) ** 2)
-        return self.compute_wilson_avg(alpha)
-
-    def compute_wilson(self, alpha=0.05):
+    def wilson(self, alpha=0.05):
         ns = self.this_avg * self.pulls
         n = self.pulls
         z = 1.96 if alpha == 0.05 else stats.norm.interval(1 - alpha)[1]
         z2 = z ** 2
         estimate = (ns + 0.5 * z2) / (n + z2)
         ci = z / (n + z2) * np.sqrt((ns * (n - ns)) / n + z2 / 4)
-        if np.isnan(estimate):
-            print("")
         if self.is_cost_arm:
             ci *= -1
         return max(estimate + ci, 1e-10)
 
-    def compute_wilson_t(self, alpha_max=0.1):
-        alpha = self.exp_decay_alpha(alpha_max=alpha_max)  # 1 / (1 + self.t * np.log(self.t) ** 2)
-        return self.compute_wilson(alpha)
-
-    def _compute_sample_average_estimator(self):
-        ci = self.get_ci()
-        avg = self.this_avg + ci
-        return min(1.0, max(0.0, avg))
-
     def _compute_alpha_beta(self):
-        if self._ci == "wilson-ci-t":
-            avg = self.compute_wilson_t()
-        elif self._ci == "wilson":
-            avg = self.compute_wilson_avg(alpha=0.05)
-        elif self._ci == "wilson-t":
-            avg = self.compute_wilson_avg_t()
-        else:
-            avg = self.this_avg + self.get_ci()
-        avg = min(1.0, max(0.0, avg))
-        alpha = avg * self.pulls
-        beta = self.pulls * (1 - avg)
+        alpha = self.this_avg * self.pulls
+        beta = self.pulls * (1 - self.this_avg)
         return alpha, beta
 
 
