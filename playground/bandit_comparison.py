@@ -54,32 +54,19 @@ def sort_setting(mean_rewards, mean_costs):
 def create_bandits(k: int, seed: int):
     return np.array([
         # UCB(k=k, name="w-UCB", type="w", seed=seed),
-        # KLBUCB(k=k, name="KLBUCB", seed=seed),
-        # # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding-t)", seed=seed,
-        # #                                  ci_reward="hoeffding-t", ci_cost="hoeffding-t"),
-        UCB(k=k, name="j-UCB", type="j", seed=seed),
+        UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
+        UCB(k=k, name="j-UCB (a)", type="j", seed=seed, adaptive=True),
+        UCB(k=k, name="j-UCB", type="j", seed=seed, adaptive=False),
+        UCB(k=k, name="w-UCB", type="w", seed=seed, adaptive=False),
         # UCB(k=k, name="i-UCB", type="i", seed=seed),
         # UCB(k=k, name="c-UCB", type="c", seed=seed),
-        UCB(k=k, name="m-UCB", type="m", seed=seed),
-        # UCBMBBandit(k=k, name="UCB-MB", seed=seed),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-ci-t)", seed=seed,
-        #                                  ci_reward="wilson-ci-t", ci_cost="wilson-ci-t"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed,
-        #                                  ci_reward="combined", ci_cost="combined"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-ci)", seed=seed,
-        #                                  ci_reward="wilson-ci", ci_cost="wilson-ci"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson)", seed=seed,
+        # UCB(k=k, name="m-UCB", type="m", seed=seed),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="Optimistic TS", seed=seed,
+        #                                  ci_reward="optimistic", ci_cost="optimistic"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="Pessimistic TS", seed=seed,
+        #                                  ci_reward="pessimistic", ci_cost="pessimistic"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="Wilson", seed=seed,
         #                                  ci_reward="wilson", ci_cost="wilson"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-t)", seed=seed,
-        #                                  ci_reward="wilson-t", ci_cost="wilson-t"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="BTS (damped)", seed=seed,
-        #                                  ci_reward="damped", ci_cost="damped"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="BTS (qdamped)", seed=seed,
-        #                                  ci_reward="qdamped", ci_cost="qdamped"),
-        AdaptiveBudgetedThompsonSampling(k=k, name="Optimistic TS", seed=seed,
-                                         ci_reward="optimistic", ci_cost="optimistic"),
-        AdaptiveBudgetedThompsonSampling(k=k, name="Wilson", seed=seed,
-                                         ci_reward="wilson", ci_cost="wilson"),
         # ThompsonSampling(k=k, name="TS with costs", seed=seed),
         # ThompsonSampling(k=k, name="TS without costs", seed=seed),
         # BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
@@ -116,6 +103,7 @@ def prepare_df(df: pd.DataFrame):
         gdf["oracle"] = gdf["optimal-reward"] / gdf["optimal-cost"] * gdf["spent-budget"]
         df["oracle"][gdf.index] = gdf["oracle"]
         df["regret"][gdf.index] = (gdf["oracle"] - gdf["total reward"]) / gdf["oracle"].iloc[-1]
+        # df["regret"][gdf.index] = df["regret"][gdf.index].rolling(100).mean()
     df["k"] = df["k"].astype(int)
     return df
 
@@ -183,7 +171,7 @@ if __name__ == '__main__':
         high_variance = [True, False]
         ks = [3, 10]
         B = 2000
-        reps = 10
+        reps = 1
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):

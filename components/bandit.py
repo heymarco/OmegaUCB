@@ -27,16 +27,19 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
     def sample(self):
         mean = (self.alpha + 1) / (self.alpha + self.beta + 2)
         s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
-        if self.type == "wilson":
-            s = self.wilson()
-        elif self.type == "jeffrey":
-            s = self.jeffrey()
-        elif self.type == "optimistic":
+        if self.type == "optimistic":
             if self.is_cost_arm and s > mean:
                 while s > mean:
                     s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
             elif (not self.is_cost_arm) and s < mean:
                 while s < mean:
+                    s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
+        if self.type == "pessimistic":
+            if self.is_cost_arm and s < mean:
+                while s < mean:
+                    s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
+            elif (not self.is_cost_arm) and s > mean:
+                while s > mean:
                     s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
         return s
 
