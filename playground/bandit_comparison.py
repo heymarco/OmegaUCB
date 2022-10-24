@@ -54,13 +54,13 @@ def sort_setting(mean_rewards, mean_costs):
 def create_bandits(k: int, seed: int):
     return np.array([
         # UCB(k=k, name="w-UCB", type="w", seed=seed),
-        UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
-        UCB(k=k, name="j-UCB (a)", type="j", seed=seed, adaptive=True),
+        # UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
+        # UCB(k=k, name="j-UCB (a)", type="j", seed=seed, adaptive=True),
         UCB(k=k, name="j-UCB", type="j", seed=seed, adaptive=False),
         UCB(k=k, name="w-UCB", type="w", seed=seed, adaptive=False),
         # UCB(k=k, name="i-UCB", type="i", seed=seed),
         # UCB(k=k, name="c-UCB", type="c", seed=seed),
-        # UCB(k=k, name="m-UCB", type="m", seed=seed),
+        UCB(k=k, name="m-UCB", type="m", seed=seed),
         # AdaptiveBudgetedThompsonSampling(k=k, name="Optimistic TS", seed=seed,
         #                                  ci_reward="optimistic", ci_cost="optimistic"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="Pessimistic TS", seed=seed,
@@ -69,7 +69,7 @@ def create_bandits(k: int, seed: int):
         #                                  ci_reward="wilson", ci_cost="wilson"),
         # ThompsonSampling(k=k, name="TS with costs", seed=seed),
         # ThompsonSampling(k=k, name="TS without costs", seed=seed),
-        # BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
+        BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
     ])
 
 
@@ -169,9 +169,9 @@ if __name__ == '__main__':
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True, False]
-        ks = [3, 10]
-        B = 2000
-        reps = 1
+        ks = [50, 10, 3]
+        B = 30000
+        reps = 200
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
