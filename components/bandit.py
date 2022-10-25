@@ -41,6 +41,16 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             elif (not self.is_cost_arm) and s > mean:
                 while s > mean:
                     s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
+        if self.type == "ts-cost":
+            if self.is_cost_arm:
+                s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
+            else:
+                s = (self.alpha + 1) / (self.alpha + self.beta + 2)
+        if self.type == "ts-reward":
+            if not self.is_cost_arm:
+                s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
+            else:
+                s = (self.alpha + 1) / (self.alpha + self.beta + 2)
         return s
 
     def mean(self):
