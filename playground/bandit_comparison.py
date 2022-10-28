@@ -27,9 +27,12 @@ from util import run_async
 
 def create_setting(k: int, high_variance: bool, seed: int):
     rng = np.random.default_rng(seed)
-    scale = 0.8 if high_variance else 0.2
-    low = (1 - scale) / 2
-    high = 1 - low
+    if high_variance:
+        low = rng.uniform(low=0.03, high=0.3)
+        high = low + max(0.97 - low, 0.5)  # at least a range of 0.5
+    else:
+        low = rng.uniform(low=0.2, high=0.8)
+        high = low + 0.2
     mean_rewards = rng.uniform(low, high, size=k)
     mean_costs = rng.uniform(low, high, size=k)
     return mean_rewards, mean_costs
@@ -50,33 +53,19 @@ def sort_setting(mean_rewards, mean_costs):
 
 def create_bandits(k: int, seed: int):
     return np.array([
-        # UCB(k=k, name="w-UCB", type="w", seed=seed),
-        # KLBUCB(k=k, name="KLBUCB", seed=seed),
-        # # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (hoeffding-t)", seed=seed,
-        # #                                  ci_reward="hoeffding-t", ci_cost="hoeffding-t"),
-        # # UCB(k=k, name="j-UCB", type="j", seed=seed),
-        # UCB(k=k, name="i-UCB", type="i", seed=seed),
+        # UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
+        # UCB(k=k, name="j-UCB (a)", type="j", seed=seed, adaptive=True),
+        # UCB(k=k, name="j-UCB", type="j", seed=seed, adaptive=False),
+        UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
+        UCB(k=k, name="w-UCB", type="w", seed=seed, adaptive=False),
+        # UCB(k=k, name="i-UCB (a)", type="i", seed=seed, adaptive=True),
         # UCB(k=k, name="c-UCB", type="c", seed=seed),
-        UCB(k=k, name="m-UCB", type="m", seed=seed),
-        # UCBMBBandit(k=k, name="UCB-MB", seed=seed),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-ci-t)", seed=seed,
-        #                                  ci_reward="wilson-ci-t", ci_cost="wilson-ci-t"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (combined)", seed=seed,
-        #                                  ci_reward="combined", ci_cost="combined"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-ci)", seed=seed,
-        #                                  ci_reward="wilson-ci", ci_cost="wilson-ci"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson)", seed=seed,
-        #                                  ci_reward="wilson", ci_cost="wilson"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="ABTS (wilson-t)", seed=seed,
-        #                                  ci_reward="wilson-t", ci_cost="wilson-t"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="BTS (damped)", seed=seed,
-        #                                  ci_reward="damped", ci_cost="damped"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="BTS (qdamped)", seed=seed,
-        #                                  ci_reward="qdamped", ci_cost="qdamped"),
-        AdaptiveBudgetedThompsonSampling(k=k, name="Wilson", seed=seed,
-                                         ci_reward="wilson", ci_cost="wilson"),
-        # ThompsonSampling(k=k, name="TS with costs", seed=seed),
-        # ThompsonSampling(k=k, name="TS without costs", seed=seed),
+        UCB(k=k, name="m-UCB (a)", type="m", seed=seed, adaptive=True),
+        # UCB(k=k, name="m-UCB", type="m", seed=seed, adaptive=False),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
+        #                                  ci_reward="ts-cost", ci_cost="ts-cost"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="TS (reward)", seed=seed,
+        #                                  ci_reward="ts-reward", ci_cost="ts-reward"),
         BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
     ])
 
@@ -90,8 +79,7 @@ def iterate(bandit: AbstractBandit, mean_rewards, mean_costs, rng, logger):
     this_cost = int(rng.uniform() < mean_cost)
     if isinstance(bandit, ThompsonSampling):
         if bandit.name == "TS with costs":
-            normalized_reward = (
-                                            1 + this_reward - this_cost) / 2  # gives 0 if mean_reward is much smaller than mean cost and 1 if mean cost is much smaller than mean reward
+            normalized_reward = (1 + this_reward - this_cost) / 2  # gives 0 if mean_reward is much smaller than mean cost and 1 if mean cost is much smaller than mean reward
             this_normalized_reward = int(rng.uniform() < normalized_reward)
             bandit.update(arm, this_normalized_reward)
         else:
@@ -108,9 +96,10 @@ def prepare_df(df: pd.DataFrame):
     df["regret"] = np.nan
     df["oracle"] = np.nan
     for _, gdf in df.groupby(["rep", "approach", "k", "high-variance"]):
-        gdf["oracle"] = gdf["optimal-reward"] / gdf["optimal-cost"] * gdf["spent budget"]
+        gdf["oracle"] = gdf["optimal-reward"] / gdf["optimal-cost"] * gdf["spent-budget"]
         df["oracle"][gdf.index] = gdf["oracle"]
-        df["regret"][gdf.index] = gdf["oracle"] - gdf["total reward"]
+        df["regret"][gdf.index] = (gdf["oracle"] - gdf["total reward"]) / gdf["oracle"].iloc[-1]
+        # df["regret"][gdf.index] = df["regret"][gdf.index].rolling(100).mean()
     df["k"] = df["k"].astype(int)
     return df
 
@@ -176,8 +165,8 @@ if __name__ == '__main__':
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True, False]
-        ks = [50, 10, 2]
-        B = 2000
+        ks = [100, 30, 10, 3]
+        B = 20000
         reps = 300
         dfs = []
         for k in tqdm(ks, desc="k"):

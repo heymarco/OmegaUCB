@@ -1,11 +1,15 @@
 import numpy as np
 from scipy import stats
+import math
 
 from components.bandits.abstract import AbstractArm, AbstractBandit
 
 
 class UCBArm(AbstractArm):
-    def __init__(self, type: str, alpha=0.25):
+    def __init__(self, type: str, alpha=0.25, confidence=0.95, adaptive=False):
+        self.adaptive = adaptive
+        self.confidence = confidence
+        self.z = stats.norm.interval(self.confidence)[1]
         self.alpha = alpha
         self.pulls = 0
         self.t = 0
@@ -13,83 +17,114 @@ class UCBArm(AbstractArm):
         self._avg_cost = 0
         self._avg_reward = 0
         self._type = type
-        self._cmin = 1e-5
         self._rew = 0
         self._cost = 0
 
     def _wilson_alpha(self):
-        return 2 / self.t ** 2
+        return 1 - self.confidence
+
+    def _adaptive_confidence(self):
+        conf = max(0, np.sqrt(1 - 4 / self.t ** 2))
+        return conf
+
+    def _adaptive_z(self):
+        if self.t == 0:
+            return 0
+        else:
+            K = 1.0 / 4
+            z = np.sqrt(2 * K * np.log(self.t / self.pulls))
+        return z
 
     def _epsilon(self):
         return self.alpha * np.sqrt(np.log(self.t - 1) / self.pulls)
 
-    def _wilson_reward_estimate(self):
-        ns = self._avg_reward * self.pulls
+    def _hoeffding_epsilon_for_confidence(self):
+        return np.sqrt(np.log(2 / (1 - self.confidence)) / (2 * self.pulls))
+
+    def _center_adjusted_average(self, non_adjusted_average, z):
         n = self.pulls
-        z = 1.96 if self._wilson_alpha() == 0.05 else stats.norm.interval(1 - self._wilson_alpha())[1]
-        z2 = z ** 2
-        return (ns + 0.5 * z2) / (n + z2)
+        ns = non_adjusted_average * n
+        z2 = np.power(z, 2)
+        avg = (ns + 0.5 * z2) / (n + z2)
+        return avg
 
-    def _wilson_cost_estimate(self):
-        ns = self._avg_cost * self.pulls
-        n = self.pulls
-        z = 1.96 if self._wilson_alpha() == 0.05 else stats.norm.interval(1 - self._wilson_alpha())[0]
-        z2 = z ** 2
-        return (ns + 0.5 * z2) / (n + z2)
-
-    def _wilson_reward_ci(self):
-            n = self.pulls
-            ns = self._avg_reward * n
-            nf = n - ns
-            z = 1.96 if self._wilson_alpha() == 0.05 else stats.norm.interval(1 - self._wilson_alpha())[1]
-            z2 = np.power(z, 2)
-            return z / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
-
-    def _wilson_cost_ci(self):
+    def update_wilson_estimate_cost(self):
         n = self.pulls
         ns = self._avg_cost * n
         nf = n - ns
-        z = 1.96 if self._wilson_alpha() == 0.05 else stats.norm.interval(1 - self._wilson_alpha())[1]
-        z2 = np.power(z, 2)
-        return z / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
+        if self.adaptive:
+            z = self._adaptive_z()
+        else:
+            z = self.z
+        z2 = z ** 2
 
-    def _jeffrey_estimate_cost(self):
+        avg = (ns + 0.5 * z2) / (n + z2)
+        ci = z / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
+        self._cost = max(avg - ci, 1e-10)
+
+    def update_wilson_estimate_reward(self):
+        n = self.pulls
+        ns = self._avg_reward * n
+        nf = n - ns
+        if self.adaptive:
+            z = self._adaptive_z()
+        else:
+            z = self.z
+        z2 = np.power(z, 2)
+        avg = (ns + 0.5 * z2) / (n + z2)
+        ci = z / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
+        self._rew = min(avg + ci, 1.0)
+
+    def update_jeffrey_estimate_cost(self):
         if self.pulls == self._prev_pulls and self.pulls > 1:
             return self._cost
         n = self.pulls
         x = self._avg_cost * n
-        low, high = stats.beta.interval(alpha=0.05, a=0.5 + x, b=0.5 + n - x)
+        if self.adaptive:
+            low, high = stats.beta.interval(alpha=self._adaptive_confidence(),
+                                            a=0.5 + x, b=0.5 + n - x)
+        else:
+            low, high = stats.beta.interval(alpha=self.confidence,
+                                            a=0.5 + x, b=0.5 + n - x)
         self._cost = low
-        return low
 
-    def _jeffrey_estimate_reward(self):
+    def update_jeffrey_estimate_reward(self):
         if self.pulls == self._prev_pulls and self.pulls > 1:
             return self._rew
         n = self.pulls
         x = self._avg_reward * n
-        low, high = stats.beta.interval(alpha=0.05, a=0.5 + x, b=0.5 + n - x)
+        if self.adaptive:
+            low, high = stats.beta.interval(alpha=self._adaptive_confidence(),
+                                            a=0.5 + x, b=0.5 + n - x)
+        else:
+            low, high = stats.beta.interval(alpha=self.confidence,
+                                            a=0.5 + x, b=0.5 + n - x)
         self._rew = high
-        return high
 
     def sample(self):
-        cost = max(self._cmin, self._avg_cost)
+        cost = max(1e-10, self._avg_cost)
         if self._type == "i":
-            return self._avg_reward / cost + self._epsilon()
+            epsilon = self._epsilon() if self.adaptive else self._hoeffding_epsilon_for_confidence()
+            return self._avg_reward / cost + epsilon
         elif self._type == "c":
-            return (self._avg_reward + self._epsilon()) / cost
+            epsilon = self._epsilon() if self.adaptive else self._hoeffding_epsilon_for_confidence()
+            return (self._avg_reward + epsilon) / cost
         elif self._type == "m":
-            top = min(self._avg_reward + self._epsilon(), 1)
-            bottom = max(cost - self._epsilon(), 1e-10)
+            epsilon = self._epsilon() if self.adaptive else self._hoeffding_epsilon_for_confidence()
+            top = min(self._avg_reward + epsilon, 1)
+            bottom = max(cost - epsilon, 1e-10)
             return top / bottom
-        elif self._type == "w":
-            ci_rew = self._wilson_reward_ci()
-            ci_cost = self._wilson_cost_ci()
-            top = min(self._wilson_reward_estimate() + ci_rew, 1)
-            bottom = max(self._wilson_cost_estimate() - ci_cost, 1e-10)
-            return top / bottom
-        elif self._type == "j":
-            rew = self._jeffrey_estimate_reward()
-            cost = self._jeffrey_estimate_cost()
+        elif self._type == "r":
+            epsilon = self._epsilon()
+            z = 1.96  # stats.norm.interval(self.confidence)[1]
+            top = self._center_adjusted_average(self._avg_reward, z)
+            bottom = self._center_adjusted_average(self._avg_cost, z)
+            ratio = top / bottom
+            index = ratio * (1 + epsilon)
+            return index
+        elif self._type == "j" or self._type == "w":
+            rew = self._rew
+            cost = self._cost
             return rew / cost
         else:
             raise ValueError
@@ -102,20 +137,39 @@ class UCBArm(AbstractArm):
         self._prev_pulls = self.pulls
         if self.pulls == 0 and not was_pulled:
             return
-        if was_pulled:
-            self.pulls += 1
-            self._avg_cost = ((self.pulls - 1) * self._avg_cost + new_cost) / self.pulls
-            self._avg_reward = ((self.pulls - 1) * self._avg_reward + new_reward) / self.pulls
+        if self.adaptive:
+            if was_pulled:
+                self.pulls += 1
+                self._avg_cost = ((self.pulls - 1) * self._avg_cost + new_cost) / self.pulls
+                self._avg_reward = ((self.pulls - 1) * self._avg_reward + new_reward) / self.pulls
+            if self._type == "j":
+                self.update_jeffrey_estimate_cost()
+                self.update_jeffrey_estimate_reward()
+            elif self._type == "w":
+                self.update_wilson_estimate_cost()
+                self.update_wilson_estimate_reward()
+        else:
+            if was_pulled:
+                self.pulls += 1
+                self._avg_cost = ((self.pulls - 1) * self._avg_cost + new_cost) / self.pulls
+                self._avg_reward = ((self.pulls - 1) * self._avg_reward + new_reward) / self.pulls
+                if self._type == "j":
+                    self.update_jeffrey_estimate_cost()
+                    self.update_jeffrey_estimate_reward()
+                elif self._type == "w":
+                    self.update_wilson_estimate_cost()
+                    self.update_wilson_estimate_reward()
 
     def startup_complete(self):
         return self.pulls > 0
 
 
 class UCB(AbstractBandit):
-    def __init__(self, k: int, name: str, type: str, seed: int):
+    def __init__(self, k: int, name: str, type: str, seed: int, adaptive: bool = False):
         super().__init__(k, name, seed)
         self.type = type
-        self.arms = [UCBArm(type) for _ in range(k)]
+        self.adaptive = adaptive
+        self.arms = [UCBArm(type, adaptive=adaptive) for _ in range(k)]
 
     def sample(self):
         if not self.startup_complete():
