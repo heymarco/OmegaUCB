@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import stats
+import math
 
 from components.bandits.abstract import AbstractArm, AbstractBandit
 
@@ -8,6 +9,7 @@ class UCBArm(AbstractArm):
     def __init__(self, type: str, alpha=0.25, confidence=0.95, adaptive=False):
         self.adaptive = adaptive
         self.confidence = confidence
+        self.z = stats.norm.interval(self.confidence)[1]
         self.alpha = alpha
         self.pulls = 0
         self.t = 0
@@ -22,15 +24,29 @@ class UCBArm(AbstractArm):
         return 1 - self.confidence
 
     def _adaptive_confidence(self):
-        conf = max(0, 1 - 2 / self.t ** 2)
+        conf = max(0, np.sqrt(1 - 4 / self.t ** 2))
         return conf
 
     def _adaptive_z(self):
-        z = stats.norm.interval(self._adaptive_confidence())[1]
+        if self.t == 0:
+            return 0
+        else:
+            K = 1.0 / 4
+            z = np.sqrt(2 * K * np.log(self.t / self.pulls))
         return z
 
     def _epsilon(self):
         return self.alpha * np.sqrt(np.log(self.t - 1) / self.pulls)
+
+    def _hoeffding_epsilon_for_confidence(self):
+        return np.sqrt(np.log(2 / (1 - self.confidence)) / (2 * self.pulls))
+
+    def _center_adjusted_average(self, non_adjusted_average, z):
+        n = self.pulls
+        ns = non_adjusted_average * n
+        z2 = np.power(z, 2)
+        avg = (ns + 0.5 * z2) / (n + z2)
+        return avg
 
     def update_wilson_estimate_cost(self):
         n = self.pulls
@@ -39,7 +55,7 @@ class UCBArm(AbstractArm):
         if self.adaptive:
             z = self._adaptive_z()
         else:
-            z = stats.norm.interval(self.confidence)[1]
+            z = self.z
         z2 = z ** 2
 
         avg = (ns + 0.5 * z2) / (n + z2)
@@ -53,7 +69,7 @@ class UCBArm(AbstractArm):
         if self.adaptive:
             z = self._adaptive_z()
         else:
-            z = stats.norm.interval(self.confidence)[1]
+            z = self.z
         z2 = np.power(z, 2)
         avg = (ns + 0.5 * z2) / (n + z2)
         ci = z / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
@@ -88,13 +104,24 @@ class UCBArm(AbstractArm):
     def sample(self):
         cost = max(1e-10, self._avg_cost)
         if self._type == "i":
-            return self._avg_reward / cost + self._epsilon()
+            epsilon = self._epsilon() if self.adaptive else self._hoeffding_epsilon_for_confidence()
+            return self._avg_reward / cost + epsilon
         elif self._type == "c":
-            return (self._avg_reward + self._epsilon()) / cost
+            epsilon = self._epsilon() if self.adaptive else self._hoeffding_epsilon_for_confidence()
+            return (self._avg_reward + epsilon) / cost
         elif self._type == "m":
-            top = min(self._avg_reward + self._epsilon(), 1)
-            bottom = max(cost - self._epsilon(), 1e-10)
+            epsilon = self._epsilon() if self.adaptive else self._hoeffding_epsilon_for_confidence()
+            top = min(self._avg_reward + epsilon, 1)
+            bottom = max(cost - epsilon, 1e-10)
             return top / bottom
+        elif self._type == "r":
+            epsilon = self._epsilon()
+            z = 1.96  # stats.norm.interval(self.confidence)[1]
+            top = self._center_adjusted_average(self._avg_reward, z)
+            bottom = self._center_adjusted_average(self._avg_cost, z)
+            ratio = top / bottom
+            index = ratio * (1 + epsilon)
+            return index
         elif self._type == "j" or self._type == "w":
             rew = self._rew
             cost = self._cost

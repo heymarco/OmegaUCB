@@ -28,10 +28,10 @@ from util import run_async
 def create_setting(k: int, high_variance: bool, seed: int):
     rng = np.random.default_rng(seed)
     if high_variance:
-        low = rng.uniform(low=0.1, high=0.5)
-        high = low + max(0.9 - low, 0.5)  # at least a range of 0.5
+        low = rng.uniform(low=0.03, high=0.3)
+        high = low + max(0.97 - low, 0.5)  # at least a range of 0.5
     else:
-        low = rng.uniform(low=0.1, high=0.8)
+        low = rng.uniform(low=0.2, high=0.8)
         high = low + 0.2
     mean_rewards = rng.uniform(low, high, size=k)
     mean_costs = rng.uniform(low, high, size=k)
@@ -56,14 +56,16 @@ def create_bandits(k: int, seed: int):
         # UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
         # UCB(k=k, name="j-UCB (a)", type="j", seed=seed, adaptive=True),
         # UCB(k=k, name="j-UCB", type="j", seed=seed, adaptive=False),
+        UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
         UCB(k=k, name="w-UCB", type="w", seed=seed, adaptive=False),
-        UCB(k=k, name="i-UCB", type="i", seed=seed),
-        UCB(k=k, name="c-UCB", type="c", seed=seed),
-        UCB(k=k, name="m-UCB", type="m", seed=seed),
-        AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
-                                         ci_reward="ts-cost", ci_cost="ts-cost"),
-        AdaptiveBudgetedThompsonSampling(k=k, name="TS (reward)", seed=seed,
-                                         ci_reward="ts-reward", ci_cost="ts-reward"),
+        # UCB(k=k, name="i-UCB (a)", type="i", seed=seed, adaptive=True),
+        # UCB(k=k, name="c-UCB", type="c", seed=seed),
+        UCB(k=k, name="m-UCB (a)", type="m", seed=seed, adaptive=True),
+        # UCB(k=k, name="m-UCB", type="m", seed=seed, adaptive=False),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
+        #                                  ci_reward="ts-cost", ci_cost="ts-cost"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="TS (reward)", seed=seed,
+        #                                  ci_reward="ts-reward", ci_cost="ts-reward"),
         BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
     ])
 
@@ -165,7 +167,7 @@ if __name__ == '__main__':
         high_variance = [True, False]
         ks = [100, 30, 10, 3]
         B = 20000
-        reps = 200
+        reps = 300
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
