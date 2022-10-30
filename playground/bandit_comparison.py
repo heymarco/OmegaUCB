@@ -49,7 +49,6 @@ def sort_setting(mean_rewards, mean_costs):
 
 def create_bandits(k: int, seed: int):
     return np.array([
-        # UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
         # UCB(k=k, name="j-UCB (a)", type="j", seed=seed, adaptive=True),
         # UCB(k=k, name="j-UCB", type="j", seed=seed, adaptive=False),
         UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
@@ -58,8 +57,8 @@ def create_bandits(k: int, seed: int):
         # UCB(k=k, name="c-UCB", type="c", seed=seed),
         UCB(k=k, name="m-UCB (a)", type="m", seed=seed, adaptive=True),
         # UCB(k=k, name="m-UCB", type="m", seed=seed, adaptive=False),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
-        #                                  ci_reward="ts-cost", ci_cost="ts-cost"),
+        AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
+                                         ci_reward="ts-cost", ci_cost="ts-cost"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="TS (reward)", seed=seed,
         #                                  ci_reward="ts-reward", ci_cost="ts-reward"),
         BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
@@ -164,20 +163,20 @@ if __name__ == '__main__':
         high_variance = [True]
         p_min = [0.01, 0.02, 0.05, 0.1, 0.25, 0.5]
         ks = [100, 30, 10, 3]
-        steps = 10e5
-        reps = 300
+        steps = 10e5  # we should be able to pull the cheapest arm 100000 times
+        reps = 200
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
                 for p in tqdm(p_min, leave=False, desc="p_min"):
                     all_args = []
                     for rep in range(reps):
-                        mean_rewards, mean_costs = create_setting(k, seed=rep + 500, high_variance=hv, p_min=p)
+                        mean_rewards, mean_costs = create_setting(k, seed=rep, high_variance=hv, p_min=p)
                         mean_rewards, mean_costs = sort_setting(mean_rewards, mean_costs)
                         lowest_cost = np.min(mean_costs)
                         B = int(np.ceil(steps * lowest_cost))
-                        args_list = [[b, B, mean_rewards, mean_costs, rep + 500, hv, p]
-                                     for b in create_bandits(k, rep + 500)]
+                        args_list = [[b, B, mean_rewards, mean_costs, rep, hv, p]
+                                     for b in create_bandits(k, rep)]
                         all_args.append(args_list)
                     num_bandits = len(create_bandits(k, 0))
                     for b_index in tqdm(range(num_bandits), leave=False, desc="Bandit"):
