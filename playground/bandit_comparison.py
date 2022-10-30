@@ -25,15 +25,11 @@ from components.bandit_logging import BanditLogger
 from util import run_async
 
 
-def create_setting(k: int, high_variance: bool, seed: int):
+def create_setting(k: int, high_variance: bool, p_min, seed: int):
     rng = np.random.default_rng(seed)
-    if high_variance:
-        low = rng.uniform(low=0.03, high=0.3)
-        high = low + max(0.97 - low, 0.5)  # at least a range of 0.5
-    else:
-        low = rng.uniform(low=0.2, high=0.8)
-        high = low + 0.2
-    mean_rewards = rng.uniform(low, high, size=k)
+    low = p_min
+    high = 1.0 if high_variance else min(1.0, p_min * 3)
+    mean_rewards = np.array([0.5 for _ in range(k)])  # investigate effect when all arms have same cost.
     mean_costs = rng.uniform(low, high, size=k)
     return mean_rewards, mean_costs
 
@@ -53,7 +49,6 @@ def sort_setting(mean_rewards, mean_costs):
 
 def create_bandits(k: int, seed: int):
     return np.array([
-        # UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
         # UCB(k=k, name="j-UCB (a)", type="j", seed=seed, adaptive=True),
         # UCB(k=k, name="j-UCB", type="j", seed=seed, adaptive=False),
         UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
@@ -62,8 +57,8 @@ def create_bandits(k: int, seed: int):
         # UCB(k=k, name="c-UCB", type="c", seed=seed),
         UCB(k=k, name="m-UCB (a)", type="m", seed=seed, adaptive=True),
         # UCB(k=k, name="m-UCB", type="m", seed=seed, adaptive=False),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
-        #                                  ci_reward="ts-cost", ci_cost="ts-cost"),
+        AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
+                                         ci_reward="ts-cost", ci_cost="ts-cost"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="TS (reward)", seed=seed,
         #                                  ci_reward="ts-reward", ci_cost="ts-reward"),
         BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
@@ -95,22 +90,22 @@ def prepare_df(df: pd.DataFrame):
     df["spent budget"] = (df["spent-budget"] / 100).round() * 100
     df["regret"] = np.nan
     df["oracle"] = np.nan
+    df["normalized budget"] = np.nan
     for _, gdf in df.groupby(["rep", "approach", "k", "high-variance"]):
         gdf["oracle"] = gdf["optimal-reward"] / gdf["optimal-cost"] * gdf["spent-budget"]
         df["oracle"][gdf.index] = gdf["oracle"]
+        gdf["normalized budget"] = gdf["spent budget"] / gdf["spent budget"].iloc[-1]
+        df["normalized budget"][gdf.index] = gdf["normalized budget"]
         df["regret"][gdf.index] = (gdf["oracle"] - gdf["total reward"]) / gdf["oracle"].iloc[-1]
-        # df["regret"][gdf.index] = df["regret"][gdf.index].rolling(100).mean()
     df["k"] = df["k"].astype(int)
     return df
 
 
 def plot_regret(df: pd.DataFrame):
-    # df = df[df["approach"] != "ABTS (wilson)"]
-    # df = df[df["approach"] != "ABTS (hoeffding)"]
     facet_kws = {'sharey': False, 'sharex': True}
     g = sns.relplot(data=df, kind="line",
-                    x="spent budget", y="regret",
-                    hue="approach", row="k", col="high-variance",
+                    x="normalized budget", y="regret",
+                    hue="approach", row="k", col="p-min",
                     height=3, aspect=1, facet_kws=facet_kws,
                     ci=None)
     axes = g.axes.flatten()
@@ -121,10 +116,11 @@ def plot_regret(df: pd.DataFrame):
     plt.show()
 
 
-def run_bandit(bandit, B, mean_rewards, mean_costs, seed, hv):
+def run_bandit(bandit, B, mean_rewards, mean_costs, seed, hv, p_min):
     B_t = B
     logger = BanditLogger()
     logger.track_approach(bandit.name)
+    logger.track_p_min(p_min)
     logger.track_k(len(bandit))
     logger.track_high_variance(hv)
     logger.track_optimal_cost(mean_costs[0])
@@ -136,7 +132,7 @@ def run_bandit(bandit, B, mean_rewards, mean_costs, seed, hv):
         r, c = iterate(bandit, mean_rewards, mean_costs, rng, logger)
         B_t -= c
         r_sum += r
-        if (B_t % 10) == 1:
+        if (B_t % 50) == 1:
             logger.track_spent_budget(B - B_t)
             logger.track_reward(r_sum)
             logger.track_cost(c)
@@ -164,28 +160,32 @@ if __name__ == '__main__':
     filepath = os.path.join(directory, "bandit_comparison_ci.csv")
     assert os.path.exists(directory)
     if not use_results:
-        high_variance = [True, False]
+        high_variance = [True]
+        p_min = [0.01, 0.02, 0.05, 0.1, 0.25, 0.5]
         ks = [100, 30, 10, 3]
-        B = 20000
-        reps = 300
+        steps = 10e5  # we should be able to pull the cheapest arm 100000 times
+        reps = 200
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
-                all_args = []
-                for rep in range(reps):
-                    mean_rewards, mean_costs = create_setting(k, seed=rep + 500, high_variance=hv)
-                    mean_rewards, mean_costs = sort_setting(mean_rewards, mean_costs)
-                    args_list = [[b, B, mean_rewards, mean_costs, rep + 500, hv] for b in create_bandits(k, rep + 500)]
-                    all_args.append(args_list)
-                num_bandits = len(create_bandits(k, 0))
-                for b_index in tqdm(range(num_bandits), leave=False, desc="Bandit"):
-                    args_for_bandit = [a[b_index] for a in all_args]
-                    results = run_async(run_bandit, args_for_bandit, njobs=multiprocessing.cpu_count() - 1)
-                    dfs = dfs + results
+                for p in tqdm(p_min, leave=False, desc="p_min"):
+                    all_args = []
+                    for rep in range(reps):
+                        mean_rewards, mean_costs = create_setting(k, seed=rep, high_variance=hv, p_min=p)
+                        mean_rewards, mean_costs = sort_setting(mean_rewards, mean_costs)
+                        lowest_cost = np.min(mean_costs)
+                        B = int(np.ceil(steps * lowest_cost))
+                        args_list = [[b, B, mean_rewards, mean_costs, rep, hv, p]
+                                     for b in create_bandits(k, rep)]
+                        all_args.append(args_list)
+                    num_bandits = len(create_bandits(k, 0))
+                    for b_index in tqdm(range(num_bandits), leave=False, desc="Bandit"):
+                        args_for_bandit = [a[b_index] for a in all_args]
+                        results = run_async(run_bandit, args_for_bandit, njobs=multiprocessing.cpu_count() - 1)
+                        dfs = dfs + results
         df = pd.concat(dfs)
         df.to_csv(filepath, index=False)
     if plot_results:
         df = pd.read_csv(filepath)
         df = prepare_df(df)
-        # get_best_arm_stats(df)
         plot_regret(df)

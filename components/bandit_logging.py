@@ -9,7 +9,7 @@ class BanditLogger:
 
     def __init__(self,
                  columns: list = ["rep", "approach", "k", "high-variance", "optimal-reward", "spent-budget",
-                                  "optimal-cost", "reward", "cost", "arm"]):
+                                  "optimal-cost", "reward", "cost", "arm", "p-min"]):
         self._data = []
         self._columns = columns
         self._current_row = [np.nan for _ in range(len(self._columns))]
@@ -19,6 +19,9 @@ class BanditLogger:
 
     def track_high_variance(self, hv: bool):
         self._track_value(hv, "high-variance")
+
+    def track_p_min(self, p):
+        self._track_value(p, "p-min")
 
     def track_arm(self, arm: int):
         self._track_value(arm, "arm")
