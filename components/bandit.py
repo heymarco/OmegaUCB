@@ -1,5 +1,5 @@
 import numpy as np
-from scipy import stats
+from scipy.stats import beta
 
 from components.bandits.abstract import AbstractArm, AbstractBandit
 
@@ -34,19 +34,19 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
             elif (not self.is_cost_arm) and s < mean:
                 while s < mean:
                     s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
-        if self.type == "pessimistic":
+        elif self.type == "pessimistic":
             if self.is_cost_arm and s < mean:
                 while s < mean:
                     s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
             elif (not self.is_cost_arm) and s > mean:
                 while s > mean:
                     s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
-        if self.type == "ts-cost":
+        elif self.type == "ts-cost":
             if self.is_cost_arm:
                 s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
             else:
                 s = (self.alpha + 1) / (self.alpha + self.beta + 2)
-        if self.type == "ts-reward":
+        elif self.type == "ts-reward":
             if not self.is_cost_arm:
                 s = self.rng.beta(a=self.alpha + 1, b=self.beta + 1)
             else:
@@ -80,29 +80,8 @@ class ArmWithAdaptiveBetaPosterior(AbstractArm):
     def jeffrey(self, alpha=0.05):
         n = self.pulls
         x = self.this_avg * n
-        low, high = stats.beta.interval(alpha=alpha, a=0.5 + x, b=0.5 + n - x)
+        low, high = beta.interval(alpha=alpha, a=0.5 + x, b=0.5 + n - x)
         return low if self.is_cost_arm else high
-
-    def compute_wilson_avg(self, alpha):
-        ns = self.this_avg * self.pulls
-        n = self.pulls
-        z = 1.96 if alpha == 0.05 else stats.norm.interval(1 - alpha)[1]
-        z2 = z ** 2
-        estimate = (ns + 0.5 * z2) / (n + z2)
-        if np.isnan(estimate):
-            print("")
-        return estimate
-
-    def wilson(self, alpha=0.05):
-        ns = self.this_avg * self.pulls
-        n = self.pulls
-        z = 1.96 if alpha == 0.05 else stats.norm.interval(1 - alpha)[1]
-        z2 = z ** 2
-        estimate = (ns + 0.5 * z2) / (n + z2)
-        ci = z / (n + z2) * np.sqrt((ns * (n - ns)) / n + z2 / 4)
-        if self.is_cost_arm:
-            ci *= -1
-        return max(estimate + ci, 1e-10)
 
     def _compute_alpha_beta(self):
         alpha = self.this_avg * self.pulls
@@ -116,10 +95,11 @@ class AdaptiveBudgetedThompsonSampling(AbstractBandit):
         self.ci_cost = ci_cost
         self.reward_arms = [ArmWithAdaptiveBetaPosterior(arm_index, ci=ci_reward, is_cost_arm=False) for arm_index in range(k)]
         self.cost_arms = [ArmWithAdaptiveBetaPosterior(k + arm_index, ci=ci_cost, is_cost_arm=True) for arm_index in range(k)]
+        self._startup_complete = False
         super(AdaptiveBudgetedThompsonSampling, self).__init__(k, name, seed)
 
     def sample(self) -> int:
-        if np.any([not a.startup_complete for a in self.reward_arms]):
+        if not self._startup_complete:
             return [i for i, a in enumerate(self.reward_arms) if not a.startup_complete][0]
         reward_samples = [a.sample() for a in self.reward_arms]
         cost_samples = [a.sample() for a in self.cost_arms]
@@ -137,6 +117,8 @@ class AdaptiveBudgetedThompsonSampling(AbstractBandit):
             cost = int(self.rng.uniform() < cost)
         [(r.update(reward, was_pulled=arm == i), c.update(cost, was_pulled=arm == i))
          for (i, (r, c)) in enumerate(zip(self.reward_arms, self.cost_arms))]
+        if not self._startup_complete:
+            self._startup_complete = np.any([not a.startup_complete for a in self.reward_arms])
 
     def __len__(self):
         return len(self.cost_arms)

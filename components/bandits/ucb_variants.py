@@ -1,5 +1,5 @@
 import numpy as np
-from scipy import stats
+from scipy.stats import norm, beta
 import math
 
 from components.bandits.abstract import AbstractArm, AbstractBandit
@@ -9,7 +9,7 @@ class UCBArm(AbstractArm):
     def __init__(self, type: str, alpha=0.25, confidence=0.95, adaptive=False):
         self.adaptive = adaptive
         self.confidence = confidence
-        self.z = stats.norm.interval(self.confidence)[1]
+        self.z = norm.interval(self.confidence)[1]
         self.alpha = alpha
         self.pulls = 0
         self.t = 0
@@ -81,10 +81,10 @@ class UCBArm(AbstractArm):
         n = self.pulls
         x = self._avg_cost * n
         if self.adaptive:
-            low, high = stats.beta.interval(alpha=self._adaptive_confidence(),
+            low, high = beta.interval(alpha=self._adaptive_confidence(),
                                             a=0.5 + x, b=0.5 + n - x)
         else:
-            low, high = stats.beta.interval(alpha=self.confidence,
+            low, high = beta.interval(alpha=self.confidence,
                                             a=0.5 + x, b=0.5 + n - x)
         self._cost = low
 
@@ -94,10 +94,10 @@ class UCBArm(AbstractArm):
         n = self.pulls
         x = self._avg_reward * n
         if self.adaptive:
-            low, high = stats.beta.interval(alpha=self._adaptive_confidence(),
+            low, high = beta.interval(alpha=self._adaptive_confidence(),
                                             a=0.5 + x, b=0.5 + n - x)
         else:
-            low, high = stats.beta.interval(alpha=self.confidence,
+            low, high = beta.interval(alpha=self.confidence,
                                             a=0.5 + x, b=0.5 + n - x)
         self._rew = high
 
@@ -116,7 +116,7 @@ class UCBArm(AbstractArm):
             return top / bottom
         elif self._type == "r":
             epsilon = self._epsilon()
-            z = 1.96  # stats.norm.interval(self.confidence)[1]
+            z = self.z
             top = self._center_adjusted_average(self._avg_reward, z)
             bottom = self._center_adjusted_average(self._avg_cost, z)
             ratio = top / bottom
@@ -169,17 +169,20 @@ class UCB(AbstractBandit):
         super().__init__(k, name, seed)
         self.type = type
         self.adaptive = adaptive
+        self._startup_complete = False
         self.arms = [UCBArm(type, adaptive=adaptive) for _ in range(k)]
 
     def sample(self):
-        if not self.startup_complete():
-            return [i for i, a in enumerate(self.arms) if not a.startup_complete()][0]
-        samples = [a.sample() for a in self.arms]
-        return np.argmax(samples)
+        if not self._startup_complete:
+            result = [i for i, a in enumerate(self.arms) if not a.startup_complete()][0]
+            return result
+        return np.argmax([a.sample() for a in self.arms])
 
     def update(self, arm: int, reward: float, cost: float):
         [a.update(new_reward=reward, new_cost=cost, was_pulled=arm == i)
          for i, a in enumerate(self.arms)]
+        if not self._startup_complete:
+            self._startup_complete = self.startup_complete()
 
     def set(self, *args, **kwargs):
         raise NotImplementedError
