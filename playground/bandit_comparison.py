@@ -10,8 +10,6 @@ import sys
 import os
 from time import process_time_ns
 
-from experiment import prepare_df, run_bandit
-
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
@@ -19,6 +17,7 @@ from components.bandit import AdaptiveBudgetedThompsonSampling
 from components.bandits.bts import BudgetedThompsonSampling
 from components.bandits.ucb_variants import UCB
 from util import run_async
+from experiment import prepare_df, run_bandit
 
 
 def create_setting(k: int, high_variance: bool, p_min, seed: int):
@@ -112,5 +111,5 @@ if __name__ == '__main__':
         df.to_csv(filepath, index=False)
     if plot_results:
         df = pd.read_csv(filepath)
-        df = prepare_df(df)
+        df = prepare_df(df, every_nth=5)
         plot_regret(df, filename + ".pdf")

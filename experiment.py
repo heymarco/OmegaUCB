@@ -20,8 +20,9 @@ def iterate(bandit: AbstractBandit, mean_rewards, mean_costs, rng, logger):
     return this_reward, this_cost
 
 
-def prepare_df(df: pd.DataFrame):
+def prepare_df(df: pd.DataFrame, every_nth: int = 1):
     df.ffill(inplace=True)
+    df = df.iloc[::every_nth]
     df["total reward"] = df["reward"]
     df["spent budget"] = (df["spent-budget"] / 500).round() * 500
     df["regret"] = np.nan
