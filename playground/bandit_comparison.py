@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import seaborn as sns
+import matplotlib.pyplot as plt
 
 import sys
 import os
@@ -76,7 +77,7 @@ def plot_regret(df: pd.DataFrame, filename: str):
 
 
 if __name__ == '__main__':
-    use_results = False
+    use_results = True
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filename = "bandit_comparison_ci"
