@@ -13,6 +13,12 @@ class BanditLogger:
         self._data = []
         self._columns = columns
         self._current_row = [np.nan for _ in range(len(self._columns))]
+        self._column_indices = {key: i for (i, key) in enumerate(columns)}
+
+    def track_iteration(self, spent_budget, r_sum, c):
+        self.track_spent_budget(spent_budget)
+        self.track_reward(r_sum)
+        self.track_cost(c)
 
     def track_approach(self, app: str):
         self._track_value(app, "approach")
@@ -60,8 +66,7 @@ class BanditLogger:
         self._current_row[self._index_of(id)] = newval
 
     def _index_of(self, id):
-        index = next(i for i in range(len(self._columns)) if self._columns[i] == id)
-        return index
+        return self._column_indices[id]
 
     def _reset(self):
         self._current_row = [np.nan for _ in range(len(self._columns))]
