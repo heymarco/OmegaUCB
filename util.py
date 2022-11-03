@@ -1,8 +1,11 @@
+import os.path
 from multiprocessing import Pool
 from time import sleep
 
 import numpy as np
+import pandas as pd
 from scipy import stats
+from tqdm import tqdm
 
 MNIST = 554
 MUSHROOM = 24
@@ -31,3 +34,18 @@ def reg_beta(x, a, b, k=100):
     n = a + b
     reg = k / n ** 2
     return stats.beta.pdf(x, a + reg, b + reg)
+
+
+def subsample_csv(csv_path: str, every_nth: int = 1):
+    iterator = pd.read_csv(csv_path, chunksize=100000)
+    reduced_chunks = []
+    last_row = None
+    for chunk_number, chunk in tqdm(enumerate(iterator)):
+        if not chunk_number == 0:
+            chunk = pd.concat([last_row, chunk]).reset_index()
+        last_row = chunk.iloc[-1]
+        reduced_chunk = chunk.iloc[::every_nth]
+        reduced_chunks.append(reduced_chunk)
+    reduced_df = pd.DataFrame([reduced_chunks]).reset_index()
+    path, ext = os.path.splitext(csv_path)
+    reduced_df.to_csv(os.path.join(path, "_reduced" + ext))
