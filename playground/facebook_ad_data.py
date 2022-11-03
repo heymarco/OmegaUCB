@@ -99,7 +99,7 @@ def plot_regret_over_k(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    use_results = True
+    use_results = False
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filename = "bandit_comparison_facebook_ads"
