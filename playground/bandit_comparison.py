@@ -16,7 +16,7 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 from components.bandit import AdaptiveBudgetedThompsonSampling
 from components.bandits.bts import BudgetedThompsonSampling
 from components.bandits.ucb_variants import UCB
-from util import run_async
+from util import run_async, subsample_csv
 from experiment import prepare_df, run_bandit
 
 
@@ -61,9 +61,10 @@ def create_bandits(k: int, seed: int):
 
 
 def plot_regret(df: pd.DataFrame, filename: str):
-    facet_kws = {'sharey': False, 'sharex': True}
+    facet_kws = {'sharey': False, 'sharex': False}
+    df["round"] = df.index
     g = sns.relplot(data=df, kind="line",
-                    x="normalized budget", y="regret",
+                    x="round", y="regret",
                     hue="approach", row="k", col="p-min",
                     height=3, aspect=1, facet_kws=facet_kws,
                     ci=None)
@@ -110,6 +111,9 @@ if __name__ == '__main__':
         df = pd.concat(dfs)
         df.to_csv(filepath, index=False)
     if plot_results:
-        df = pd.read_csv(filepath)
-        df = prepare_df(df, every_nth=5)
-        plot_regret(df, filename + ".pdf")
+        # subsample_csv(filepath, every_nth=50)
+        reduced_filename = filename + "_reduced" 
+        reduced_filepath = os.path.join(directory, reduced_filename)
+        df = pd.read_csv(reduced_filepath + ".csv")
+        df = prepare_df(df)
+        plot_regret(df, reduced_filename + ".pdf")

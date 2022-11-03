@@ -37,7 +37,7 @@ def reg_beta(x, a, b, k=100):
 
 
 def subsample_csv(csv_path: str, every_nth: int = 1):
-    iterator = pd.read_csv(csv_path, chunksize=100000)
+    iterator = pd.read_csv(csv_path, chunksize=int(10e6))
     reduced_chunks = []
     last_row = None
     for chunk_number, chunk in tqdm(enumerate(iterator)):
@@ -46,6 +46,8 @@ def subsample_csv(csv_path: str, every_nth: int = 1):
         last_row = chunk.iloc[-1]
         reduced_chunk = chunk.iloc[::every_nth]
         reduced_chunks.append(reduced_chunk)
-    reduced_df = pd.DataFrame([reduced_chunks]).reset_index()
+    reduced_df = pd.concat(reduced_chunks).reset_index()
     path, ext = os.path.splitext(csv_path)
-    reduced_df.to_csv(os.path.join(path, "_reduced" + ext))
+    newpath = path + "_reduced" + ext
+    reduced_df.to_csv(newpath)
+    return reduced_df
