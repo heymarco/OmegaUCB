@@ -52,7 +52,7 @@ def get_setting(df):
 def plot_regret(df: pd.DataFrame, filename: str):
     facet_kws = {'sharey': False, 'sharex': True}
     g = sns.relplot(data=df, kind="line",
-                    x="spent budget", y="regret",
+                    x="normalized budget", y="regret",
                     hue="approach", row="p-min",
                     height=3, aspect=1, facet_kws=facet_kws,
                     ci=None)
@@ -136,6 +136,6 @@ if __name__ == '__main__':
     if plot_results:
         df = pd.read_csv(filepath)
         df = prepare_df(df)
-        plot_regret_over_k(df)
+        # plot_regret_over_k(df)
         plot_regret(df, filename + ".pdf")
 
