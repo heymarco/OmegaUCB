@@ -33,10 +33,10 @@ def prepare_df(df: pd.DataFrame, every_nth: int = 1):
         gdf["oracle"] = gdf["optimal-reward"] / gdf["optimal-cost"] * gdf["spent-budget"]
         df["oracle"][gdf.index] = gdf["oracle"]
         normalized_budget = gdf["spent budget"] / gdf["spent budget"].iloc[-1]
-        print(group, gdf["spent budget"].iloc[-1])
-        df["normalized budget"][gdf.index] = (normalized_budget * 3).round(1) / 3
-        regret = (gdf["oracle"] - gdf["total reward"]) / gdf["oracle"].iloc[-1]
-        df["regret"][gdf.index] = regret
+        gdf["normalized budget"] = (normalized_budget * 3).round(1) / 3
+        df["normalized budget"][gdf.index] = gdf["normalized budget"]
+        gdf["regret"] = (gdf["oracle"] - gdf["total reward"]) / gdf["oracle"].iloc[-1]
+        df["regret"][gdf.index] = gdf["regret"]
         df["round"][gdf.index] = np.arange(len(gdf))
     df["k"] = df["k"].astype(int)
     return df

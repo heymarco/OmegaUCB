@@ -69,7 +69,11 @@ def create_bandits(k: int, seed: int):
 def plot_regret(df: pd.DataFrame, filename: str):
     facet_kws = {'sharey': False, 'sharex': True}
     g = sns.relplot(data=df, kind="line",
+<<<<<<< HEAD
+                    x="normalized budget", y="regret", row="p-min",
+=======
                     x="normalized budget", y="regret", row="k",
+>>>>>>> eeec884606aa20391e23bcfabe13e4414af8ca1f
                     hue="approach",
                     height=3, aspect=1, facet_kws=facet_kws,
                     ci=None)
@@ -92,13 +96,14 @@ def plot_regret_over_k(df: pd.DataFrame):
     result_df = result_df[result_df["Arms"] > 3]
     # result_df = result_df.groupby(["Approach", "Arms"]).mean()
     # result_df["Regret"] = result_df["Regret"] / np.min(result_df["Regret"])
-    sns.lineplot(data=result_df, x="Arms", y="Regret", hue="Approach", marker="o")
+    df["p-min"] = df["p-min"].astype(float)
+    sns.lineplot(data=result_df, x="p-min", y="Regret", hue="Approach", marker="o")
     plt.show()
 
 
 
 if __name__ == '__main__':
-    use_results = False
+    use_results = True
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filename = "bandit_comparison_facebook_ads"
@@ -135,6 +140,14 @@ if __name__ == '__main__':
     if plot_results:
         df = pd.read_csv(filepath)
         df = prepare_df(df)
-        plot_regret_over_k(df)
+        for index, ((campaign_id, age, gender), gdf) in enumerate(data.groupby(["campaign_id", "age", "gender"])):
+            gdf = sort_df(gdf)
+            mean_rewards, mean_costs = get_setting(gdf)
+            print("Rew", mean_rewards)
+            print("Cos", mean_costs)
+            p_min = str(campaign_id) + "-" + str(age) + "-" + str(gender)
+            df["p-min"].iloc[df["p-min"] == p_min] = mean_costs[0]
+        print(df["p-min"])
         plot_regret(df, filename + ".pdf")
+        plot_regret_over_k(df)
 
