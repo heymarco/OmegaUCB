@@ -49,21 +49,6 @@ def get_setting(df):
     return mean_rewards, mean_costs
 
 
-def plot_regret(df: pd.DataFrame, filename: str):
-    facet_kws = {'sharey': False, 'sharex': True}
-    g = sns.relplot(data=df, kind="line",
-                    x="normalized budget", y="regret",
-                    hue="approach", row="p-min",
-                    height=3, aspect=1, facet_kws=facet_kws,
-                    ci=None)
-    axes = g.axes.flatten()
-    for ax in axes:
-        ax.axhline(0, color="black", lw=.5)
-    # plt.tight_layout(pad=.5)
-    plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename))
-    plt.show()
-
-
 def create_bandits(k: int, seed: int):
     return np.array([
         # UCB(k=k, name="j-UCB (a)", type="j", seed=seed, adaptive=True),
@@ -82,23 +67,39 @@ def create_bandits(k: int, seed: int):
     ])
 
 
+def plot_regret(df: pd.DataFrame, filename: str):
+    facet_kws = {'sharey': False, 'sharex': True}
+    g = sns.relplot(data=df, kind="line",
+                    x="normalized budget", y="regret",
+                    hue="approach",
+                    height=3, aspect=1, facet_kws=facet_kws,
+                    ci=None)
+    axes = g.axes.flatten()
+    for ax in axes:
+        ax.axhline(0, color="black", lw=.5)
+    # plt.tight_layout(pad=.5)
+    plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename))
+    plt.show()
+
+
 def plot_regret_over_k(df: pd.DataFrame):
     data = []
     for (k, approach, rep), gdf in df.groupby(["k", "approach", "rep"]):
         data.append([k, np.mean(gdf["regret"].iloc[-30:]), approach, rep])
     result_df = pd.DataFrame(data, columns=["Arms", "Regret", "Approach", "rep"])
-    sns.barplot(data=result_df, x="Arms", y="Regret", hue="Approach")
-    plt.yscale("log")
-    plt.show()
+    # sns.barplot(data=result_df, x="Arms", y="Regret", hue="Approach")
+    # plt.yscale("log")
+    # plt.show()
     result_df = result_df[result_df["Arms"] > 3]
-    result_df = result_df.groupby(["Approach"]).mean()
-    result_df["Regret"] = result_df["Regret"] / np.min(result_df["Regret"])
-    print(result_df)
+    # result_df = result_df.groupby(["Approach", "Arms"]).mean()
+    # result_df["Regret"] = result_df["Regret"] / np.min(result_df["Regret"])
+    sns.lineplot(data=result_df, x="Arms", y="Regret", hue="Approach", marker="o")
+    plt.show()
 
 
 
 if __name__ == '__main__':
-    use_results = True
+    use_results = False
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filename = "bandit_comparison_facebook_ads"
@@ -109,8 +110,8 @@ if __name__ == '__main__':
 
     if not use_results:
         high_variance = [True]
-        steps = 3 * 10e4  # we should be able to pull the cheapest arm 100000 times
-        reps = 10
+        steps = 10e5  # we should be able to pull the cheapest arm 100000 times
+        reps = 100
         dfs = []
         for (campaign_id, age, gender), gdf in tqdm(data.groupby(["campaign_id", "age", "gender"]), desc="Setting"):
             gdf = sort_df(gdf)
@@ -136,6 +137,6 @@ if __name__ == '__main__':
     if plot_results:
         df = pd.read_csv(filepath)
         df = prepare_df(df)
-        # plot_regret_over_k(df)
+        plot_regret_over_k(df)
         plot_regret(df, filename + ".pdf")
 
