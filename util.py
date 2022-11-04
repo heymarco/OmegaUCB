@@ -37,16 +37,17 @@ def reg_beta(x, a, b, k=100):
 
 
 def subsample_csv(csv_path: str, every_nth: int = 1):
-    iterator = pd.read_csv(csv_path, chunksize=int(1e6))
-    reduced_chunks = []
-    last_row = None
-    for chunk_number, chunk in tqdm(enumerate(iterator)):
-        if not chunk_number == 0:
-            chunk = pd.concat([last_row, chunk]).reset_index()
-        chunk.ffill()
-        last_row = chunk.iloc[-1]
-        reduced_chunk = chunk.iloc[::every_nth]
-        reduced_chunks.append(reduced_chunk)
-    reduced_df = pd.DataFrame([reduced_chunks]).reset_index()
     path, ext = os.path.splitext(csv_path)
-    reduced_df.to_csv(os.path.join(path, "_reduced" + ext))
+    newpath = path + "_reduced" + ext
+    with pd.read_csv(csv_path, chunksize=int(10e7), low_memory=False, dtype={"rep": float, "approach": str, "k": float,"high-variance": float, "optimal-reward": float, "spent-budget": float, "optimal-cost": float, "reward": float, "cost": float, "arm": float}) as iterator:
+        last_row = None
+        for chunk_number, chunk in tqdm(enumerate(iterator)):
+            if not chunk_number == 0:
+                chunk = pd.concat([last_row, chunk]).reset_index()
+            chunk.iloc[every_nth::] = chunk.iloc[every_nth::].ffill()
+            last_row = chunk.iloc[-1]
+            reduced_chunk = chunk.iloc[every_nth::]
+            mode = "w" if chunk_number == 0 else "a"
+            header = chunk_number == 0
+            reduced_chunk.to_csv(newpath, mode=mode, index=False, header=header)
+
