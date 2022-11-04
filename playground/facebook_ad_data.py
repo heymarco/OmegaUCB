@@ -9,11 +9,10 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 import seaborn as sns
 
-from util import run_async
-
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
+from util import run_async
 from components.bandit import AdaptiveBudgetedThompsonSampling
 from components.bandits.bts import BudgetedThompsonSampling
 from components.bandits.ucb_variants import UCB
@@ -53,24 +52,28 @@ def create_bandits(k: int, seed: int):
     return np.array([
         # UCB(k=k, name="j-UCB (a)", type="j", seed=seed, adaptive=True),
         # UCB(k=k, name="j-UCB", type="j", seed=seed, adaptive=False),
-        UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
-        UCB(k=k, name="w-UCB", type="w", seed=seed, adaptive=False),
+        # UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
+        # UCB(k=k, name="w-UCB", type="w", seed=seed, adaptive=False),
         # UCB(k=k, name="i-UCB (a)", type="i", seed=seed, adaptive=True),
         # UCB(k=k, name="c-UCB", type="c", seed=seed),
-        # UCB(k=k, name="m-UCB (a)", type="m", seed=seed, adaptive=True),
+        UCB(k=k, name="m-UCB (a)", type="m", seed=seed, adaptive=True),
         # UCB(k=k, name="m-UCB", type="m", seed=seed, adaptive=False),
-        AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
-                                         ci_reward="ts-cost", ci_cost="ts-cost"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
+        #                                  ci_reward="ts-cost", ci_cost="ts-cost"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="TS (reward)", seed=seed,
         #                                  ci_reward="ts-reward", ci_cost="ts-reward"),
-        BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
+        # BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
     ])
 
 
 def plot_regret(df: pd.DataFrame, filename: str):
     facet_kws = {'sharey': False, 'sharex': True}
     g = sns.relplot(data=df, kind="line",
+<<<<<<< HEAD
                     x="normalized budget", y="regret", row="p-min",
+=======
+                    x="normalized budget", y="regret", row="k",
+>>>>>>> eeec884606aa20391e23bcfabe13e4414af8ca1f
                     hue="approach",
                     height=3, aspect=1, facet_kws=facet_kws,
                     ci=None)
@@ -111,8 +114,8 @@ if __name__ == '__main__':
 
     if not use_results:
         high_variance = [True]
-        steps = 10e5  # we should be able to pull the cheapest arm 100000 times
-        reps = 100
+        steps = 1e5  # we should be able to pull the cheapest arm 10000 times
+        reps = 200
         dfs = []
         for (campaign_id, age, gender), gdf in tqdm(data.groupby(["campaign_id", "age", "gender"]), desc="Setting"):
             gdf = sort_df(gdf)
@@ -120,7 +123,6 @@ if __name__ == '__main__':
             all_args = []
             num_arms = len(mean_rewards)
             lowest_cost = np.min(mean_costs)
-            print(lowest_cost)
             B = int(np.ceil(steps * lowest_cost))
             if num_arms <= 1:
                 continue

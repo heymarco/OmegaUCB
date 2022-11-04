@@ -1,4 +1,5 @@
 import os.path
+import gc
 from multiprocessing import Pool
 from time import sleep
 
@@ -40,21 +41,24 @@ def subsample_csv(csv_path: str, every_nth: int = 1):
     path, ext = os.path.splitext(csv_path)
     newpath = path + "_reduced" + ext
     reduced_chunks = []
-    with pd.read_csv(csv_path, chunksize=int(10e7), low_memory=False, dtype={"rep": float, "approach": str, "k": float,"high-variance": float, "optimal-reward": float, "spent-budget": float, "optimal-cost": float, "reward": float, "cost": float, "arm": float}) as iterator:
-        last_row = None
+    with pd.read_csv(csv_path, chunksize=1e7, low_memory=False, dtype={"rep": float, "approach": str, "k": float,"high-variance": float, "optimal-reward": float, "spent-budget": float, "optimal-cost": float, "reward": float, "cost": float, "arm": float}) as iterator:
         for chunk_number, chunk in tqdm(enumerate(iterator)):
-            if not chunk_number == 0:
-                chunk = pd.concat([last_row, chunk]).reset_index()
-
-            necessary_rows = np.logical_or(chunk["rep"] != "", chunk["approach"] != "")
+            necessary_rows = np.logical_or(np.invert(np.isnan(chunk["rep"])), chunk["approach"].apply(lambda x: str(x) != "nan"))
+            print(np.sum(necessary_rows))
             necessary_rows = np.logical_or(necessary_rows, np.invert(np.isnan(chunk["high-variance"])))
+            print(np.sum(necessary_rows))
             necessary_rows = np.logical_or(necessary_rows, np.invert(np.isnan(chunk["k"])))
-            necessary_rows = chunk.loc[necessary_rows]
-            reduced_chunk = chunk.iloc[every_nth::]
+            print(np.sum(necessary_rows))
+            necessary_rows = chunk.loc[necessary_rows.astype(bool)]
+            reduced_chunk = chunk.iloc[::every_nth]
             necessary_rows = necessary_rows.index
             selected_rows = reduced_chunk.index
+            print(len(chunk))
+            print(len(reduced_chunk))
             selected_rows = np.unique(np.concatenate([necessary_rows, selected_rows]))
+            print(len(selected_rows))
             final_chunk = chunk.loc[selected_rows]
+            print(len(final_chunk))
             reduced_chunks.append(final_chunk)
             if chunk_number > 10:
                 break
