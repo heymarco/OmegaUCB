@@ -40,7 +40,8 @@ def reg_beta(x, a, b, k=100):
 def subsample_csv(csv_path: str, every_nth: int = 1):
     path, ext = os.path.splitext(csv_path)
     newpath = path + "_reduced" + ext
-    with pd.read_csv(csv_path, chunksize=int(10e7), low_memory=False, dtype={"rep": float, "approach": str, "k": float,"high-variance": float, "optimal-reward": float, "spent-budget": float, "optimal-cost": float, "reward": float, "cost": float, "arm": float}) as iterator:
+    reduced_chunks = []
+    with pd.read_csv(csv_path, chunksize=int(10e5), low_memory=False, dtype={"rep": float, "approach": str, "k": float,"high-variance": float, "optimal-reward": float, "spent-budget": float, "optimal-cost": float, "reward": float, "cost": float, "arm": float}) as iterator:
         last_row = None
         for chunk_number, chunk in tqdm(enumerate(iterator)):
             if not chunk_number == 0:
@@ -51,3 +52,17 @@ def subsample_csv(csv_path: str, every_nth: int = 1):
             mode = "w" if chunk_number == 0 else "a"
             header = chunk_number == 0
             reduced_chunk.to_csv(newpath, mode=mode, index=False, header=header)
+            necessary_rows = np.logical_or(chunk["rep"] != "", chunk["approach"] != "")
+            necessary_rows = np.logical_or(necessary_rows, np.invert(np.isnan(chunk["high-variance"])))
+            necessary_rows = np.logical_or(necessary_rows, np.invert(np.isnan(chunk["k"])))
+            necessary_rows = chunk.loc[necessary_rows]
+            reduced_chunk = chunk.iloc[every_nth::]
+            necessary_rows = necessary_rows.index
+            selected_rows = reduced_chunk.index
+            selected_rows = np.unique(np.concatenate([necessary_rows, selected_rows]))
+            final_chunk = chunk.loc[selected_rows]
+            reduced_chunks.append(final_chunk)
+            if chunk_number > 10:
+                break
+    df = pd.concat(reduced_chunks).reset_index()
+    df.to_csv(newpath, index=False)
