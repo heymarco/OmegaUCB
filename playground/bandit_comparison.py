@@ -77,7 +77,7 @@ def plot_regret(df: pd.DataFrame, filename: str):
 
 
 if __name__ == '__main__':
-    use_results = True
+    use_results = False
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filename = "bandit_comparison_ci"
@@ -111,9 +111,7 @@ if __name__ == '__main__':
         df = pd.concat(dfs)
         df.to_csv(filepath, index=False)
     if plot_results:
-        subsample_csv(filepath, every_nth=500)
-        reduced_filename = filename + "_reduced" 
-        reduced_filepath = os.path.join(directory, reduced_filename)
-        df = pd.read_csv(reduced_filepath + ".csv")
+        df = pd.read_csv(filepath)
         df = prepare_df(df)
-        plot_regret(df, reduced_filename + ".pdf")
+        plot_regret_over_k(df)
+        plot_regret(df, filename + ".pdf")

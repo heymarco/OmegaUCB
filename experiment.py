@@ -55,13 +55,15 @@ def run_bandit(bandit, steps, B, mean_rewards, mean_costs, seed, hv, p_min):
     rng = np.random.default_rng(seed)
     r_sum = 0
 
+    i = 0
     while B_t > 0:
         r, c = iterate(bandit, mean_rewards, mean_costs, rng, logger)
         B_t -= c
         r_sum += r
-        if (B_t % 200) == 0:
+        if (i % 100) == 1:
             logger.track_iteration(B - B_t, r_sum, c)
             logger.finalize_round()
+        i += 1
     return logger.get_dataframe()
 
 
