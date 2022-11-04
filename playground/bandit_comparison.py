@@ -16,7 +16,7 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 from components.bandit import AdaptiveBudgetedThompsonSampling
 from components.bandits.bts import BudgetedThompsonSampling
 from components.bandits.ucb_variants import UCB
-from util import run_async
+from util import run_async, subsample_csv
 from experiment import prepare_df, run_bandit
 
 
@@ -61,7 +61,8 @@ def create_bandits(k: int, seed: int):
 
 
 def plot_regret(df: pd.DataFrame, filename: str):
-    facet_kws = {'sharey': False, 'sharex': True}
+    facet_kws = {'sharey': False, 'sharex': False}
+    df["normalized budget"] = df.index
     g = sns.relplot(data=df, kind="line",
                     x="normalized budget", y="regret",
                     hue="approach", row="k", col="p-min",
@@ -76,7 +77,7 @@ def plot_regret(df: pd.DataFrame, filename: str):
 
 
 if __name__ == '__main__':
-    use_results = True
+    use_results = False
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filename = "bandit_comparison_ci"
@@ -85,9 +86,9 @@ if __name__ == '__main__':
     if not use_results:
         high_variance = [True]
         p_min = [0.01, 0.02, 0.05, 0.1, 0.25, 0.5]
-        ks = [10]
-        steps = 5*10e3  # we should be able to pull the cheapest arm 100000 times
-        reps = 10
+        ks = [100, 30, 10]
+        steps = 1e5  # we should be able to pull the cheapest arm 100000 times
+        reps = 200
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
@@ -111,5 +112,6 @@ if __name__ == '__main__':
         df.to_csv(filepath, index=False)
     if plot_results:
         df = pd.read_csv(filepath)
-        df = prepare_df(df, every_nth=5)
+        df = prepare_df(df)
+        plot_regret_over_k(df)
         plot_regret(df, filename + ".pdf")
