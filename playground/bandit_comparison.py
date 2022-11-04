@@ -86,9 +86,9 @@ if __name__ == '__main__':
     if not use_results:
         high_variance = [True]
         p_min = [0.01, 0.02, 0.05, 0.1, 0.25, 0.5]
-        ks = [10]
-        steps = 5*10e3  # we should be able to pull the cheapest arm 100000 times
-        reps = 10
+        ks = [100, 30, 10]
+        steps = 1e5  # we should be able to pull the cheapest arm 100000 times
+        reps = 200
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
