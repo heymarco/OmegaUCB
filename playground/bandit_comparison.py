@@ -62,9 +62,9 @@ def create_bandits(k: int, seed: int):
 
 def plot_regret(df: pd.DataFrame, filename: str):
     facet_kws = {'sharey': False, 'sharex': False}
-    df["round"] = df.index
+    df["normalized budget"] = df.index
     g = sns.relplot(data=df, kind="line",
-                    x="round", y="regret",
+                    x="normalized budget", y="regret",
                     hue="approach", row="k", col="p-min",
                     height=3, aspect=1, facet_kws=facet_kws,
                     ci=None)
@@ -111,7 +111,7 @@ if __name__ == '__main__':
         df = pd.concat(dfs)
         df.to_csv(filepath, index=False)
     if plot_results:
-        # subsample_csv(filepath, every_nth=50)
+        subsample_csv(filepath, every_nth=500)
         reduced_filename = filename + "_reduced" 
         reduced_filepath = os.path.join(directory, reduced_filename)
         df = pd.read_csv(reduced_filepath + ".csv")

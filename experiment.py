@@ -29,10 +29,11 @@ def prepare_df(df: pd.DataFrame, every_nth: int = 1):
     df["oracle"] = np.nan
     df["normalized budget"] = np.nan
     df["round"] = np.nan
-    for _, gdf in df.groupby(["rep", "approach", "k", "high-variance", "p-min"]):
+    for group, gdf in df.groupby(["rep", "approach", "k", "high-variance", "p-min"]):
         gdf["oracle"] = gdf["optimal-reward"] / gdf["optimal-cost"] * gdf["spent-budget"]
         df["oracle"][gdf.index] = gdf["oracle"]
         normalized_budget = gdf["spent budget"] / gdf["spent budget"].iloc[-1]
+        print(group, gdf["spent budget"].iloc[-1])
         df["normalized budget"][gdf.index] = (normalized_budget * 3).round(1) / 3
         regret = (gdf["oracle"] - gdf["total reward"]) / gdf["oracle"].iloc[-1]
         df["regret"][gdf.index] = regret
@@ -58,7 +59,7 @@ def run_bandit(bandit, steps, B, mean_rewards, mean_costs, seed, hv, p_min):
         r, c = iterate(bandit, mean_rewards, mean_costs, rng, logger)
         B_t -= c
         r_sum += r
-        if (B_t % 50) == 1:
+        if (B_t % 200) == 0:
             logger.track_iteration(B - B_t, r_sum, c)
             logger.finalize_round()
     return logger.get_dataframe()
