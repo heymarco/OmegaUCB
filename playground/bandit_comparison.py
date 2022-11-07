@@ -25,7 +25,8 @@ def create_setting(k: int, high_variance: bool, p_min, seed: int):
     low = p_min
     high = 1.0 if high_variance else min(1.0, p_min * 3)
     mean_rewards = np.array([0.5 for _ in range(k)])  # investigate effect when all arms have same cost.
-    mean_costs = rng.uniform(low, high, size=k)
+    mean_costs = rng.uniform(low, high, size=k-1)
+    mean_costs = np.concatenate([[p_min], mean_costs])  # we want to include the minimum cost
     return mean_rewards, mean_costs
 
 
@@ -76,6 +77,16 @@ def plot_regret(df: pd.DataFrame, filename: str):
     plt.show()
 
 
+def plot_regret_over_k(df: pd.DataFrame):
+    data = []
+    for (k, p_min, approach, rep), gdf in df.groupby(["k", "p-min", "approach", "rep"]):
+        data.append([k, p_min, np.mean(gdf["regret"].iloc[-30:]), approach, rep])
+    result_df = pd.DataFrame(data, columns=["k", "c-min", "Regret", "Approach", "rep"])
+    result_df = result_df[result_df["k"] > 3]
+    sns.lineplot(data=result_df, x="c-min", y="Regret", hue="Approach", marker="o")
+    plt.show()
+
+
 if __name__ == '__main__':
     use_results = False
     plot_results = True
@@ -85,10 +96,10 @@ if __name__ == '__main__':
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True]
-        p_min = [0.01, 0.02, 0.05, 0.1, 0.25, 0.5]
+        p_min = [0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0]  # the setting with 1.0 is the traditional bandit setting.
         ks = [100, 30, 10]
-        steps = 1e5  # we should be able to pull the cheapest arm 100000 times
-        reps = 200
+        steps = 3e5  # we should be able to pull the cheapest arm 200000 times
+        reps = 30
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
@@ -112,6 +123,6 @@ if __name__ == '__main__':
         df.to_csv(filepath, index=False)
     if plot_results:
         df = pd.read_csv(filepath)
-        df = prepare_df(df)
+        df = prepare_df(df, every_nth=100)
         plot_regret_over_k(df)
         plot_regret(df, filename + ".pdf")
