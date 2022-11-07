@@ -6,7 +6,8 @@ from components.bandits.abstract import AbstractArm, AbstractBandit
 
 
 class UCBArm(AbstractArm):
-    def __init__(self, type: str, alpha=0.25, confidence=0.95, adaptive=False):
+    def __init__(self, type: str, alpha=0.25, confidence=0.95, nroot=4, adaptive=False):
+        self.nroot = nroot
         self.adaptive = adaptive
         self.confidence = confidence
         self.z = norm.interval(self.confidence)[1]
@@ -31,7 +32,7 @@ class UCBArm(AbstractArm):
         if self.t == 0:
             return 0
         else:
-            K = 1.0 / 4
+            K = 1.0 / self.nroot
             z = np.sqrt(2 * K * np.log(self.t / self.pulls))
         return z
 
@@ -165,12 +166,13 @@ class UCBArm(AbstractArm):
 
 
 class UCB(AbstractBandit):
-    def __init__(self, k: int, name: str, type: str, seed: int, adaptive: bool = False):
+    def __init__(self, k: int, name: str, type: str, seed: int, nroot: int = 4, adaptive: bool = False):
         super().__init__(k, name, seed)
+        self.nroot = nroot
         self.type = type
         self.adaptive = adaptive
         self._startup_complete = False
-        self.arms = [UCBArm(type, adaptive=adaptive) for _ in range(k)]
+        self.arms = [UCBArm(type, nroot=nroot, adaptive=adaptive) for _ in range(k)]
 
     def sample(self):
         if not self._startup_complete:

@@ -83,12 +83,11 @@ def plot_regret(df: pd.DataFrame, filename: str):
 
 def plot_regret_over_k(df: pd.DataFrame):
     data = []
-    for (k, approach, rep), gdf in df.groupby(["k", "approach", "rep"]):
-        data.append([k, np.mean(gdf["regret"].iloc[-30:]), approach, rep])
-    result_df = pd.DataFrame(data, columns=["Arms", "Regret", "Approach", "rep"])
-    result_df = result_df[result_df["Arms"] > 3]
-    df["p-min"] = df["p-min"].astype(float)
-    sns.lineplot(data=result_df, x="p-min", y="Regret", hue="Approach", marker="o")
+    for (k, p_min, approach, rep), gdf in df.groupby(["k", "p-min", "approach", "rep"]):
+        data.append([k, p_min, np.mean(gdf["regret"].iloc[-30:]), approach, rep])
+    result_df = pd.DataFrame(data, columns=["k", "c-min", "Regret", "Approach", "rep"])
+    result_df = result_df[result_df["k"] > 3]
+    sns.lineplot(data=result_df, x="c-min", y="Regret", hue="Approach", marker="o")
     plt.show()
 
 
