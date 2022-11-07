@@ -61,13 +61,13 @@ def create_bandits(k: int, seed: int):
 
 
 def plot_regret(df: pd.DataFrame, filename: str):
-    facet_kws = {'sharey': False, 'sharex': False}
-    df["normalized budget"] = df.index
+    df = df.iloc[::30]
+    facet_kws = {'sharey': False, 'sharex': True}
     g = sns.relplot(data=df, kind="line",
-                    x="normalized budget", y="regret",
-                    hue="approach", row="k", col="p-min",
+                    x="normalized budget", y="regret", row="k", col="p-min",
+                    hue="approach",
                     height=3, aspect=1, facet_kws=facet_kws,
-                    ci=None)
+                    errorbar=None)
     axes = g.axes.flatten()
     for ax in axes:
         ax.axhline(0, color="black", lw=.5)
@@ -75,9 +75,19 @@ def plot_regret(df: pd.DataFrame, filename: str):
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename))
     plt.show()
 
+def plot_regret_over_k(df: pd.DataFrame):
+    data = []
+    for (k, approach, rep), gdf in df.groupby(["k", "approach", "rep"]):
+        data.append([k, np.mean(gdf["regret"].iloc[-30:]), approach, rep])
+    result_df = pd.DataFrame(data, columns=["Arms", "Regret", "Approach", "rep"])
+    result_df = result_df[result_df["Arms"] > 3]
+    df["p-min"] = df["p-min"].astype(float)
+    sns.lineplot(data=result_df, x="p-min", y="Regret", hue="Approach", marker="o")
+    plt.show()
+
 
 if __name__ == '__main__':
-    use_results = False
+    use_results = True
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filename = "bandit_comparison_ci"
@@ -87,7 +97,7 @@ if __name__ == '__main__':
         high_variance = [True]
         p_min = [0.01, 0.02, 0.05, 0.1, 0.25, 0.5]
         ks = [100, 30, 10]
-        steps = 1e5  # we should be able to pull the cheapest arm 100000 times
+        steps = 2e5  # we should be able to pull the cheapest arm 100000 times
         reps = 200
         dfs = []
         for k in tqdm(ks, desc="k"):
@@ -113,5 +123,5 @@ if __name__ == '__main__':
     if plot_results:
         df = pd.read_csv(filepath)
         df = prepare_df(df)
-        plot_regret_over_k(df)
+        # plot_regret_over_k(df)
         plot_regret(df, filename + ".pdf")

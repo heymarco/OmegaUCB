@@ -69,11 +69,7 @@ def create_bandits(k: int, seed: int):
 def plot_regret(df: pd.DataFrame, filename: str):
     facet_kws = {'sharey': False, 'sharex': True}
     g = sns.relplot(data=df, kind="line",
-<<<<<<< HEAD
                     x="normalized budget", y="regret", row="p-min",
-=======
-                    x="normalized budget", y="regret", row="k",
->>>>>>> eeec884606aa20391e23bcfabe13e4414af8ca1f
                     hue="approach",
                     height=3, aspect=1, facet_kws=facet_kws,
                     ci=None)
@@ -90,12 +86,7 @@ def plot_regret_over_k(df: pd.DataFrame):
     for (k, approach, rep), gdf in df.groupby(["k", "approach", "rep"]):
         data.append([k, np.mean(gdf["regret"].iloc[-30:]), approach, rep])
     result_df = pd.DataFrame(data, columns=["Arms", "Regret", "Approach", "rep"])
-    # sns.barplot(data=result_df, x="Arms", y="Regret", hue="Approach")
-    # plt.yscale("log")
-    # plt.show()
     result_df = result_df[result_df["Arms"] > 3]
-    # result_df = result_df.groupby(["Approach", "Arms"]).mean()
-    # result_df["Regret"] = result_df["Regret"] / np.min(result_df["Regret"])
     df["p-min"] = df["p-min"].astype(float)
     sns.lineplot(data=result_df, x="p-min", y="Regret", hue="Approach", marker="o")
     plt.show()
