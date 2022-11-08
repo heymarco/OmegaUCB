@@ -82,7 +82,7 @@ def plot_regret_over_k(df: pd.DataFrame):
     data = []
     ts_palette = sns.color_palette("Blues", n_colors=3)[1:]
     mucb_palette = sns.color_palette("Reds", n_colors=2)[1:]
-    wucb_palette = sns.color_palette("Greens", n_colors=4)[1:]
+    wucb_palette = sns.color_palette("Greens", n_colors=5)[1:]
     palette = ts_palette + mucb_palette + wucb_palette
     for (k, p_min, approach, rep), gdf in df.groupby(["k", "p-min", "approach", "rep"]):
         data.append([k, p_min, np.mean(gdf["regret"].iloc[-30:]), approach, rep])
