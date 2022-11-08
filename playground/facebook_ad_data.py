@@ -9,6 +9,12 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 import seaborn as sns
 
+import matplotlib as mpl
+mpl.rcParams['text.usetex'] = True
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{times}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{nicefrac}'
+mpl.rc('font', family='serif')
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
@@ -88,6 +94,7 @@ def plot_regret_over_k(df: pd.DataFrame):
     result_df = pd.DataFrame(data, columns=["k", "c-min", "Regret", "Approach", "rep"])
     result_df = result_df[result_df["k"] > 3]
     sns.lineplot(data=result_df, x="c-min", y="Regret", hue="Approach", marker="o")
+    plt.yscale("log")
     plt.show()
 
 

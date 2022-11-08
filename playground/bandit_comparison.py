@@ -48,6 +48,7 @@ def create_bandits(k: int, seed: int):
         # UCB(k=k, name="j-UCB (a)", type="j", seed=seed, adaptive=True),
         # UCB(k=k, name="j-UCB", type="j", seed=seed, adaptive=False),
         UCB(k=k, name="w-UCB (a, r=2)", type="w", seed=seed, nroot=2, adaptive=True),
+        UCB(k=k, name="w-UCB (a, r=3)", type="w", seed=seed, nroot=3, adaptive=True),
         UCB(k=k, name="w-UCB (a, r=4)", type="w", seed=seed, nroot=4, adaptive=True),
         UCB(k=k, name="w-UCB", type="w", seed=seed, adaptive=False),
         # UCB(k=k, name="i-UCB (a)", type="i", seed=seed, adaptive=True),
@@ -63,11 +64,10 @@ def create_bandits(k: int, seed: int):
 
 
 def plot_regret(df: pd.DataFrame, filename: str):
-    facet_kws = {'sharey': False, 'sharex': False}
-    df["normalized budget"] = df.index
+    facet_kws = {'sharey': False, 'sharex': True}
     g = sns.relplot(data=df, kind="line",
-                    x="normalized budget", y="regret",
-                    hue="approach", row="k", col="p-min",
+                    x="normalized budget", y="regret", col="p-min", row="k",
+                    hue="approach",
                     height=3, aspect=1, facet_kws=facet_kws,
                     ci=None)
     axes = g.axes.flatten()
@@ -80,11 +80,20 @@ def plot_regret(df: pd.DataFrame, filename: str):
 
 def plot_regret_over_k(df: pd.DataFrame):
     data = []
+    ts_palette = sns.color_palette("Blues", n_colors=3)[1:]
+    mucb_palette = sns.color_palette("Reds", n_colors=2)[1:]
+    wucb_palette = sns.color_palette("Greens", n_colors=4)[1:]
+    palette = ts_palette + mucb_palette + wucb_palette
     for (k, p_min, approach, rep), gdf in df.groupby(["k", "p-min", "approach", "rep"]):
         data.append([k, p_min, np.mean(gdf["regret"].iloc[-30:]), approach, rep])
-    result_df = pd.DataFrame(data, columns=["k", "c-min", "Regret", "Approach", "rep"])
+    result_df = pd.DataFrame(data, columns=["k", r"$c_{min}$", "Regret", "Approach", "rep"])
     result_df = result_df[result_df["k"] > 3]
-    sns.lineplot(data=result_df, x="c-min", y="Regret", hue="Approach", marker="o")
+    g = sns.lineplot(data=result_df, x=r"$c_{min}$", y="Regret", hue="Approach", marker="o",
+                     err_style="bars", palette=palette)
+    g.set(xscale="log")
+    plt.gcf().set_size_inches(5.5, 3.5)
+    plt.tight_layout(pad=.5)
+    plt.savefig(os.path.join(os.getcwd(), "..", "figures", "regret_over_cost_with_fixed_reward.pdf"))
     plt.show()
 
 
@@ -100,7 +109,7 @@ if __name__ == '__main__':
         p_min = [0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0]  # the setting with 1.0 is the traditional bandit setting.
         ks = [100, 30, 10]
         steps = 3e5  # we should be able to pull the cheapest arm 200000 times
-        reps = 30
+        reps = 100
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
@@ -124,6 +133,7 @@ if __name__ == '__main__':
         df.to_csv(filepath, index=False)
     if plot_results:
         df = pd.read_csv(filepath)
-        df = prepare_df(df, every_nth=100)
+        df = prepare_df(df, every_nth=10)
+        df = df[df["p-min"] < 1.0]
         plot_regret_over_k(df)
         plot_regret(df, filename + ".pdf")
