@@ -127,7 +127,9 @@ class UCBArm(AbstractArm):
         elif self._type == "j" or self._type == "w":
             rew = self._rew
             cost = self._cost
-            assert cost > 0
+            if cost == 0:
+                # we have not yet payed anything for this arm
+                return np.infty
             return rew / cost
         else:
             raise ValueError
