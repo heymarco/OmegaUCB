@@ -32,7 +32,7 @@ class UCBArm(AbstractArm):
             return 0
         else:
             K = 1.0 / self.nroot
-            z = np.sqrt(2 * K * np.log(self.t / self.pulls))
+            z = np.sqrt(2 * K * np.log((self.t + 1) / self.pulls))
         return z
 
     def _epsilon(self):
