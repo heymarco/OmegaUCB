@@ -127,6 +127,7 @@ class UCBArm(AbstractArm):
         elif self._type == "j" or self._type == "w":
             rew = self._rew
             cost = self._cost
+            assert cost > 0
             return rew / cost
         else:
             raise ValueError
