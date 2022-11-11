@@ -58,17 +58,17 @@ def create_bandits(k: int, seed: int):
     return np.array([
         # UCB(k=k, name="j-UCB (a)", type="j", seed=seed, adaptive=True),
         # UCB(k=k, name="j-UCB", type="j", seed=seed, adaptive=False),
-        # UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
-        # UCB(k=k, name="w-UCB", type="w", seed=seed, adaptive=False),
+        UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
+        UCB(k=k, name="w-UCB", type="w", seed=seed, adaptive=False),
         # UCB(k=k, name="i-UCB (a)", type="i", seed=seed, adaptive=True),
         # UCB(k=k, name="c-UCB", type="c", seed=seed),
         UCB(k=k, name="m-UCB (a)", type="m", seed=seed, adaptive=True),
         # UCB(k=k, name="m-UCB", type="m", seed=seed, adaptive=False),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
-        #                                  ci_reward="ts-cost", ci_cost="ts-cost"),
+        AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
+                                         ci_reward="ts-cost", ci_cost="ts-cost"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="TS (reward)", seed=seed,
         #                                  ci_reward="ts-reward", ci_cost="ts-reward"),
-        # BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
+        BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
     ])
 
 
