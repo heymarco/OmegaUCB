@@ -181,7 +181,7 @@ class UCB(AbstractBandit):
             return result
         samples = [a.sample() for a in self.arms]
         return np.random.choice(
-            np.argwhere(samples == np.max(samples))
+            np.flatnonzero(samples == np.max(samples))
         )
 
     def update(self, arm: int, reward: float, cost: float):
