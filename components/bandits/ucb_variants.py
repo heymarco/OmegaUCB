@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.stats import norm, beta
-import math
 
 from components.bandits.abstract import AbstractArm, AbstractBandit
 
@@ -61,7 +60,7 @@ class UCBArm(AbstractArm):
 
         avg = (ns + 0.5 * z2) / (n + z2)
         ci = z / (n + z2) * np.sqrt((ns * nf) / n + z2 / 4)
-        self._cost = max(avg - ci, 1e-10)
+        self._cost = avg - ci
 
     def update_wilson_estimate_reward(self):
         n = self.pulls
@@ -113,7 +112,9 @@ class UCBArm(AbstractArm):
         elif self._type == "m":
             epsilon = self._epsilon() if self.adaptive else self._hoeffding_epsilon_for_confidence()
             top = min(self._avg_reward + epsilon, 1)
-            bottom = max(cost - epsilon, 1e-10)
+            bottom = cost - epsilon
+            if bottom <= 0:
+                return np.infty
             return top / bottom
         elif self._type == "r":
             epsilon = self._epsilon()
@@ -178,7 +179,10 @@ class UCB(AbstractBandit):
         if not self._startup_complete:
             result = [i for i, a in enumerate(self.arms) if not a.startup_complete()][0]
             return result
-        return np.argmax([a.sample() for a in self.arms])
+        return np.random.choice(
+            np.argwhere(np.max([a.sample()
+                        for a in self.arms]))
+        )
 
     def update(self, arm: int, reward: float, cost: float):
         [a.update(new_reward=reward, new_cost=cost, was_pulled=arm == i)
