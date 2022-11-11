@@ -179,9 +179,9 @@ class UCB(AbstractBandit):
         if not self._startup_complete:
             result = [i for i, a in enumerate(self.arms) if not a.startup_complete()][0]
             return result
+        samples = [a.sample() for a in self.arms]
         return np.random.choice(
-            np.argwhere(np.max([a.sample()
-                        for a in self.arms]))
+            np.argwhere(samples == np.max(samples))
         )
 
     def update(self, arm: int, reward: float, cost: float):
