@@ -65,9 +65,32 @@ def create_bandits(k: int, seed: int):
 
 def plot_regret(df: pd.DataFrame, filename: str):
     facet_kws = {'sharey': False, 'sharex': True}
+    ts_palette = sns.color_palette("Blues", n_colors=3)[1:]
+    mucb_palette = sns.color_palette("Reds", n_colors=2)[1:]
+    wucb_palette = sns.color_palette("Greens", n_colors=5)[1:]
+    palette = ts_palette + mucb_palette + wucb_palette
     g = sns.relplot(data=df, kind="line",
                     x="normalized budget", y="regret", col="p-min", row="k",
-                    hue="approach",
+                    hue="approach", palette=palette,
+                    height=3, aspect=1, facet_kws=facet_kws,
+                    ci=None)
+    axes = g.axes.flatten()
+    for ax in axes:
+        ax.axhline(0, color="black", lw=.5)
+    # plt.tight_layout(pad=.5)
+    plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename))
+    plt.show()
+
+
+def plot_nrounds(df: pd.DataFrame, filename: str):
+    facet_kws = {'sharey': False, 'sharex': True}
+    ts_palette = sns.color_palette("Blues", n_colors=3)[1:]
+    mucb_palette = sns.color_palette("Reds", n_colors=2)[1:]
+    wucb_palette = sns.color_palette("Greens", n_colors=5)[1:]
+    palette = ts_palette + mucb_palette + wucb_palette
+    g = sns.relplot(data=df, kind="line",
+                    x="normalized budget", y="round", col="p-min", row="k",
+                    hue="approach", palette=palette,
                     height=3, aspect=1, facet_kws=facet_kws,
                     ci=None)
     axes = g.axes.flatten()
@@ -98,7 +121,7 @@ def plot_regret_over_k(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    use_results = False
+    use_results = True
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
     filename = "bandit_comparison_ci"
@@ -106,10 +129,10 @@ if __name__ == '__main__':
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True]
-        p_min = [0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0]  # the setting with 1.0 is the traditional bandit setting.
+        p_min = [0.01, 0.02, 0.05, 0.1, 0.25, 0.5]  # the setting with 1.0 is the traditional bandit setting.
         ks = [100, 30, 10]
         steps = 3e5  # we should be able to pull the cheapest arm 200000 times
-        reps = 100
+        reps = 200
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):
@@ -135,5 +158,6 @@ if __name__ == '__main__':
         df = pd.read_csv(filepath)
         df = prepare_df(df, every_nth=10)
         df = df[df["p-min"] < 1.0]
+        plot_nrounds(df, "nrounds.pdf")
         plot_regret_over_k(df)
         plot_regret(df, filename + ".pdf")
