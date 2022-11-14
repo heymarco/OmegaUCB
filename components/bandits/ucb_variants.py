@@ -34,6 +34,7 @@ class UCBArm(AbstractArm):
 
     def _adaptive_confidence(self):
         conf = 1 - 2 / self.t ** 2
+        conf = max(0, conf)
         return conf
 
     def _adaptive_z(self):
