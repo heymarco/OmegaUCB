@@ -23,11 +23,11 @@ class UCBArm(AbstractArm):
         else:
             # based on Fig. 3 in paper https://www.sciencedirect.com/science/article/pii/S0925231217304216
             if type == "c":
-                self.alpha = np.power(2, -3)
+                self.alpha = np.power(2.0, -3.0)
             elif type == "i":
-                self.alpha = np.power(2, -2)
+                self.alpha = np.power(2.0, -2.0)
             elif type == "m":
-                self.alpha = np.power(2, -4)
+                self.alpha = np.power(2.0, -4.0)
 
     def _wilson_alpha(self):
         return 1 - self.confidence
