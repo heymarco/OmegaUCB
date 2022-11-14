@@ -5,12 +5,11 @@ from components.bandits.abstract import AbstractArm, AbstractBandit
 
 
 class UCBArm(AbstractArm):
-    def __init__(self, type: str, alpha=0.25, confidence=0.95, nroot=4, adaptive=False):
+    def __init__(self, type: str, alpha=None, confidence=0.95, nroot=4, adaptive=False):
         self.nroot = nroot
         self.adaptive = adaptive
         self.confidence = confidence
         self.z = norm.interval(self.confidence)[1]
-        self.alpha = alpha
         self.pulls = 0
         self.t = 0
         self._prev_pulls = 0
@@ -19,12 +18,22 @@ class UCBArm(AbstractArm):
         self._type = type
         self._rew = 0
         self._cost = 0
+        if alpha is not None:
+            self.alpha = alpha
+        else:
+            # based on Fig. 3 in paper https://www.sciencedirect.com/science/article/pii/S0925231217304216
+            if type == "c":
+                self.alpha = np.power(2, -3)
+            elif type == "i":
+                self.alpha = np.power(2, -2)
+            elif type == "m":
+                self.alpha = np.power(2, -4)
 
     def _wilson_alpha(self):
         return 1 - self.confidence
 
     def _adaptive_confidence(self):
-        conf = max(0, np.sqrt(1 - 4 / self.t ** 2))
+        conf = 1 - 2 / self.t ** 2
         return conf
 
     def _adaptive_z(self):
@@ -82,10 +91,10 @@ class UCBArm(AbstractArm):
         x = self._avg_cost * n
         if self.adaptive:
             low, high = beta.interval(alpha=self._adaptive_confidence(),
-                                            a=0.5 + x, b=0.5 + n - x)
+                                      a=0.5 + x, b=0.5 + n - x)
         else:
             low, high = beta.interval(alpha=self.confidence,
-                                            a=0.5 + x, b=0.5 + n - x)
+                                      a=0.5 + x, b=0.5 + n - x)
         self._cost = low
 
     def update_jeffrey_estimate_reward(self):
@@ -95,10 +104,10 @@ class UCBArm(AbstractArm):
         x = self._avg_reward * n
         if self.adaptive:
             low, high = beta.interval(alpha=self._adaptive_confidence(),
-                                            a=0.5 + x, b=0.5 + n - x)
+                                      a=0.5 + x, b=0.5 + n - x)
         else:
             low, high = beta.interval(alpha=self.confidence,
-                                            a=0.5 + x, b=0.5 + n - x)
+                                      a=0.5 + x, b=0.5 + n - x)
         self._rew = high
 
     def sample(self):

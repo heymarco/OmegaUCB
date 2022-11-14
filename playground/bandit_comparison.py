@@ -20,6 +20,13 @@ from util import run_async, subsample_csv
 from experiment import prepare_df, run_bandit
 
 
+import matplotlib as mpl
+mpl.rcParams['text.usetex'] = True
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{times}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{nicefrac}'
+mpl.rc('font', family='serif')
+
+
 def create_setting(k: int, high_variance: bool, p_min, seed: int):
     rng = np.random.default_rng(seed)
     low = p_min
@@ -45,32 +52,31 @@ def sort_setting(mean_rewards, mean_costs):
 
 def create_bandits(k: int, seed: int):
     return np.array([
-        # UCB(k=k, name="j-UCB (a)", type="j", seed=seed, adaptive=True),
-        # UCB(k=k, name="j-UCB", type="j", seed=seed, adaptive=False),
-        UCB(k=k, name="w-UCB (a, r=2)", type="w", seed=seed, nroot=2, adaptive=True),
-        UCB(k=k, name="w-UCB (a, r=3)", type="w", seed=seed, nroot=3, adaptive=True),
-        UCB(k=k, name="w-UCB (a, r=4)", type="w", seed=seed, nroot=4, adaptive=True),
-        UCB(k=k, name="w-UCB", type="w", seed=seed, adaptive=False),
-        # UCB(k=k, name="i-UCB (a)", type="i", seed=seed, adaptive=True),
-        # UCB(k=k, name="c-UCB", type="c", seed=seed),
+        UCB(k=k, name="j-UCB (a)", type="j", seed=seed, adaptive=True),
+        # UCB(k=k, name="w-UCB (a, r=2)", type="w", seed=seed, nroot=2, adaptive=True),
+        # UCB(k=k, name="w-UCB (a, r=3)", type="w", seed=seed, nroot=3, adaptive=True),
+        # UCB(k=k, name="w-UCB (a, r=4)", type="w", seed=seed, nroot=4, adaptive=True),
+        # UCB(k=k, name="w-UCB", type="w", seed=seed, adaptive=False),
+        UCB(k=k, name="i-UCB", type="i", seed=seed, adaptive=True),
+        UCB(k=k, name="c-UCB", type="c", seed=seed, adaptive=True),
         UCB(k=k, name="m-UCB", type="m", seed=seed, adaptive=True),
-        # UCB(k=k, name="m-UCB", type="m", seed=seed, adaptive=False),
-        AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
-                                         ci_reward="ts-cost", ci_cost="ts-cost"),
+        # AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
+        #                                  ci_reward="ts-cost", ci_cost="ts-cost"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="TS (reward)", seed=seed,
         #                                  ci_reward="ts-reward", ci_cost="ts-reward"),
-        BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
+        # BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
     ])
 
 
 def plot_regret(df: pd.DataFrame, filename: str):
+    df.sort_values(by="approach", inplace=True)
     facet_kws = {'sharey': False, 'sharex': True}
     ts_palette = sns.color_palette("Blues", n_colors=3)[1:]
     mucb_palette = sns.color_palette("Reds", n_colors=2)[1:]
     wucb_palette = sns.color_palette("Greens", n_colors=5)[1:]
     palette = ts_palette + mucb_palette + wucb_palette
     g = sns.relplot(data=df, kind="line",
-                    x="normalized budget", y="regret", col="p-min", row="k",
+                    x="spent budget", y="regret", col="p-min", row="k",
                     hue="approach", palette=palette,
                     height=3, aspect=1, facet_kws=facet_kws,
                     ci=None)
@@ -78,11 +84,13 @@ def plot_regret(df: pd.DataFrame, filename: str):
     for ax in axes:
         ax.axhline(0, color="black", lw=.5)
     # plt.tight_layout(pad=.5)
+    g.set(xscale="log")
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename))
     plt.show()
 
 
 def plot_nrounds(df: pd.DataFrame, filename: str):
+    df.sort_values(by="approach", inplace=True)
     facet_kws = {'sharey': False, 'sharex': True}
     ts_palette = sns.color_palette("Blues", n_colors=3)[1:]
     mucb_palette = sns.color_palette("Reds", n_colors=2)[1:]
@@ -102,18 +110,20 @@ def plot_nrounds(df: pd.DataFrame, filename: str):
 
 
 def plot_regret_over_k(df: pd.DataFrame):
+    df.sort_values(by="approach", inplace=True)
     data = []
     ts_palette = sns.color_palette("Blues", n_colors=3)[1:]
     mucb_palette = sns.color_palette("Reds", n_colors=2)[1:]
     wucb_palette = sns.color_palette("Greens", n_colors=5)[1:]
     palette = ts_palette + mucb_palette + wucb_palette
-    for (k, p_min, approach, rep), gdf in df.groupby(["k", "p-min", "approach", "rep"]):
+    for (approach, k, p_min, rep), gdf in df.groupby(["approach", "k", "p-min", "rep"]):
         data.append([k, p_min, np.mean(gdf["regret"].iloc[-30:]), approach, rep])
     result_df = pd.DataFrame(data, columns=["k", r"$c_{min}$", "Regret", "Approach", "rep"])
     result_df = result_df[result_df["k"] > 3]
     g = sns.lineplot(data=result_df, x=r"$c_{min}$", y="Regret", hue="Approach", marker="o",
                      err_style="bars", palette=palette)
     g.set(xscale="log")
+    g.set(yscale="log")
     plt.gcf().set_size_inches(5.5, 3.5)
     plt.tight_layout(pad=.5)
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", "regret_over_cost_with_fixed_reward.pdf"))
@@ -121,18 +131,18 @@ def plot_regret_over_k(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    use_results = True
+    use_results = False
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
-    filename = "bandit_comparison_ci"
+    filename = "bandit_comparison_ci_2"
     filepath = os.path.join(directory, filename + ".csv")
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True]
         p_min = [0.01, 0.02, 0.05, 0.1, 0.25, 0.5]  # the setting with 1.0 is the traditional bandit setting.
         ks = [100, 30, 10]
-        steps = 3e5  # we should be able to pull the cheapest arm 200000 times
-        reps = 200
+        steps = 2e5  # we should be able to pull the cheapest arm 200000 times
+        reps = 100
         dfs = []
         for k in tqdm(ks, desc="k"):
             for hv in tqdm(high_variance, leave=False, desc="variance"):

@@ -20,7 +20,7 @@ def linear_cost_function(t, c0=1, k=1 / 5, t0=1) -> float:
     return c0 + k * (t - t0)
 
 
-def run_async(function, args_list, njobs, sleep_time_s = 0.05):
+def run_async(function, args_list, njobs, sleep_time_s=0.05):
     pool = Pool(njobs)
     results = {i: pool.apply_async(function, args=args)
                for i, args in enumerate(args_list)}
@@ -44,21 +44,14 @@ def subsample_csv(csv_path: str, every_nth: int = 1):
     with pd.read_csv(csv_path, chunksize=1e7, low_memory=False, dtype={"rep": float, "approach": str, "k": float,"high-variance": float, "optimal-reward": float, "spent-budget": float, "optimal-cost": float, "reward": float, "cost": float, "arm": float}) as iterator:
         for chunk_number, chunk in tqdm(enumerate(iterator)):
             necessary_rows = np.logical_or(np.invert(np.isnan(chunk["rep"])), chunk["approach"].apply(lambda x: str(x) != "nan"))
-            print(np.sum(necessary_rows))
             necessary_rows = np.logical_or(necessary_rows, np.invert(np.isnan(chunk["high-variance"])))
-            print(np.sum(necessary_rows))
             necessary_rows = np.logical_or(necessary_rows, np.invert(np.isnan(chunk["k"])))
-            print(np.sum(necessary_rows))
             necessary_rows = chunk.loc[necessary_rows.astype(bool)]
             reduced_chunk = chunk.iloc[::every_nth]
             necessary_rows = necessary_rows.index
             selected_rows = reduced_chunk.index
-            print(len(chunk))
-            print(len(reduced_chunk))
             selected_rows = np.unique(np.concatenate([necessary_rows, selected_rows]))
-            print(len(selected_rows))
             final_chunk = chunk.loc[selected_rows]
-            print(len(final_chunk))
             reduced_chunks.append(final_chunk)
             if chunk_number > 10:
                 break

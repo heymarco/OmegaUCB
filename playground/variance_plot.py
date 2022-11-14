@@ -86,14 +86,15 @@ if __name__ == '__main__':
     fig, axes = plt.subplots(1, 3)
     steps = 20
     # Setting 0
-    n = 20
-    ax = n / 2
+    n = np.arange(10, 300)
+    wanted_mean = 0.1
+    ax = (n+2) * 0.7 - 1
     bx = n - ax
-    ay = np.arange(steps, 3 * steps + 1) / steps
-    axes[0].plot(ay, variance2(ax, bx, ay), color="green")
+    ay = n / 10
+    axes[0].plot(n, np.sqrt(variance2(ax, bx, ay)), color="green")
     # axes[0].plot(ay, variance(ax, bx, ay))
-    axes[0].plot(ay, mean(ax, bx, ay))
-    axes[0].set_xlabel(r"$1\leq\beta^c < 3$ for $n={}$".format(n))
+    axes[0].plot(n, mean(ax, bx, ay))
+    # axes[0].set_xlabel(r"$1\leq\beta^c < 3$ for $n={}$".format(n))
 
     # Setting 1
     n = 20
