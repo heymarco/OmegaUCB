@@ -78,8 +78,8 @@ class WUCBArm(AbstractArm):
                 self.pulls += 1
                 self._avg_cost = ((self.pulls - 1) * self._avg_cost + new_cost) / self.pulls
                 self._avg_reward = ((self.pulls - 1) * self._avg_reward + new_reward) / self.pulls
-                self.update_cost()
-                self.update_reward()
+            self.update_cost()
+            self.update_reward()
 
     def startup_complete(self):
         return self.pulls > 0
