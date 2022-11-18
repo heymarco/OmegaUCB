@@ -13,11 +13,11 @@ from time import process_time_ns
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from components.bandit import AdaptiveBudgetedThompsonSampling
+
 from components.bandits.bts import BudgetedThompsonSampling
 from components.bandits.ucb_variants import UCB
 from components.bandits.wucb import WUCB
-from util import run_async, subsample_csv
+from util import run_async, create_palette
 from experiment import prepare_df, run_bandit
 
 
@@ -53,30 +53,31 @@ def sort_setting(mean_rewards, mean_costs):
 
 def create_bandits(k: int, seed: int):
     return np.array([
-        WUCB(k=k, name="w-UCB (a, r=1)", seed=seed, r=1, adaptive=True),
-        WUCB(k=k, name="w-UCB (a, r=2)", seed=seed, r=2, adaptive=True),
-        WUCB(k=k, name="w-UCB (a, r=3)", seed=seed, r=3, adaptive=True),
-        WUCB(k=k, name="w-UCB (a, r=4)", seed=seed, r=4, adaptive=True),
-        UCB(k=k, name="m-UCB", type="m", seed=seed, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, r=1/6)", seed=seed, r=1/6, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, r=1/5)", seed=seed, r=1/5, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, r=1/4)", seed=seed, r=1/4, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, r=1/3)", seed=seed, r=1/3, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, r=1/2)", seed=seed, r=1/2, adaptive=True),
+        # WUCB(k=k, name="w-UCB (a, r=2)", seed=seed, r=2, adaptive=True),
+        # WUCB(k=k, name="w-UCB (a, r=3)", seed=seed, r=3, adaptive=True),
+        # WUCB(k=k, name="w-UCB (a, r=4)", seed=seed, r=4, adaptive=True),
+        # UCB(k=k, name="m-UCB", type="m", seed=seed, adaptive=True),
         # AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
         #                                  ci_reward="ts-cost", ci_cost="ts-cost"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="TS (reward)", seed=seed,
         #                                  ci_reward="ts-reward", ci_cost="ts-reward"),
-        BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
+        # BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
     ])
 
 
 def plot_regret(df: pd.DataFrame, filename: str):
     df.sort_values(by="approach", inplace=True)
     facet_kws = {'sharey': False, 'sharex': True}
-    # ts_palette = sns.color_palette("Blues", n_colors=3)[1:]
-    # mucb_palette = sns.color_palette("Reds", n_colors=2)[1:]
-    # wucb_palette = sns.color_palette("Greens", n_colors=5)[1:]
-    # palette = ts_palette + mucb_palette + wucb_palette
+    palette = create_palette(df)
     g = sns.relplot(data=df, kind="line",
                     x="normalized budget", y="regret", col="p-min", row="k",
                     hue="approach",
-                    # palette=palette,
+                    palette=palette,
                     height=3, aspect=1, facet_kws=facet_kws,
                     ci=None)
     axes = g.axes.flatten()
@@ -91,10 +92,7 @@ def plot_regret(df: pd.DataFrame, filename: str):
 def plot_nrounds(df: pd.DataFrame, filename: str):
     df.sort_values(by="approach", inplace=True)
     facet_kws = {'sharey': False, 'sharex': True}
-    ts_palette = sns.color_palette("Blues", n_colors=3)[1:]
-    mucb_palette = sns.color_palette("Reds", n_colors=2)[1:]
-    wucb_palette = sns.color_palette("Greens", n_colors=5)[1:]
-    palette = ts_palette + mucb_palette + wucb_palette
+    palette = create_palette(df)
     g = sns.relplot(data=df, kind="line",
                     x="normalized budget", y="round", col="p-min", row="k",
                     hue="approach", palette=palette,
@@ -111,15 +109,13 @@ def plot_nrounds(df: pd.DataFrame, filename: str):
 def plot_regret_over_k(df: pd.DataFrame):
     df.sort_values(by="approach", inplace=True)
     data = []
-    # ts_palette = sns.color_palette("Blues", n_colors=3)[1:]
-    # mucb_palette = sns.color_palette("Reds", n_colors=2)[1:]
-    # wucb_palette = sns.color_palette("Greens", n_colors=5)[1:]
-    # palette = ts_palette + mucb_palette + wucb_palette
+    palette = create_palette(df)
     for (approach, k, p_min, rep), gdf in df.groupby(["approach", "k", "p-min", "rep"]):
         data.append([k, p_min, np.mean(gdf["regret"].iloc[-30:]), approach, rep])
     result_df = pd.DataFrame(data, columns=["k", r"$c_{min}$", "Regret", "Approach", "rep"])
     result_df = result_df[result_df["k"] > 3]
     g = sns.lineplot(data=result_df, x=r"$c_{min}$", y="Regret", hue="Approach", marker="o",
+                     palette=palette,
                      err_style="bars")
     g.set(xscale="log")
     g.set(yscale="log")

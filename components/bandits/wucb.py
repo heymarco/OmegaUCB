@@ -90,7 +90,7 @@ class WUCBArm(AbstractArm):
 
 
 class WUCB(AbstractBandit):
-    def __init__(self, k: int, name: str, seed: int, r: int = 4, adaptive: bool = False):
+    def __init__(self, k: int, name: str, seed: int, r: float = 4.0, adaptive: bool = False):
         super(WUCB, self).__init__(k, name, seed)
         self.r = r
         self.adaptive = adaptive

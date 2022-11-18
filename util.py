@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from tqdm import tqdm
+import seaborn as sns
 
 MNIST = 554
 MUSHROOM = 24
@@ -57,3 +58,19 @@ def subsample_csv(csv_path: str, every_nth: int = 1):
                 break
     df = pd.concat(reduced_chunks).reset_index()
     df.to_csv(newpath, index=False)
+
+
+def create_palette(df: pd.DataFrame):
+    ts = ["TS"]
+    wucb = ["w-UCB"]
+    ucb = ["m-UCB", "c-UCB", "i-UCB"]
+    ids = [ts, ucb, wucb]
+    color_palettes = ["Blues", "Reds", "Greens"]
+    final_palette = []
+    for c, id in zip(color_palettes, ids):
+        mask = pd["approach"].apply(lambda x: np.any([x in string for string in id]))
+        data = df["approach"].iloc[mask]
+        palette = sns.color_palette(c, n_colors=len(data) + 1)[1:]
+        final_palette += palette
+    return final_palette
+
