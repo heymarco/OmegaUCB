@@ -18,7 +18,7 @@ class UCBSCArm(AbstractArm):
         mu = self._avg_reward
         tau = self._avg_cost
         aux_term = np.log(self.t) / (2 * self.pulls)
-        if self.tau < np.sqrt(aux_term):
+        if tau < np.sqrt(aux_term):
             return np.infty
         else:
             alpha = np.sqrt(aux_term / (mu ** 2 + tau ** 2 - aux_term))
