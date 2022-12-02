@@ -33,8 +33,10 @@ def create_setting(k: int, high_variance: bool, p_min, seed: int):
     rng = np.random.default_rng(seed)
     low = p_min
     high = 1.0 if high_variance else min(1.0, p_min * 3)
-    mean_rewards = np.array([0.5 for _ in range(k)])  # investigate effect when all arms have same cost.
+    mean_rewards = rng.uniform(low, high, size=k-1)
+    max_reward = np.max(mean_rewards)
     mean_costs = rng.uniform(low, high, size=k-1)
+    mean_rewards = np.concatenate([[max_reward], mean_rewards])
     mean_costs = np.concatenate([[p_min], mean_costs])  # we want to include the minimum cost
     return mean_rewards, mean_costs
 
@@ -54,21 +56,20 @@ def sort_setting(mean_rewards, mean_costs):
 
 def create_bandits(k: int, seed: int):
     return np.array([
-        UCBSC(k=k, name="UCB-SC", seed=seed)
-        # WUCB(k=k, name="w-UCB (a, r=1/6)", seed=seed, r=1/6, adaptive=True),
-        # WUCB(k=k, name="w-UCB (a, r=1/5)", seed=seed, r=1/5, adaptive=True),
-        # WUCB(k=k, name="w-UCB (a, r=1/4)", seed=seed, r=1/4, adaptive=True),
-        # WUCB(k=k, name="w-UCB (a, r=1/3)", seed=seed, r=1/3, adaptive=True),
-        # WUCB(k=k, name="w-UCB (a, r=1/2)", seed=seed, r=1/2, adaptive=True),
-        # WUCB(k=k, name="w-UCB (a, r=2)", seed=seed, r=2, adaptive=True),
-        # WUCB(k=k, name="w-UCB (a, r=3)", seed=seed, r=3, adaptive=True),
-        # WUCB(k=k, name="w-UCB (a, r=4)", seed=seed, r=4, adaptive=True),
-        # UCB(k=k, name="m-UCB", type="m", seed=seed, adaptive=True),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
-        #                                  ci_reward="ts-cost", ci_cost="ts-cost"),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="TS (reward)", seed=seed,
-        #                                  ci_reward="ts-reward", ci_cost="ts-reward"),
-        # BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
+        UCBSC(k=k, name="UCB-SC+", seed=seed),
+        WUCB(k=k, name="w-UCB (a, r=1/6)", seed=seed, r=1/6, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, r=1/5)", seed=seed, r=1/5, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, r=1/4)", seed=seed, r=1/4, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, r=1/3)", seed=seed, r=1/3, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, r=1/2)", seed=seed, r=1/2, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, r=1)", seed=seed, r=1, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, r=2)", seed=seed, r=2, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, r=3)", seed=seed, r=3, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, r=4)", seed=seed, r=4, adaptive=True),
+        UCB(k=k, name="m-UCB", type="m", seed=seed, adaptive=True),
+        UCB(k=k, name="i-UCB", type="i", seed=seed, adaptive=True),
+        UCB(k=k, name="c-UCB", type="c", seed=seed, adaptive=True),
+        BudgetedThompsonSampling(k=k, name="BTS", seed=seed),
     ])
 
 
@@ -87,7 +88,8 @@ def plot_regret(df: pd.DataFrame, filename: str):
     for ax in axes:
         ax.axhline(0, color="black", lw=.5)
     # plt.tight_layout(pad=.5)
-    # g.set(xscale="log")
+    g.set(xscale="log")
+    g.set(yscale="log")
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename))
     plt.show()
 
@@ -130,17 +132,17 @@ def plot_regret_over_k(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    use_results = False
+    use_results = True
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
-    filename = "bandit_comparison"
+    filename = "bandit_comparison_full"
     filepath = os.path.join(directory, filename + ".csv")
     assert os.path.exists(directory)
     if not use_results:
         high_variance = [True]
         p_min = [0.01, 0.02, 0.05, 0.1, 0.25, 0.5]  # the setting with 1.0 is the traditional bandit setting.
         ks = [100, 30, 10]
-        steps = 1.5e5  # we should be able to pull the cheapest arm 200000 times
+        steps = 1e5  # we should be able to pull the cheapest arm 200000 times
         reps = 100
         dfs = []
         for k in tqdm(ks, desc="k"):
@@ -166,9 +168,6 @@ if __name__ == '__main__':
     if plot_results:
         df = pd.read_csv(filepath)
         df = prepare_df(df, every_nth=10)
-        df = df.loc[df["approach"] != "w-UCB (a, r=2)"]
-        df = df.loc[df["approach"] != "w-UCB (a, r=3)"]
-        df = df.loc[df["approach"] != "w-UCB (a, r=4)"]
 
         # filepath2 = os.path.join(directory, filename + "_2" + ".csv")
         # if os.path.exists(filepath2):
@@ -179,4 +178,7 @@ if __name__ == '__main__':
 
         # plot_nrounds(df, "nrounds2.pdf")
         plot_regret_over_k(df)
+        df = df.loc[df["approach"] != "w-UCB (a, r=2)"]
+        df = df.loc[df["approach"] != "w-UCB (a, r=3)"]
+        df = df.loc[df["approach"] != "w-UCB (a, r=4)"]
         plot_regret(df, filename + ".pdf")

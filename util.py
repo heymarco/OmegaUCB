@@ -64,8 +64,9 @@ def create_palette(df: pd.DataFrame):
     ts = ["TS"]
     wucb = ["w-UCB"]
     ucb = ["m-UCB", "c-UCB", "i-UCB"]
-    id_list = [ts, ucb, wucb]
-    color_palettes = ["Blues", "Reds", "Greens"]
+    ucb_sc = ["UCB-SC"]
+    id_list = [ts, ucb_sc, ucb, wucb]
+    color_palettes = ["Blues", "Oranges", "Reds", "Greens"]
     final_palette = []
     for c, ids in zip(color_palettes, id_list):
         mask = df["approach"].apply(lambda x: np.any([id in x for id in ids])).astype(bool)

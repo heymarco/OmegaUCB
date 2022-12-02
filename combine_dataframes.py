@@ -15,6 +15,7 @@ if __name__ == '__main__':
     filenames = [
         "bandit_comparison_ci_rgeq1.csv",
         "bandit_comparison_ci_rleq1.csv",
+        "bandit_comparison_ucbsc.csv"
     ]
     final_df_name = "bandit_comparison_combined.csv"
     df = combine_dataframes(directory, filenames)
