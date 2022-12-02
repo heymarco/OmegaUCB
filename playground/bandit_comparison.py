@@ -16,8 +16,9 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from components.bandits.bts import BudgetedThompsonSampling
 from components.bandits.ucb_variants import UCB
+from components.bandits.ucbsc import UCBSC
 from components.bandits.wucb import WUCB
-from util import run_async, create_palette
+from util import run_async, create_palette, cm2inch
 from experiment import prepare_df, run_bandit
 
 
@@ -53,11 +54,12 @@ def sort_setting(mean_rewards, mean_costs):
 
 def create_bandits(k: int, seed: int):
     return np.array([
-        WUCB(k=k, name="w-UCB (a, r=1/6)", seed=seed, r=1/6, adaptive=True),
-        WUCB(k=k, name="w-UCB (a, r=1/5)", seed=seed, r=1/5, adaptive=True),
-        WUCB(k=k, name="w-UCB (a, r=1/4)", seed=seed, r=1/4, adaptive=True),
-        WUCB(k=k, name="w-UCB (a, r=1/3)", seed=seed, r=1/3, adaptive=True),
-        WUCB(k=k, name="w-UCB (a, r=1/2)", seed=seed, r=1/2, adaptive=True),
+        UCBSC(k=k, name="UCB-SC", seed=seed)
+        # WUCB(k=k, name="w-UCB (a, r=1/6)", seed=seed, r=1/6, adaptive=True),
+        # WUCB(k=k, name="w-UCB (a, r=1/5)", seed=seed, r=1/5, adaptive=True),
+        # WUCB(k=k, name="w-UCB (a, r=1/4)", seed=seed, r=1/4, adaptive=True),
+        # WUCB(k=k, name="w-UCB (a, r=1/3)", seed=seed, r=1/3, adaptive=True),
+        # WUCB(k=k, name="w-UCB (a, r=1/2)", seed=seed, r=1/2, adaptive=True),
         # WUCB(k=k, name="w-UCB (a, r=2)", seed=seed, r=2, adaptive=True),
         # WUCB(k=k, name="w-UCB (a, r=3)", seed=seed, r=3, adaptive=True),
         # WUCB(k=k, name="w-UCB (a, r=4)", seed=seed, r=4, adaptive=True),
@@ -75,10 +77,11 @@ def plot_regret(df: pd.DataFrame, filename: str):
     facet_kws = {'sharey': False, 'sharex': True}
     palette = create_palette(df)
     g = sns.relplot(data=df, kind="line",
-                    x="normalized budget", y="regret", col="p-min", row="k",
+                    x="normalized budget", y="regret",
+                    row="p-min", col="k",
                     hue="approach",
                     palette=palette,
-                    height=3, aspect=1, facet_kws=facet_kws,
+                    height=cm2inch(4)[0], aspect=1.5, facet_kws=facet_kws,
                     ci=None)
     axes = g.axes.flatten()
     for ax in axes:
@@ -94,9 +97,10 @@ def plot_nrounds(df: pd.DataFrame, filename: str):
     facet_kws = {'sharey': False, 'sharex': True}
     palette = create_palette(df)
     g = sns.relplot(data=df, kind="line",
-                    x="normalized budget", y="round", col="p-min", row="k",
+                    x="normalized budget", y="round",
+                    row="p-min", col="k",
                     hue="approach", palette=palette,
-                    height=3, aspect=1, facet_kws=facet_kws,
+                    height=cm2inch(6), aspect=1, facet_kws=facet_kws,
                     ci=None)
     axes = g.axes.flatten()
     for ax in axes:
@@ -129,7 +133,7 @@ if __name__ == '__main__':
     use_results = False
     plot_results = True
     directory = os.path.join(os.getcwd(), "..", "results")
-    filename = "bandit_comparison_ci"
+    filename = "bandit_comparison"
     filepath = os.path.join(directory, filename + ".csv")
     assert os.path.exists(directory)
     if not use_results:
@@ -162,14 +166,17 @@ if __name__ == '__main__':
     if plot_results:
         df = pd.read_csv(filepath)
         df = prepare_df(df, every_nth=10)
+        df = df.loc[df["approach"] != "w-UCB (a, r=2)"]
+        df = df.loc[df["approach"] != "w-UCB (a, r=3)"]
+        df = df.loc[df["approach"] != "w-UCB (a, r=4)"]
 
-        filepath2 = os.path.join(directory, filename + "_2" + ".csv")
-        if os.path.exists(filepath2):
-            df2 = pd.read_csv(filepath2)
-            df2 = prepare_df(df2, every_nth=10)
-            df["approach"][df["approach"] == "m-UCB"] = "m-UCB (0.25)"
-            df = pd.concat([df, df2], ignore_index=True)
+        # filepath2 = os.path.join(directory, filename + "_2" + ".csv")
+        # if os.path.exists(filepath2):
+        #     df2 = pd.read_csv(filepath2)
+        #     df2 = prepare_df(df2, every_nth=10)
+        #     df["approach"][df["approach"] == "m-UCB"] = "m-UCB (0.25)"
+        #     df = pd.concat([df, df2], ignore_index=True)
 
         # plot_nrounds(df, "nrounds2.pdf")
-        # plot_regret_over_k(df)
+        plot_regret_over_k(df)
         plot_regret(df, filename + ".pdf")

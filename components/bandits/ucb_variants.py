@@ -76,9 +76,8 @@ class UCBArm(AbstractArm):
 
 
 class UCB(AbstractBandit):
-    def __init__(self, k: int, name: str, type: str, seed: int, r: float = 4, adaptive: bool = False):
+    def __init__(self, k: int, name: str, type: str, seed: int, adaptive: bool = False):
         super(UCB, self).__init__(k, name, seed)
-        self.r = r
         self.type = type
         self.adaptive = adaptive
         self._startup_complete = False

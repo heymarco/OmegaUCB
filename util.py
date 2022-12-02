@@ -64,13 +64,21 @@ def create_palette(df: pd.DataFrame):
     ts = ["TS"]
     wucb = ["w-UCB"]
     ucb = ["m-UCB", "c-UCB", "i-UCB"]
-    ids = [ts, ucb, wucb]
+    id_list = [ts, ucb, wucb]
     color_palettes = ["Blues", "Reds", "Greens"]
     final_palette = []
-    for c, id in zip(color_palettes, ids):
-        mask = pd["approach"].apply(lambda x: np.any([x in string for string in id]))
-        data = df["approach"].iloc[mask]
-        palette = sns.color_palette(c, n_colors=len(data) + 1)[1:]
+    for c, ids in zip(color_palettes, id_list):
+        mask = df["approach"].apply(lambda x: np.any([id in x for id in ids])).astype(bool)
+        data = df["approach"].loc[mask]
+        n_colors = len(np.unique(data))
+        palette = sns.color_palette(c, n_colors=n_colors + 1)[1:]
         final_palette += palette
     return final_palette
 
+
+def cm2inch(*tupl):
+    inch = 2.54
+    if isinstance(tupl[0], tuple):
+        return tuple(i/inch for i in tupl[0])
+    else:
+        return tuple(i/inch for i in tupl)
