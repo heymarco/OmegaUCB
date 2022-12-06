@@ -27,7 +27,6 @@ class UCBArm(AbstractArm):
                 self.alpha = np.power(2.0, -2.0)
             elif type == "m":
                 self.alpha = np.power(2.0, -4.0)  # this is the recommendation in the paper
-                self.alpha = np.power(2.0, -2)  # but this works better!
 
     def _adaptive_confidence(self):
         conf = 1 - 2 / self.t ** 2

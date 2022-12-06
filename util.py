@@ -54,8 +54,6 @@ def subsample_csv(csv_path: str, every_nth: int = 1):
             selected_rows = np.unique(np.concatenate([necessary_rows, selected_rows]))
             final_chunk = chunk.loc[selected_rows]
             reduced_chunks.append(final_chunk)
-            if chunk_number > 10:
-                break
     df = pd.concat(reduced_chunks).reset_index()
     df.to_csv(newpath, index=False)
 
@@ -83,3 +81,18 @@ def cm2inch(*tupl):
         return tuple(i/inch for i in tupl[0])
     else:
         return tuple(i/inch for i in tupl)
+
+
+def extract_rho(s: str):
+    relevant_part = s.split("=")[-1][:-1]
+    if "/" in relevant_part:
+        numerator, denominator = relevant_part.split("/")
+        numerator = float(numerator)
+        denominator = float(denominator)
+        return numerator / denominator
+    else:
+        return float(relevant_part)
+
+
+def incremental_regret(rew_this, cost_this, rew_best, cost_best):
+    return cost_this * (rew_best / cost_best - rew_this / cost_this)
