@@ -1,55 +1,13 @@
+import multiprocessing
 import os
+from copy import deepcopy
 from typing import List
 
-import numpy as np
-import pandas as pd
-import seaborn as sns
-from matplotlib import pyplot as plt
-
 from components.bandit_logging import *
-from components.bandits.abstract import AbstractBandit
-from components.experiments.abstract import Experiment, Environment
+from components.experiments.abstract import Experiment, Environment, execute_bandit_on_env
 from components.experiments.environments import BernoulliSamplingEnvironment
-
-
-def prepare_df2(df: pd.DataFrame):
-    df.ffill(inplace=True)
-    df[NORMALIZED_BUDGET] = df[NORMALIZED_BUDGET].round(1)
-    return df
-
-
-def prepare_df(df: pd.DataFrame, every_nth: int = 1):
-    df.ffill(inplace=True)
-    df = df.iloc[::every_nth]
-    df["total reward"] = df["reward"]
-    # df["spent budget"] = np.round(df["spent-budget"] / 100) * 100
-    df["regret"] = np.nan
-    df["oracle"] = np.nan
-    df["normalized budget"] = np.nan
-    df["round"] = np.nan
-    df["our_approach"] = df["approach"].apply(lambda x: "w-UCB" in x)
-    df["diff"] = np.nan
-
-    for group, gdf in df.groupby(["rep", "approach", "k", "high-variance", "p-min"]):
-        gdf["diff"] = np.diff(gdf["spent-budget"], prepend=0.0)
-        df["diff"][gdf.index] = gdf["diff"]
-    df = df.loc[df["diff"] > 0]
-
-    for group, gdf in df.groupby(["rep", "approach", "k", "high-variance", "p-min"]):
-        rounds = (gdf.index.to_numpy() - gdf.index.to_numpy()[0]) * 100 + 1 + every_nth
-        gdf["round"] = rounds
-        gdf["oracle"] = gdf["optimal-reward"] * gdf["spent-budget"] / gdf["optimal-cost"]
-        df["oracle"][gdf.index] = gdf["oracle"]
-        normalized_budget = gdf["spent-budget"] / gdf["spent-budget"].iloc[-1]
-        gdf["regret"] = gdf["oracle"] - gdf["total reward"]
-        df["regret"][gdf.index] = gdf["regret"]
-        gdf["normalized budget"] = np.ceil((normalized_budget * 100)) / 100
-        df["normalized budget"][gdf.index] = gdf["normalized budget"]
-    budget_points = np.arange(1, 21) / 20
-    df_mask = df["normalized budget"].apply(lambda x: x in budget_points)
-    df = df.loc[df_mask]
-    df["k"] = df["k"].astype(int)
-    return df
+from facebook_ad_data_util import get_facebook_ad_data_settings, get_facebook_ad_stats
+from util import run_async
 
 
 class UniformArmsExperiment(Experiment):
@@ -68,3 +26,37 @@ class UniformArmsExperiment(Experiment):
             env = BernoulliSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, seed=seed)
             envs.append(env)
         return envs
+
+
+class FacebookAdDataExperiment(Experiment):
+    def _generate_environments(self, k: int,  # k is derived from the data in this environment
+                               seed: int) -> List[Environment]:
+        settings = get_facebook_ad_data_settings()
+        envs = []
+        for mean_rewards, mean_costs in settings:
+            env = BernoulliSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, seed=seed)
+            envs.append(env)
+        return envs
+
+    def _generate_args(self, k: int, num_reps: int) -> List:
+        args = []
+        for rep in range(num_reps):
+            environments = self._generate_environments(k=k, seed=rep)
+            for env in environments:
+                k = len(env.mean_rewards)
+                bandits = self._create_bandits(k=k, seed=rep)
+                for bandit in bandits:
+                    args.append([deepcopy(bandit), deepcopy(env), self.num_steps, rep])
+        return args
+
+    def run(self, arms: List[int], num_reps: int) -> pd.DataFrame:
+        get_facebook_ad_stats()
+        all_dfs = []
+        all_args = self._generate_args(0,  # number of arms inferred from environments directly
+                                       num_reps)
+        dfs = run_async(execute_bandit_on_env, all_args, njobs=multiprocessing.cpu_count() - 1)
+        all_dfs += dfs
+        df = pd.concat(all_dfs)
+        return df
+
+

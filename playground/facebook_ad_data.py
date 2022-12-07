@@ -18,16 +18,14 @@ mpl.rc('font', family='serif')
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from util import run_async
+from util import run_async, load_facebook_data
 from components.bandit import AdaptiveBudgetedThompsonSampling
 from components.bandits.bts import BudgetedThompsonSampling
 from components.bandits.ucb_variants import UCB
-from experiment import run_bandit, prepare_df
 
 
 def prepare_data():
-    data_path = os.path.join(os.getcwd(), "..", "data", "KAG_conversion_adapted.csv")
-    raw_data = pd.read_csv(data_path)
+    raw_data = load_facebook_data()
     is_zero_cost = raw_data["spent"] == 0
     is_zero_reward = raw_data["approved_conversion"] == 0
     is_nan_ratio = np.isnan(raw_data["reward_cost_ratio"])

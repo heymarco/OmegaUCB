@@ -54,16 +54,17 @@ class Experiment(ABC):
 
     def _create_bandits(self, k: int, seed: int):
         return np.array([
+            UCB(k=k, name="Budget-UCB", type="b", seed=seed),
             UCBSC(k=k, name="UCB-SC+", seed=seed),
-            WUCB(k=k, name="w-UCB (a, r=1/6)", seed=seed, r=1 / 6, adaptive=True),
-            WUCB(k=k, name="w-UCB (a, r=1/5)", seed=seed, r=1 / 5, adaptive=True),
-            WUCB(k=k, name="w-UCB (a, r=1/4)", seed=seed, r=1 / 4, adaptive=True),
-            WUCB(k=k, name="w-UCB (a, r=1/3)", seed=seed, r=1 / 3, adaptive=True),
-            WUCB(k=k, name="w-UCB (a, r=1/2)", seed=seed, r=1 / 2, adaptive=True),
-            WUCB(k=k, name="w-UCB (a, r=1)", seed=seed, r=1, adaptive=True),
-            WUCB(k=k, name="w-UCB (a, r=2)", seed=seed, r=2, adaptive=True),
-            WUCB(k=k, name="w-UCB (a, r=3)", seed=seed, r=3, adaptive=True),
-            WUCB(k=k, name="w-UCB (a, r=4)", seed=seed, r=4, adaptive=True),
+            WUCB(k=k, name="w-UCB (rho=1/6)", seed=seed, r=1 / 6, adaptive=True),
+            WUCB(k=k, name="w-UCB (rho=1/5)", seed=seed, r=1 / 5, adaptive=True),
+            WUCB(k=k, name="w-UCB (rho=1/4)", seed=seed, r=1 / 4, adaptive=True),
+            WUCB(k=k, name="w-UCB (rho=1/3)", seed=seed, r=1 / 3, adaptive=True),
+            WUCB(k=k, name="w-UCB (rho=1/2)", seed=seed, r=1 / 2, adaptive=True),
+            WUCB(k=k, name="w-UCB (rho=1)", seed=seed, r=1, adaptive=True),
+            WUCB(k=k, name="w-UCB (rho=2)", seed=seed, r=2, adaptive=True),
+            WUCB(k=k, name="w-UCB (rho=3)", seed=seed, r=3, adaptive=True),
+            WUCB(k=k, name="w-UCB (rho=4)", seed=seed, r=4, adaptive=True),
             UCB(k=k, name="m-UCB", type="m", seed=seed, adaptive=True),
             UCB(k=k, name="i-UCB", type="i", seed=seed, adaptive=True),
             UCB(k=k, name="c-UCB", type="c", seed=seed, adaptive=True),
@@ -91,7 +92,11 @@ class Experiment(ABC):
 
 
 def iterate(bandit: AbstractBandit, env: Environment, rng):
-    arm = bandit.sample()
+    if isinstance(bandit, UCB):
+        c_min = env.get_stats()[MINIMUM_AVERAGE_COST]
+        arm = bandit.sample(c_min=c_min)
+    else:
+        arm = bandit.sample()
     mean_reward = env.mean_rewards[arm]
     mean_cost = env.mean_costs[arm]
     this_reward = int(rng.uniform() < mean_reward)

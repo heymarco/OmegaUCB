@@ -22,6 +22,9 @@ REWARD_OF_CURRENT_ARM = r"$r_{i,t}$"
 MINIMUM_AVERAGE_COST = r"$c_{min}$"
 REGRET = "Regret"
 NORMALIZED_BUDGET = "normalized-budget"
+RHO = r"$\rho$"
+IS_OUR_APPROACH = "our_approach"
+APPROACH_ORDER = "order"
 
 
 all_ids = [
@@ -42,7 +45,8 @@ all_ids = [
     MINIMUM_AVERAGE_COST,
     REGRET,
     TIME,
-    NORMALIZED_BUDGET
+    NORMALIZED_BUDGET,
+    APPROACH_ORDER
 ]
 
 

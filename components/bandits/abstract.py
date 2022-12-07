@@ -5,7 +5,7 @@ import numpy as np
 
 class AbstractArm(ABC):
     @abstractmethod
-    def sample(self):
+    def sample(self, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
@@ -24,7 +24,7 @@ class AbstractBandit(ABC):
         self.rng = np.random.default_rng(seed)
 
     @abstractmethod
-    def sample(self):
+    def sample(self, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod

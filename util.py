@@ -1,16 +1,28 @@
 import os.path
 import gc
+import pathlib
 from multiprocessing import Pool
 from time import sleep
 
 import numpy as np
+import pandas
 import pandas as pd
 from scipy import stats
 from tqdm import tqdm
 import seaborn as sns
 
-MNIST = 554
-MUSHROOM = 24
+from components.bandit_logging import *
+
+
+approach_order = {
+    "BTS": 0,
+    "UCB-SC+": 1,
+    "Budget-UCB": 2,
+    "c-UCB": 3,
+    "i-UCB": 4,
+    "m-UCB": 5,
+    "w-UCB": 6
+}
 
 
 def str_to_arr(s, dtype):
@@ -59,16 +71,17 @@ def subsample_csv(csv_path: str, every_nth: int = 1):
 
 
 def create_palette(df: pd.DataFrame):
-    ts = ["TS"]
+    df.sort_values(by=[APPROACH_ORDER, RHO])
+    ts = ["BTS"]
     wucb = ["w-UCB"]
-    ucb = ["m-UCB", "c-UCB", "i-UCB"]
+    ucb = ["m-UCB", "c-UCB", "i-UCB", "Budget-UCB"]
     ucb_sc = ["UCB-SC"]
     id_list = [ts, ucb_sc, ucb, wucb]
-    color_palettes = ["Blues", "Oranges", "Reds", "Greens"]
+    color_palettes = ["Wistia", "Reds", "Greens", "Blues"]
     final_palette = []
     for c, ids in zip(color_palettes, id_list):
-        mask = df["approach"].apply(lambda x: np.any([id in x for id in ids])).astype(bool)
-        data = df["approach"].loc[mask]
+        mask = df[APPROACH].apply(lambda x: np.any([id in x for id in ids])).astype(bool)
+        data = df[APPROACH].loc[mask]
         n_colors = len(np.unique(data))
         palette = sns.color_palette(c, n_colors=n_colors + 1)[1:]
         final_palette += palette
@@ -84,6 +97,8 @@ def cm2inch(*tupl):
 
 
 def extract_rho(s: str):
+    if "r=" not in s:
+        return np.nan
     relevant_part = s.split("=")[-1][:-1]
     if "/" in relevant_part:
         numerator, denominator = relevant_part.split("/")
@@ -96,3 +111,31 @@ def extract_rho(s: str):
 
 def incremental_regret(rew_this, cost_this, rew_best, cost_best):
     return cost_this * (rew_best / cost_best - rew_this / cost_this)
+
+
+def save_df(df: pd.DataFrame, name: str):
+    this_dir = pathlib.Path(__file__).parent.resolve()
+    fp = os.path.join(this_dir, "results", name + ".csv")
+    df.to_csv(fp, index=False)
+
+
+def load_df(name: str):
+    this_dir = pathlib.Path(__file__).parent.resolve()
+    fp = os.path.join(this_dir, "results", name + ".csv")
+    return pd.read_csv(fp)
+
+
+def prepare_df2(df: pd.DataFrame):
+    df.ffill(inplace=True)
+    df.sort_values(by=APPROACH, inplace=True)
+    df[NORMALIZED_BUDGET] = np.ceil((df[NORMALIZED_BUDGET] * 25)) / 25
+    df[RHO] = np.nan
+    df[RHO] = df[APPROACH].apply(lambda x: extract_rho(x))
+    df[IS_OUR_APPROACH] = False
+    df[IS_OUR_APPROACH] = df[APPROACH].apply(lambda x: "w-UCB" in x)
+    df[APPROACH_ORDER] = np.nan
+    df[APPROACH_ORDER] = df[APPROACH].apply(
+        lambda x: next(approach_order[key] for key in approach_order.keys() if key in x)
+    )
+    assert not np.any(np.isnan(df[APPROACH_ORDER]))
+    return df
