@@ -97,7 +97,7 @@ def cm2inch(*tupl):
 
 
 def extract_rho(s: str):
-    if "r=" not in s:
+    if "rho=" not in s:
         return np.nan
     relevant_part = s.split("=")[-1][:-1]
     if "/" in relevant_part:
@@ -128,7 +128,8 @@ def load_df(name: str):
 def prepare_df2(df: pd.DataFrame):
     df.ffill(inplace=True)
     df.sort_values(by=APPROACH, inplace=True)
-    df[NORMALIZED_BUDGET] = np.ceil((df[NORMALIZED_BUDGET] * 25)) / 25
+    df[NORMALIZED_BUDGET] = np.ceil((df[NORMALIZED_BUDGET] * 10)) / 10
+    df = df[df[NORMALIZED_BUDGET] <= 1]
     df[RHO] = np.nan
     df[RHO] = df[APPROACH].apply(lambda x: extract_rho(x))
     df[IS_OUR_APPROACH] = False

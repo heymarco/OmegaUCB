@@ -40,11 +40,27 @@ def get_setting(df):
     return np.array(mean_rewards), np.array(mean_costs)
 
 
-def get_facebook_ad_data_settings():
+def add_noise(setting, random_state: int):
+    rng = np.random.default_rng(random_state)
+    rew = setting[0]
+    cost = setting[1]
+    noise_rew = rng.uniform(-1, 1, size=rew.shape) * 0.05
+    noise_cost = rng.uniform(-1, 1, size=cost.shape) * 0.05
+    rew = rew + noise_rew
+    cost = cost + noise_cost
+    rew = np.maximum(rew, 0.01)
+    rew = np.minimum(rew, 1.0)
+    cost = np.maximum(cost, 0.01)
+    cost = np.minimum(cost, 1.0)
+    return rew, cost
+
+
+def get_facebook_ad_data_settings(random_state: int):
     data = prepare_facebook_data()
     settings = []
     for _, gdf in data.groupby(["campaign_id", "age", "gender"]):
         setting = get_setting(gdf)
+        setting = add_noise(setting, random_state=random_state)
         k = len(setting[0])
         if k >= 2:
             settings.append(get_setting(gdf))
@@ -63,4 +79,4 @@ def get_facebook_ad_stats():
                 age, gender, min(setting[-1]), len(setting[0])
             ])
     df = pd.DataFrame(rows, columns=cols)
-    print(df)
+    print(df.sort_values(by=["Gender", "Age"]).set_index(["Gender", "Age"]).to_latex(escape=False, multirow=True))

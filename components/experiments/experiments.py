@@ -31,7 +31,7 @@ class UniformArmsExperiment(Experiment):
 class FacebookAdDataExperiment(Experiment):
     def _generate_environments(self, k: int,  # k is derived from the data in this environment
                                seed: int) -> List[Environment]:
-        settings = get_facebook_ad_data_settings()
+        settings = get_facebook_ad_data_settings(random_state=seed)
         envs = []
         for mean_rewards, mean_costs in settings:
             env = BernoulliSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, seed=seed)

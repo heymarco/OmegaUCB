@@ -30,12 +30,12 @@ def plot_regret(df: pd.DataFrame):
     df = df.groupby([x, hue, row]).mean().reset_index()
     lims = compute_ylims(df, row_var=row)
     palette = create_palette(df)
-    df = df.sort_values(by=APPROACH_ORDER)
+    df = df.sort_values(by=[APPROACH_ORDER, RHO])
     g = sns.relplot(data=df, x=x, y=y, hue=hue, row=row,
                     kind="line", palette=palette, aspect=1.8, height=cm2inch(6)[0],
                     facet_kws={"sharey": False}, err_style=None)
     # g.set(yscale="log")
-    # g.set(xscale="log")
+    g.set(xscale="log")
     for lim, ax in zip(lims, g.axes.flatten()):
         ax.set_ylim(lim)
     plt.show()
@@ -45,11 +45,11 @@ if __name__ == '__main__':
     filename = "facebook_ads"
     df = load_df(filename)
     df = prepare_df2(df)
-    # df = df.loc[df[APPROACH] != "w-UCB (a, r=1)"]
-    df = df.loc[df[APPROACH] != "w-UCB (rho=1/5)"]
-    df = df.loc[df[APPROACH] != "w-UCB (rho=1/6)"]
+    df = df.loc[df[APPROACH] != "w-UCB (a, r=1)"]
+    # df = df.loc[df[APPROACH] != "w-UCB (rho=1/5)"]
+    # df = df.loc[df[APPROACH] != "w-UCB (rho=1/6)"]
     df = df.loc[df[APPROACH] != "w-UCB (rho=2)"]
     df = df.loc[df[APPROACH] != "w-UCB (rho=3)"]
     df = df.loc[df[APPROACH] != "w-UCB (rho=4)"]
-    # df = df.loc[df[APPROACH] != "UCB-SC+"]
+    df = df.loc[df[APPROACH] != "Budget-UCB"]
     plot_regret(df)

@@ -33,48 +33,47 @@ if __name__ == '__main__':
     matrix = [
         [0, -1, 0, 0, 0, -1, -1, -1, -1, -1, 0, 0],
         [1, 0, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, -1, -1, 0, 0, 0, 0, -1, -1],
-        [0, 0, 0, 0, 0, -1, -1, -1, -1, -1, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 1, 0, 0, 0, -1, -1, -1, 0, 0],
-        [1, 0, 0, 1, 0, 0, 0, -1, -1, -1, 0, 0],
-        [1, 0, 0, 1, 0, 1, 1, 0, -1, -1, 0, 0],
-        [1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
-        [1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [-2, 1, 0, 0, -1, -1, 0, 0, 0, 0, -1, -1],
+        [-2, -2, -2, 0, 0, -1, -1, -1, -1, -1, 0, -1],
+        [-2, -2, 1, -2, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 1, -2, 0, 0, -1, -1, -1, 0, 0],
+        [1, -2, -2, 1, -2, 0, 0, -1, -1, -1, 0, 0],
+        [1, -2, -2, 1, -2, 1, 1, 0, -1, -1, 0, 0],
+        [1, -2, -2, 1, -2, 1, 1, 1, 0, 0, 0, 0],
+        [1, -2, -2, 1, -2, 1, 1, 1, 0, 0, 0, 0],
+        [-2, 0, 1, 0, -2, 0, -2, -2, -2, -2, 0, 0],
+        [-2, -2, 1, 1, -2, 0, -2, -2, -2, -2, 0, 0],
     ]
 
-    matrix_bin = [
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0],
-        [1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
-        [1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    ]
+    for row in range(len(matrix)):
+        for col in range(len(matrix[row])):
+            if matrix[row][col] == -2:
+                matrix[col][row] = -2
 
-    use_bin = True
-    if use_bin:
-        df = pd.DataFrame(np.array(matrix_bin).T, columns=approaches, index=approaches)
-        ax = sns.heatmap(df.iloc[:-1, 1:], cmap=sns.color_palette("vlag_r", n_colors=3)[1:],
-                         linewidth=1, cbar=False, square=True, mask=np.tril(np.ones_like(matrix_bin))[:-1, 1:])
+    matrix_inv = [matrix[-i-1] for i in range(len(matrix))]
+    mask = np.triu(np.ones_like(matrix_inv))
+    mask = np.array([mask[-(i+1)] for i in range(len(mask))])
+    approaches_inv = [approaches[-(i+1)] for i in range(len(approaches))]
+
+    show_full = True
+    palette = sns.color_palette("vlag_r", n_colors=3)
+    palette = palette if show_full else palette[1:]
+    palette = ["lightgray"] + palette
+
+
+    if not show_full:
+        df = pd.DataFrame(np.array(matrix_inv), columns=approaches, index=approaches_inv)
+        ax = sns.heatmap(df.iloc[:-1, :-1], cmap=palette,
+                         linewidth=1, cbar=False, square=True, mask=mask[:-1, :-1])
     else:
-        df = pd.DataFrame(np.array(matrix).T, columns=approaches, index=approaches)
-        ax = sns.heatmap(df, cmap=sns.color_palette("vlag_r", n_colors=3),
-                         linewidth=1, cbar=False, square=True, mask=np.tril(np.ones_like(matrix_bin)))
-    ax.set_ylabel("Competitor")
-    ax.set_xlabel("Approach outperforms")
+        df = pd.DataFrame(np.array(matrix), columns=approaches, index=approaches)
+        ax = sns.heatmap(df, cmap=palette,
+                         linewidth=1, cbar=False, square=True)
+    ax.set_xlabel(r"\ldots competitor")
+    ax.set_ylabel(r"Approach outperforms \ldots")
     ax.xaxis.set_label_position('top')
-    ax.yaxis.set_label_position('right')
+    ax.yaxis.set_label_position('left')
     ax.xaxis.tick_top()
-    ax.yaxis.tick_right()
     # ax.set_title("Dominance matrix of related approaches")
     for item in ax.get_xticklabels():
         item.set_rotation(90)
