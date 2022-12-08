@@ -122,7 +122,6 @@ def execute_bandit_on_env(bandit: AbstractBandit, env: Environment, num_steps: i
     regret_sum = 0
     budget = num_steps * env_stats[MINIMUM_AVERAGE_COST]
 
-    prev_arm = -1
     t = 0
     while spent_budget < budget:
         r, c, arm = iterate(bandit, env, rng)
@@ -132,7 +131,7 @@ def execute_bandit_on_env(bandit: AbstractBandit, env: Environment, num_steps: i
         mu_c_this = env.mean_costs[arm]
         regret_sum += incremental_regret(rew_this=mu_r_this, cost_this=mu_c_this,
                                          rew_best=reward_optimal_arm, cost_best=cost_optimal_arm)
-        should_track = prev_arm != arm or t % 100 == 0
+        should_track = t % int(1e3) == 0
         if should_track:
             logger.track_arm(arm)
             logger.track_round(t)
@@ -144,7 +143,6 @@ def execute_bandit_on_env(bandit: AbstractBandit, env: Environment, num_steps: i
             logger.track_total_reward(r_sum)
             logger.track_time()
             logger.finalize_round()
-        prev_arm = arm
         t += 1
     return logger.get_dataframe()
 
