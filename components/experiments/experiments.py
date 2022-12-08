@@ -13,19 +13,15 @@ from util import run_async
 class UniformArmsExperiment(Experiment):
     def _generate_environments(self, k: int, seed: int) -> List[Environment]:
         rng = np.random.default_rng(seed)
-        c_mins = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5]
-        envs = []
-        for c in c_mins:
-            low = c
-            high = 1.0
-            mean_rewards = rng.uniform(low, high, size=k - 1)
-            max_reward = np.max(mean_rewards)
-            mean_costs = rng.uniform(low, high, size=k - 1)
-            mean_rewards = np.concatenate([[max_reward], mean_rewards])
-            mean_costs = np.concatenate([[c], mean_costs])  # we want to include the minimum cost
-            env = BernoulliSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, seed=seed)
-            envs.append(env)
-        return envs
+        c_min = 0.01
+        mean_rewards = rng.uniform(0, 1, size=k)
+        mean_costs = rng.uniform(c_min, 1.0, size=k)
+        eff_invers = mean_costs / mean_rewards
+        sorted_indices = np.argsort(eff_invers)
+        mean_rewards = mean_rewards[sorted_indices]
+        mean_costs = mean_costs[sorted_indices]
+        env = BernoulliSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, seed=seed)
+        return [env]
 
 
 class FacebookAdDataExperiment(Experiment):
