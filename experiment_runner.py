@@ -12,7 +12,7 @@ def execute_experiment(exp: Experiment, arms: List[int], num_reps: int):
 
 
 if __name__ == '__main__':
-    arms = [10, 100]
+    arms = [100, 10, 50]
     n_reps = 100
     n_steps = int(1.5e5)
 
