@@ -48,7 +48,7 @@ def add_noise(setting, random_state: int):
     noise_cost = rng.uniform(-1, 1, size=cost.shape) * 0.05
     rew = rew + noise_rew
     cost = cost + noise_cost
-    rew = np.maximum(rew, 0.01)
+    rew = np.maximum(rew, 0.0)
     rew = np.minimum(rew, 1.0)
     cost = np.maximum(cost, 0.01)
     cost = np.minimum(cost, 1.0)
