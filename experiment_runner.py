@@ -20,8 +20,8 @@ if __name__ == '__main__':
     synth_beta = BetaExperiment("synth_beta", num_steps=n_steps)
     execute_experiment(synth_beta, arms, num_reps=n_reps)
 
-    facebook_beta = FacebookBetaExperiment("facebook_beta", num_steps=n_steps)
-    execute_experiment(facebook_beta, arms=[0], num_reps=n_reps)
+    # facebook_beta = FacebookBetaExperiment("facebook_beta", num_steps=n_steps)
+    # execute_experiment(facebook_beta, arms=[0], num_reps=n_reps)
 
     # synth_bernoulli = BernoulliExperiment("synth_bernoulli", num_steps=n_steps)
     # execute_experiment(synth_bernoulli, arms, num_reps=n_reps)

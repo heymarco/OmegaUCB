@@ -14,8 +14,8 @@ from components.bandit_logging import *
 
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = rho'\usepackage{times}'
-mpl.rcParams['text.latex.preamble'] = rho'\usepackage{nicefrac}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{times}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{nicefrac}'
 mpl.rc('font', family='serif')
 
 
@@ -58,11 +58,9 @@ if __name__ == '__main__':
     filename = "uniform_vary_costs"
     df = load_df(filename)
     df = prepare_df2(df, n_steps=10)
-    # df = df.loc[df[APPROACH] != "w-UCB (a, rho=1)"]
     df = df.loc[df[APPROACH] != "w-UCB (rho=1/5)"]
     df = df.loc[df[APPROACH] != "w-UCB (rho=1/6)"]
     df = df.loc[df[APPROACH] != "w-UCB (rho=2)"]
     df = df.loc[df[APPROACH] != "w-UCB (rho=3)"]
     df = df.loc[df[APPROACH] != "w-UCB (rho=4)"]
-    # df = df.loc[df[APPROACH] != "UCB-SC+"]
     plot_regret(df)

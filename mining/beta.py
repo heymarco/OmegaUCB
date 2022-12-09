@@ -20,7 +20,7 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{nicefrac}'
 mpl.rc('font', family='serif')
 
 
-def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=0.1):
+def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=0.3):
     lims = []
     df = df.groupby([x, hue, col_var]).mean().reset_index()
     df = df[df[x] <= x_cut]
@@ -42,7 +42,7 @@ def plot_regret(df: pd.DataFrame):
     g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
                     kind="line", palette=palette,
                     facet_kws={"sharey": False}, err_style="bars")
-    # g.set(xscale="log")
+    g.set(xscale="log")
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):
         ax.set_ylim(lim)
         if i > 0:
@@ -57,7 +57,7 @@ def plot_regret(df: pd.DataFrame):
 if __name__ == '__main__':
     filename = "synth_beta"
     df = load_df(filename)
-    df = prepare_df2(df, n_steps=50)
+    df = prepare_df2(df, n_steps=10)
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_5]
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_6]
     df = df.loc[df[APPROACH] != OMEGA_UCB_2]
