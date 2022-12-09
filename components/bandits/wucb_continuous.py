@@ -29,8 +29,9 @@ class Aggregate:
         return np.sqrt(self.variance())
 
 
-def compute_eta(pop_var: float) -> float:
-    return min(1.0, 4.0 * pop_var)
+def compute_eta(mean: float, pop_var: float) -> float:
+    bernoulli_variance = mean * (1 - mean)
+    return min(pop_var / bernoulli_variance, 1)
 
 
 class GeneralizedWUCBArm(AbstractArm):
@@ -58,10 +59,11 @@ class GeneralizedWUCBArm(AbstractArm):
         return z
 
     def update_cost(self):
+        mean = self._cost_aggregate.mean()
         n = self.pulls
-        ns = self._cost_aggregate.mean() * n
+        ns = mean * n
         nf = n - ns
-        eta = compute_eta(self._cost_aggregate.variance())
+        eta = compute_eta(mean, self._cost_aggregate.variance())
         if self.adaptive:
             z = self._adaptive_z()
         else:
@@ -73,10 +75,11 @@ class GeneralizedWUCBArm(AbstractArm):
         self._cost = avg - ci
 
     def update_reward(self):
+        mean = self._rew_aggregate.mean()
         n = self.pulls
-        ns = self._rew_aggregate.mean() * n
+        ns = mean * n
         nf = n - ns
-        eta = compute_eta(self._rew_aggregate.variance())
+        eta = compute_eta(mean, self._rew_aggregate.variance())
         if self.adaptive:
             z = self._adaptive_z()
         else:
