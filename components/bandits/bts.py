@@ -50,12 +50,14 @@ class BudgetedThompsonSampling(AbstractBandit):
             # Bernoulli reward
             self.reward_arms[arm].update(reward)
         else:
+            # Perform Bernoulli trial as suggested in the paper
             bernoulli_reward = int(self.rng.uniform() < reward)
             self.reward_arms[arm].update(bernoulli_reward)
         if cost == 1 or cost == 0:
             # Bernoulli cost
             self.cost_arms[arm].update(cost)
         else:
+            # Perform Bernoulli trial as suggested in the paper
             bernoulli_cost = int(self.rng.uniform() < cost)
             self.cost_arms[arm].update(bernoulli_cost)
 

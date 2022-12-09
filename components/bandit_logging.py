@@ -16,15 +16,16 @@ OPTIMAL_COST = r"$c_1$"
 SPENT_BUDGET = r"spent-budget"
 TOTAL_REWARD = "reward"
 AVG_COST_OF_CURRENT_ARM = r"$\mu_i^c$"
-AVG_REWARD_OF_CURRENT_ARM = r"$\mu_i^r$"
+AVG_REWARD_OF_CURRENT_ARM = r"$\mu_i^rho$"
 COST_OF_CURRENT_ARM = r"$c_{i,t}$"
 REWARD_OF_CURRENT_ARM = r"$r_{i,t}$"
 MINIMUM_AVERAGE_COST = r"$c_{min}$"
 REGRET = "Regret"
-NORMALIZED_BUDGET = "normalized-budget"
+NORMALIZED_BUDGET = "Normalized Budget"
 RHO = r"$\rho$"
 IS_OUR_APPROACH = "our_approach"
 APPROACH_ORDER = "order"
+NORMALIZED_REGRET = "Normalized Regret"
 
 
 all_ids = [

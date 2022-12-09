@@ -21,6 +21,7 @@ class ThompsonSampling(AbstractBandit):
             # Bernoulli reward
             self.arms[arm].update(reward)
         else:
+            # Perform Bernoulli trial as suggested in the paper
             bernoulli_reward = int(self.rng.uniform() < reward)
             self.arms[arm].update(bernoulli_reward)
 

@@ -6,8 +6,8 @@ from scipy.special import beta
 
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{times}'
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{nicefrac}'
+mpl.rcParams['text.latex.preamble'] = rho'\usepackage{times}'
+mpl.rcParams['text.latex.preamble'] = rho'\usepackage{nicefrac}'
 mpl.rc('font', family='serif')
 
 
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     axes[0].plot(ay, np.sqrt(variance2(ax, bx, ay)))
     # axes[0].plot(ay, variance(ax, bx, ay))
     axes[0].plot(ay, mean(ax, bx, ay))
-    axes[0].set_xlabel(r"$1 \leq \beta^c < 3$ for $n={}$".format(n))
+    axes[0].set_xlabel(rho"$1 \leq \beta^c < 3$ for $n={}$".format(n))
 
     # Setting 1
     n = 20
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     axes[1].plot(ay, np.sqrt(variance2(ax, bx, ay)))
     # axes[1].plot(ay, variance(ax, bx, ay))
     axes[1].plot(ay, mean(ax, bx, ay))
-    axes[1].set_xlabel(r"$3\leq \beta^c$ for $n={}$".format(n))
+    axes[1].set_xlabel(rho"$3\leq \beta^c$ for $n={}$".format(n))
 
     # Setting 2
     n = 100
@@ -74,9 +74,9 @@ if __name__ == '__main__':
     axes[2].plot(ay, np.sqrt(variance2(ax, bx, ay)), label="Std.")
     # axes[2].plot(ay, variance(ax, bx, ay))
     axes[2].plot(ay, mean(ax, bx, ay), label="Mean")
-    axes[2].set_xlabel(r"$\beta^c$ for $n={}$".format(n))
+    axes[2].set_xlabel(rho"$\beta^c$ for $n={}$".format(n))
 
-    plt.suptitle(r"Standard deviation and mean for reward-cost-ratio for $\alpha^r = \beta^r$")
+    plt.suptitle(rho"Standard deviation and mean for reward-cost-ratio for $\alpha^rho = \beta^rho$")
     plt.legend()
     plt.gcf().set_size_inches(6, 1.7)
     plt.tight_layout(pad=.5)
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     axes[0].plot(n, np.sqrt(variance2(ax, bx, ay)), color="green")
     # axes[0].plot(ay, variance(ax, bx, ay))
     axes[0].plot(n, mean(ax, bx, ay))
-    # axes[0].set_xlabel(r"$1\leq\beta^c < 3$ for $n={}$".format(n))
+    # axes[0].set_xlabel(rho"$1\leq\beta^c < 3$ for $n={}$".format(n))
 
     # Setting 1
     n = 20
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     axes[1].plot(ay, variance2(ax, bx, ay), color="green")
     # axes[1].plot(ay, variance(ax, bx, ay))
     axes[1].plot(ay, mean(ax, bx, ay))
-    axes[1].set_xlabel(r"$3\leq \beta^c$ for $n={}$".format(n))
+    axes[1].set_xlabel(rho"$3\leq \beta^c$ for $n={}$".format(n))
 
     # Setting 2
     n = 100
@@ -114,9 +114,9 @@ if __name__ == '__main__':
     axes[2].plot(ay, variance2(ax, bx, ay), label="Variance", color="green")
     # axes[2].plot(ay, variance(ax, bx, ay))
     axes[2].plot(ay, mean(ax, bx, ay), label="Mean")
-    axes[2].set_xlabel(r"$\beta^c$ for $n={}$".format(n))
+    axes[2].set_xlabel(rho"$\beta^c$ for $n={}$".format(n))
 
-    plt.suptitle(r"Variance and mean for reward-cost-ratio for $\alpha^r = \beta^r$")
+    plt.suptitle(rho"Variance and mean for reward-cost-ratio for $\alpha^rho = \beta^rho$")
     plt.legend()
     plt.gcf().set_size_inches(6, 1.7)
     plt.tight_layout(pad=.5)

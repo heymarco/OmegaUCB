@@ -1,6 +1,7 @@
 from typing import List
 
-from components.experiments.experiments import UniformArmsExperiment, FacebookAdDataExperiment
+from components.experiments.experiments import BernoulliExperiment, FacebookBernoulliExperiment, BetaExperiment, \
+    FacebookBetaExperiment
 from components.experiments.abstract import Experiment
 
 from util import save_df
@@ -16,9 +17,14 @@ if __name__ == '__main__':
     n_reps = 100
     n_steps = int(1.5e5)
 
-    c_min_experiment = UniformArmsExperiment("uniform_vary_costs", num_steps=n_steps)
-    execute_experiment(c_min_experiment, arms, num_reps=n_reps)
+    synth_beta = BetaExperiment("synth_beta", num_steps=n_steps)
+    execute_experiment(synth_beta, arms, num_reps=n_reps)
 
-    facebook_experiment = FacebookAdDataExperiment("facebook_ads", num_steps=n_steps)
-    execute_experiment(facebook_experiment, arms=[0], num_reps=n_reps)
+    facebook_beta = FacebookBetaExperiment("facebook_beta", num_steps=n_steps)
+    execute_experiment(facebook_beta, arms=[0], num_reps=n_reps)
 
+    # synth_bernoulli = BernoulliExperiment("synth_bernoulli", num_steps=n_steps)
+    # execute_experiment(synth_bernoulli, arms, num_reps=n_reps)
+    #
+    # facebook_bernoulli = FacebookBernoulliExperiment("facebook_bernoulli", num_steps=n_steps)
+    # execute_experiment(facebook_bernoulli, arms=[0], num_reps=n_reps)

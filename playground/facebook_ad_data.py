@@ -11,8 +11,8 @@ import seaborn as sns
 
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{times}'
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{nicefrac}'
+mpl.rcParams['text.latex.preamble'] = rho'\usepackage{times}'
+mpl.rcParams['text.latex.preamble'] = rho'\usepackage{nicefrac}'
 mpl.rc('font', family='serif')
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))

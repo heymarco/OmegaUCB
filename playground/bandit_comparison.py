@@ -24,8 +24,8 @@ from experiment import prepare_df, run_bandit
 
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{times}'
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{nicefrac}'
+mpl.rcParams['text.latex.preamble'] = rho'\usepackage{times}'
+mpl.rcParams['text.latex.preamble'] = rho'\usepackage{nicefrac}'
 mpl.rc('font', family='serif')
 
 
@@ -57,15 +57,15 @@ def sort_setting(mean_rewards, mean_costs):
 def create_bandits(k: int, seed: int):
     return np.array([
         UCBSC(k=k, name="UCB-SC+", seed=seed),
-        WUCB(k=k, name="w-UCB (a, r=1/6)", seed=seed, r=1/6, adaptive=True),
-        WUCB(k=k, name="w-UCB (a, r=1/5)", seed=seed, r=1/5, adaptive=True),
-        WUCB(k=k, name="w-UCB (a, r=1/4)", seed=seed, r=1/4, adaptive=True),
-        WUCB(k=k, name="w-UCB (a, r=1/3)", seed=seed, r=1/3, adaptive=True),
-        WUCB(k=k, name="w-UCB (a, r=1/2)", seed=seed, r=1/2, adaptive=True),
-        WUCB(k=k, name="w-UCB (a, r=1)", seed=seed, r=1, adaptive=True),
-        WUCB(k=k, name="w-UCB (a, r=2)", seed=seed, r=2, adaptive=True),
-        WUCB(k=k, name="w-UCB (a, r=3)", seed=seed, r=3, adaptive=True),
-        WUCB(k=k, name="w-UCB (a, r=4)", seed=seed, r=4, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, rho=1/6)", seed=seed, r=1/6, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, rho=1/5)", seed=seed, r=1/5, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, rho=1/4)", seed=seed, r=1/4, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, rho=1/3)", seed=seed, r=1/3, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, rho=1/2)", seed=seed, r=1/2, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, rho=1)", seed=seed, r=1, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, rho=2)", seed=seed, r=2, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, rho=3)", seed=seed, r=3, adaptive=True),
+        WUCB(k=k, name="w-UCB (a, rho=4)", seed=seed, r=4, adaptive=True),
         UCB(k=k, name="m-UCB", type="m", seed=seed, adaptive=True),
         UCB(k=k, name="i-UCB", type="i", seed=seed, adaptive=True),
         UCB(k=k, name="c-UCB", type="c", seed=seed, adaptive=True),
@@ -118,12 +118,12 @@ def plot_regret_over_k(df: pd.DataFrame):
     palette = create_palette(df)
     for (approach, k, p_min, rep), gdf in df.groupby(["approach", "k", "p-min", "rep"]):
         data.append([k, p_min, np.mean(gdf["regret"].iloc[-30:]), approach, rep])
-    result_df = pd.DataFrame(data, columns=["k", r"$c_{min}$", "Regret", "Approach", "rep"])
+    result_df = pd.DataFrame(data, columns=["k", rho"$c_{min}$", "Regret", "Approach", "rep"])
     result_df = result_df[result_df["k"] > 3]
-    # g = sns.lineplot(data=result_df, x=r"$c_{min}$", y="Regret", hue="Approach", marker="o",
+    # g = sns.lineplot(data=result_df, x=rho"$c_{min}$", y="Regret", hue="Approach", marker="o",
     #                  palette=palette,
     #                  err_style="bars")
-    sns.boxplot(data=result_df, x=r"$c_{min}$", y="Regret", hue="Approach", palette=palette, fliersize=0)
+    sns.boxplot(data=result_df, x=rho"$c_{min}$", y="Regret", hue="Approach", palette=palette, fliersize=0)
     # g.set(xscale="log")
     plt.yscale("log")
     plt.gcf().set_size_inches(5.5, 3.5)
@@ -139,8 +139,8 @@ def plot_rho_sensitivity(df: pd.DataFrame):
     m_ucb_end_regret = df.loc[df["approach"] == "m-UCB"].groupby("k").mean()
     bts_end_regret = df.loc[df["approach"] == "BTS"].groupby("k").mean()
     df = df.loc[df["our_approach"]]
-    df[r"$\rho$"] = df["approach"].apply(lambda x: extract_rho(x))
-    g = sns.relplot(data=df, x=r"$\rho$", y="regret", kind="line",
+    df[rho"$\rho$"] = df["approach"].apply(lambda x: extract_rho(x))
+    g = sns.relplot(data=df, x=rho"$\rho$", y="regret", kind="line",
                     height=cm2inch(4.5)[0], aspect=1.5,
                     hue="k", col="p-min", col_wrap=2, facet_kws={"sharey": None},
                     markers="o", err_style="bars")
@@ -191,9 +191,9 @@ if __name__ == '__main__':
 
         plot_rho_sensitivity(df.loc[df["our_approach"]])
 
-        df = df.loc[df["approach"] != "w-UCB (a, r=2)"]
-        df = df.loc[df["approach"] != "w-UCB (a, r=3)"]
-        df = df.loc[df["approach"] != "w-UCB (a, r=4)"]
+        df = df.loc[df["approach"] != "w-UCB (a, rho=2)"]
+        df = df.loc[df["approach"] != "w-UCB (a, rho=3)"]
+        df = df.loc[df["approach"] != "w-UCB (a, rho=4)"]
         df = df.loc[df["approach"] != "UCB-SC+"]
         df = df.loc[df["approach"] != "i-UCB"]
         df = df.loc[df["approach"] != "c-UCB"]

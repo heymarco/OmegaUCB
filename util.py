@@ -7,21 +7,24 @@ from time import sleep
 import numpy as np
 import pandas
 import pandas as pd
+from matplotlib import pyplot as plt
 from scipy import stats
 from tqdm import tqdm
 import seaborn as sns
 
 from components.bandit_logging import *
+from approach_names import *
 
 
 approach_order = {
-    "BTS": 0,
-    "UCB-SC+": 1,
-    "Budget-UCB": 2,
-    "c-UCB": 3,
-    "i-UCB": 4,
-    "m-UCB": 5,
-    "w-UCB": 6
+    BTS: 0,
+    UCB_SC_PLUS: 1,
+    BUDGET_UCB: 2,
+    CUCB: 3,
+    IUCB: 4,
+    MUCB: 5,
+    OMEGA_UCB_: 6,
+    ETA_UCB_: 7
 }
 
 
@@ -72,10 +75,10 @@ def subsample_csv(csv_path: str, every_nth: int = 1):
 
 def create_palette(df: pd.DataFrame):
     df.sort_values(by=[APPROACH_ORDER, RHO])
-    ts = ["BTS"]
-    wucb = ["w-UCB"]
-    ucb = ["m-UCB", "c-UCB", "i-UCB", "Budget-UCB"]
-    ucb_sc = ["UCB-SC"]
+    ts = [BTS]
+    wucb = [OMEGA_UCB_, ETA_UCB_]
+    ucb = [MUCB, CUCB, IUCB, BUDGET_UCB]
+    ucb_sc = [UCB_SC_PLUS]
     id_list = [ts, ucb_sc, ucb, wucb]
     color_palettes = ["Wistia", "Reds", "Greens", "Blues"]
     final_palette = []
@@ -125,18 +128,42 @@ def load_df(name: str):
     return pd.read_csv(fp)
 
 
-def prepare_df2(df: pd.DataFrame):
+def normalize_regret(df: pd.DataFrame):
+    df.loc[:, NORMALIZED_REGRET] = np.nan
+    for _, gdf in df.groupby([APPROACH, REP, K]):
+        budget = np.max(gdf[SPENT_BUDGET])
+        achievable_reward = budget * gdf[OPTIMAL_REWARD] / gdf[OPTIMAL_COST]
+        df.loc[gdf.index, NORMALIZED_REGRET] = gdf[REGRET] / achievable_reward
+    return df
+
+#
+# def adjust_approach_names(df: pd.DataFrame):
+#     assert not np.any(np.isnan(df.loc[:, RHO]))
+#     df.loc[:, APPROACH] = df.loc[:, APPROACH].apply(lambda x: OMEGA_UCB_STUMP.format(round(df.loc[x.index][RHO], 2)
+#                                                                                      if "w-UCB" in x))
+
+
+def prepare_df2(df: pd.DataFrame, n_steps=10):
     df.ffill(inplace=True)
+    if "normalized-budget" in df.columns:
+        df.rename({"normalized-budget": NORMALIZED_BUDGET}, axis=1, inplace=True)
+    df.loc[:, APPROACH] = df.loc[:, APPROACH].apply(lambda x: x[:5] + "$" + x[5:] if "$\eta-UCB" in x else x)
+    df = normalize_regret(df)
     df.sort_values(by=APPROACH, inplace=True)
-    df[NORMALIZED_BUDGET] = np.ceil((df[NORMALIZED_BUDGET] * 10)) / 10
+    df.loc[:, NORMALIZED_BUDGET] = np.ceil((df[NORMALIZED_BUDGET] * n_steps)) / n_steps
     df = df[df[NORMALIZED_BUDGET] <= 1]
-    df[RHO] = np.nan
-    df[RHO] = df[APPROACH].apply(lambda x: extract_rho(x))
-    df[IS_OUR_APPROACH] = False
-    df[IS_OUR_APPROACH] = df[APPROACH].apply(lambda x: "w-UCB" in x)
-    df[APPROACH_ORDER] = np.nan
+    df.loc[:, RHO] = np.nan
+    df.loc[:, RHO] = df[APPROACH].apply(lambda x: extract_rho(x))
+    df.loc[:, IS_OUR_APPROACH] = False
+    df.loc[:, IS_OUR_APPROACH] = df[APPROACH].apply(lambda x: "w-UCB" in x)
+    df.loc[:, APPROACH_ORDER] = np.nan
     df[APPROACH_ORDER] = df[APPROACH].apply(
         lambda x: next(approach_order[key] for key in approach_order.keys() if key in x)
     )
     assert not np.any(np.isnan(df[APPROACH_ORDER]))
     return df
+
+
+def move_legend_below_graph(grid, ncol: int, title: str):
+    sns.move_legend(grid, "lower center", ncols=ncol, title=title)
+    plt.tight_layout()

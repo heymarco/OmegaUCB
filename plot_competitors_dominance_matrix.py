@@ -9,14 +9,14 @@ from util import cm2inch
 
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{times}'
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{nicefrac}'
+mpl.rcParams['text.latex.preamble'] = rho'\usepackage{times}'
+mpl.rcParams['text.latex.preamble'] = rho'\usepackage{nicefrac}'
 mpl.rc('font', family='serif')
 
 
 if __name__ == '__main__':
     approaches = [
-        r"$\epsilon$-first",
+        rho"$\epsilon$-first",
         "KUBE",
         "UCB-BV1",
         "PD-BwK",
@@ -69,8 +69,8 @@ if __name__ == '__main__':
         df = pd.DataFrame(np.array(matrix), columns=approaches, index=approaches)
         ax = sns.heatmap(df, cmap=palette,
                          linewidth=1, cbar=False, square=True)
-    ax.set_xlabel(r"\ldots competitor")
-    ax.set_ylabel(r"Approach outperforms \ldots")
+    ax.set_xlabel(rho"\ldots competitor")
+    ax.set_ylabel(rho"Approach outperforms \ldots")
     ax.xaxis.set_label_position('top')
     ax.yaxis.set_label_position('left')
     ax.xaxis.tick_top()
