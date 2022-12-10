@@ -31,7 +31,10 @@ class Aggregate:
 
 def compute_eta(mean: float, pop_var: float) -> float:
     bernoulli_variance = mean * (1 - mean)
-    return min(pop_var / bernoulli_variance, 1)
+    if bernoulli_variance == 0:
+        # bernoulli variance == pop_variance
+        return 1.0
+    return min(pop_var / bernoulli_variance, 1.0)
 
 
 class GeneralizedWUCBArm(AbstractArm):
