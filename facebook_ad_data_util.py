@@ -35,9 +35,11 @@ def sort_df(df):
 
 def get_setting(df):
     df = sort_df(df)
-    mean_rewards = list(df["revenue_per_1000_impressions"])
-    mean_costs = list(df["cost_per_1000_impressions"])
-    return np.array(mean_rewards), np.array(mean_costs)
+    mean_rewards = np.array(df["revenue_per_1000_impressions"])
+    mean_costs = np.array(df["cost_per_1000_impressions"])
+    mean_costs = mean_costs[mean_costs > 0]
+    mean_rewards = mean_rewards[mean_costs > 0]
+    return mean_rewards, mean_costs
 
 
 def add_noise(setting, random_state: int):
@@ -69,14 +71,14 @@ def get_facebook_ad_data_settings(random_state: int):
 
 def get_facebook_ad_stats():
     data = prepare_facebook_data()
-    cols = ["Age", "Gender", "c_min", "K"]
+    cols = ["campaign_id", "age", "gender", "c_min", "K"]
     rows = []
     for (cid, age, gender), gdf in data.groupby(["campaign_id", "age", "gender"]):
         setting = get_setting(gdf)
         k = len(setting[0])
         if k >= 2:
             rows.append([
-                age, gender, min(setting[-1]), len(setting[0])
+                cid, age, gender, min(setting[-1]), len(setting[0])
             ])
     df = pd.DataFrame(rows, columns=cols)
-    print(df.sort_values(by=["Gender", "Age"]).set_index(["Gender", "Age"]).to_latex(escape=False, multirow=True))
+    print(df.sort_values(by=["age", "gender"]).set_index(["age", "gender"]).to_latex(escape=False, multirow=True))

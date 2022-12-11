@@ -76,11 +76,12 @@ def subsample_csv(csv_path: str, every_nth: int = 1):
 def create_palette(df: pd.DataFrame):
     df.sort_values(by=[APPROACH_ORDER, RHO])
     ts = [BTS]
-    wucb = [OMEGA_UCB_, ETA_UCB_]
+    wucb = [OMEGA_UCB_]
+    eta_ucb = [ETA_UCB_]
     ucb = [MUCB, CUCB, IUCB, BUDGET_UCB]
     ucb_sc = [UCB_SC_PLUS]
-    id_list = [ts, ucb_sc, ucb, wucb]
-    color_palettes = ["Wistia", "Reds", "Greens", "Blues"]
+    id_list = [ts, ucb_sc, ucb, wucb, eta_ucb]
+    color_palettes = ["Wistia", "Reds", "Greens", "Blues", "Purples"]
     final_palette = []
     for c, ids in zip(color_palettes, id_list):
         mask = df[APPROACH].apply(lambda x: np.any([id in x for id in ids])).astype(bool)
@@ -100,9 +101,9 @@ def cm2inch(*tupl):
 
 
 def extract_rho(s: str):
-    if "rho=" not in s:
+    if "rho" not in s:
         return np.nan
-    relevant_part = s.split("=")[-1][:-1]
+    relevant_part = s.split("=")[-1].split("$")[0]
     if "/" in relevant_part:
         numerator, denominator = relevant_part.split("/")
         numerator = float(numerator)
