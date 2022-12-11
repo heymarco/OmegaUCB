@@ -21,9 +21,7 @@ def prepare_facebook_data():
     mask = np.invert(np.logical_or(non_informative_rows, corrupted_rows))
     mask = np.logical_or(mask, np.invert(is_nan_ratio))
     filtered_df = raw_data.loc[mask].reset_index()
-    high_ratio_outliers = filtered_df["reward_cost_ratio"] > 1
-    filtered_df = filtered_df.loc[np.invert(high_ratio_outliers)]
-    high_revenue_outliers = filtered_df["revenue_per_1000_impressions"] > 1
+    high_revenue_outliers = filtered_df["revenue_per_1000_impressions"] >= 1
     filtered_df = filtered_df.loc[np.invert(high_revenue_outliers)]
     return filtered_df
 
