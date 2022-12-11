@@ -35,13 +35,11 @@ class BetaSamplingEnvironment(Environment):
                                                                             self.beta_c[cost_mask_less_05 == 0])
 
     def compute_beta_from_alpha(self, mu, alpha):
-        if mu == 1:
-            mu = 0.999
+        mu[mu == 1] = 0.999
         return alpha * (1 / mu - 1)
 
     def compute_alpha_from_beta(self, mu, beta):
-        if mu == 1:
-            mu = 0.999
+        mu[mu == 1] = 0.999
         return beta * (mu / (1 - mu))
 
     def sample(self, arm_index: int) -> Tuple[int, int, float, float]:
