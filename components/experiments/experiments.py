@@ -108,10 +108,10 @@ class FacebookBetaExperiment(Experiment):
     def _generate_environments(self, k: int,  # k is derived from the data in this environment
                                seed: int) -> List[Environment]:
         settings = get_facebook_ad_data_settings(random_state=seed)
-        envs = []
-        for mean_rewards, mean_costs in settings:
-            env = BetaSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, seed=seed)
-            envs.append(env)
+        envs = [
+            BetaSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, seed=seed)
+            for mean_rewards, mean_costs in settings
+        ]
         return envs
 
     def _generate_args(self, k: int, num_reps: int) -> List:
