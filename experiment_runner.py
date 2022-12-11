@@ -26,5 +26,5 @@ if __name__ == '__main__':
     # synth_bernoulli = BernoulliExperiment("synth_bernoulli", num_steps=n_steps)
     # execute_experiment(synth_bernoulli, arms, num_reps=n_reps)
     #
-    # facebook_bernoulli = FacebookBernoulliExperiment("facebook_bernoulli", num_steps=n_steps)
-    # execute_experiment(facebook_bernoulli, arms=[0], num_reps=n_reps)
+    facebook_bernoulli = FacebookBernoulliExperiment("facebook_bernoulli", num_steps=n_steps)
+    execute_experiment(facebook_bernoulli, arms=[0], num_reps=n_reps)
