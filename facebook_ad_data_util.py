@@ -63,7 +63,7 @@ def get_facebook_ad_data_settings(random_state: int):
         setting = add_noise(setting, random_state=random_state)
         k = len(setting[0])
         if k >= 2:
-            settings.append(get_setting(gdf))
+            settings.append(setting)
     return settings
 
 
