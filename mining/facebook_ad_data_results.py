@@ -10,11 +10,12 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from util import load_df, prepare_df2, cm2inch, create_palette
 from components.bandit_logging import *
+from approach_names import *
 
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = rho'\usepackage{times}'
-mpl.rcParams['text.latex.preamble'] = rho'\usepackage{nicefrac}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{times}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{nicefrac}'
 mpl.rc('font', family='serif')
 
 
@@ -26,7 +27,7 @@ def compute_ylims(df: pd.DataFrame, y_var, x_cut=0.5):
     return lims
 
 
-def plot_regret(df: pd.DataFrame):
+def plot_regret(df: pd.DataFrame, filename: str):
     x = NORMALIZED_BUDGET
     y = NORMALIZED_REGRET
     hue = APPROACH
@@ -38,24 +39,35 @@ def plot_regret(df: pd.DataFrame):
                     facet_kws={"sharey": False}, err_style="bars")
     # g.set(yscale="log")
     g.set(xscale="log")
-    for lim, ax in zip(lims, g.axes.flatten()):
-        ax.set_ylim(lim)
+    # for lim, ax in zip(lims, g.axes.flatten()):
+    #     ax.set_ylim(lim)
     plt.gcf().set_size_inches(cm2inch((12, 6)))
     plt.tight_layout(pad=.5)
     plt.subplots_adjust(right=0.62)
-    plt.savefig(os.path.join(os.getcwd(), "..", "figures", "facebook_ads.pdf"))
+    plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
     plt.show()
 
 
 if __name__ == '__main__':
-    filename = "facebook_ads"
+    filename = "facebook_beta"
     df = load_df(filename)
     df = prepare_df2(df, n_steps=10)
-    df = df.loc[df[APPROACH] != "w-UCB (rho=1)"]
-    # df = df.loc[df[APPROACH] != "w-UCB (rho=1/5)"]
-    # df = df.loc[df[APPROACH] != "w-UCB (rho=1/6)"]
-    df = df.loc[df[APPROACH] != "w-UCB (rho=2)"]
-    df = df.loc[df[APPROACH] != "w-UCB (rho=3)"]
-    df = df.loc[df[APPROACH] != "w-UCB (rho=4)"]
-    df = df.loc[df[APPROACH] != "Budget-UCB"]
-    plot_regret(df)
+    df = df.loc[df[APPROACH] != OMEGA_UCB_1_5]
+    df = df.loc[df[APPROACH] != OMEGA_UCB_1_6]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_3]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
+    df = df.loc[df[APPROACH] != OMEGA_UCB_2]
+    df = df.loc[df[APPROACH] != OMEGA_UCB_3]
+    df = df.loc[df[APPROACH] != OMEGA_UCB_4]
+    df = df.loc[df[APPROACH] != ETA_UCB_1_5]
+    df = df.loc[df[APPROACH] != ETA_UCB_1_6]
+    # df = df.loc[df[APPROACH] != ETA_UCB_1_4]
+    # df = df.loc[df[APPROACH] != ETA_UCB_1_3]
+    # df = df.loc[df[APPROACH] != ETA_UCB_1_2]
+    # df = df.loc[df[APPROACH] != ETA_UCB_1]
+    df = df.loc[df[APPROACH] != ETA_UCB_2]
+    df = df.loc[df[APPROACH] != ETA_UCB_3]
+    df = df.loc[df[APPROACH] != ETA_UCB_4]
+    plot_regret(df, filename)

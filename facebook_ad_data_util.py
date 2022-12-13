@@ -26,13 +26,7 @@ def prepare_facebook_data():
     return filtered_df
 
 
-def sort_df(df):
-    df = df.sort_values(by="reward_cost_ratio", ascending=False)
-    return df
-
-
 def get_setting(df):
-    df = sort_df(df)
     mean_rewards = np.array(df["revenue_per_1000_impressions"])
     mean_costs = np.array(df["cost_per_1000_impressions"])
     mean_costs = mean_costs[mean_costs > 0]
@@ -55,12 +49,21 @@ def add_noise(setting, random_state: int):
     return rew, cost
 
 
+def sort_setting(setting):
+    rew = setting[0]
+    cost = setting[1]
+    inverse_efficiency = cost / rew
+    argsort = np.argsort(inverse_efficiency)
+    return rew[argsort], cost[argsort]
+
+
 def get_facebook_ad_data_settings(random_state: int):
     data = prepare_facebook_data()
     settings = []
     for _, gdf in data.groupby(["campaign_id", "age", "gender"]):
         setting = get_setting(gdf)
         setting = add_noise(setting, random_state=random_state)
+        setting = sort_setting(setting)
         k = len(setting[0])
         if k >= 2:
             settings.append(setting)

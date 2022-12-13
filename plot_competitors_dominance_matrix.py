@@ -9,14 +9,14 @@ from util import cm2inch
 
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = rho'\usepackage{times}'
-mpl.rcParams['text.latex.preamble'] = rho'\usepackage{nicefrac}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{times}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{nicefrac}'
 mpl.rc('font', family='serif')
 
 
 if __name__ == '__main__':
     approaches = [
-        rho"$\epsilon$-first",
+        r"$\epsilon$-first",
         "KUBE",
         "UCB-BV1",
         "PD-BwK",
@@ -28,21 +28,23 @@ if __name__ == '__main__':
         "i-UCB",
         "KL-UCB-SC",
         "UCB-SC+",
+        r"$\omega$-UCB"
     ]
 
     matrix = [
-        [0, -1, 0, 0, 0, -1, -1, -1, -1, -1, 0, 0],
-        [1, 0, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0],
-        [-2, 1, 0, 0, -1, -1, 0, 0, 0, 0, -1, -1],
-        [-2, -2, -2, 0, 0, -1, -1, -1, -1, -1, 0, -1],
-        [-2, -2, 1, -2, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 1, -2, 0, 0, -1, -1, -1, 0, 0],
-        [1, -2, -2, 1, -2, 0, 0, -1, -1, -1, 0, 0],
-        [1, -2, -2, 1, -2, 1, 1, 0, -1, -1, 0, 0],
-        [1, -2, -2, 1, -2, 1, 1, 1, 0, 0, 0, 0],
-        [1, -2, -2, 1, -2, 1, 1, 1, 0, 0, 0, 0],
-        [-2, 0, 1, 0, -2, 0, -2, -2, -2, -2, 0, 0],
-        [-2, -2, 1, 1, -2, 0, -2, -2, -2, -2, 0, 0],
+        [0, -1, 0, 0, 0, -1, -1, -1, -1, -1, 0, 0, -2],
+        [1, 0, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0, -2],
+        [-2, 1, 0, 0, -1, -1, 0, 0, 0, 0, -1, -1, -2],
+        [-2, -2, -2, 0, 0, -1, -1, -1, -1, -1, 0, -1, -2],
+        [-2, -2, 1, -2, 0, 0, 0, 0, 0, 0, 0, 0, -1],
+        [1, 1, 1, 1, -2, 0, 0, -1, -1, -1, 0, 0, -1],
+        [1, -2, -2, 1, -2, 0, 0, -1, -1, -1, 0, 0, -2],
+        [1, -2, -2, 1, -2, 1, 1, 0, -1, -1, 0, 0, -1],
+        [1, -2, -2, 1, -2, 1, 1, 1, 0, 0, 0, 0, -1],
+        [1, -2, -2, 1, -2, 1, 1, 1, 0, 0, 0, 0, -1],
+        [-2, 0, 1, 0, -2, 0, -2, -2, -2, -2, 0, 0, 0],
+        [-2, -2, 1, 1, -2, 0, -2, -2, -2, -2, 0, 0, -1],
+        [-2, -2, -2, -2, 1, 1, -2, 1, 1, 1, 0, 1, 0]
     ]
 
     for row in range(len(matrix)):
@@ -69,8 +71,8 @@ if __name__ == '__main__':
         df = pd.DataFrame(np.array(matrix), columns=approaches, index=approaches)
         ax = sns.heatmap(df, cmap=palette,
                          linewidth=1, cbar=False, square=True)
-    ax.set_xlabel(rho"\ldots competitor")
-    ax.set_ylabel(rho"Approach outperforms \ldots")
+    ax.set_xlabel(r"\ldots competitor")
+    ax.set_ylabel(r"Approach outperforms \ldots")
     ax.xaxis.set_label_position('top')
     ax.yaxis.set_label_position('left')
     ax.xaxis.tick_top()
