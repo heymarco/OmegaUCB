@@ -52,8 +52,9 @@ def add_noise(setting, random_state: int):
 def sort_setting(setting):
     rew = setting[0]
     cost = setting[1]
-    inverse_efficiency = cost / rew
-    argsort = np.argsort(inverse_efficiency)
+    efficiency = rew / cost
+    argsort = np.argsort(efficiency)
+    argsort = [argsort[-(i+1)] for i in range(len(argsort))]
     return rew[argsort], cost[argsort]
 
 
