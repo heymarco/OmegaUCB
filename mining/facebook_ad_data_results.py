@@ -49,25 +49,26 @@ def plot_regret(df: pd.DataFrame, filename: str):
 
 
 if __name__ == '__main__':
-    filename = "facebook_beta"
-    df = load_df(filename)
-    df = prepare_df2(df, n_steps=10)
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_5]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_6]
-    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
-    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_3]
-    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
-    # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_2]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_3]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_4]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_5]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_6]
-    # df = df.loc[df[APPROACH] != ETA_UCB_1_4]
-    # df = df.loc[df[APPROACH] != ETA_UCB_1_3]
-    # df = df.loc[df[APPROACH] != ETA_UCB_1_2]
-    # df = df.loc[df[APPROACH] != ETA_UCB_1]
-    df = df.loc[df[APPROACH] != ETA_UCB_2]
-    df = df.loc[df[APPROACH] != ETA_UCB_3]
-    df = df.loc[df[APPROACH] != ETA_UCB_4]
-    plot_regret(df, filename)
+    filenames = ["facebook_beta", "facebook_bernoulli"]
+    for filename in filenames:
+        df = load_df(filename)
+        df = prepare_df2(df, n_steps=10)
+        # df = df.loc[df[APPROACH] != OMEGA_UCB_1_5]
+        # df = df.loc[df[APPROACH] != OMEGA_UCB_1_6]
+        # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
+        # df = df.loc[df[APPROACH] != OMEGA_UCB_1_3]
+        # df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
+        df = df.loc[df[APPROACH] != OMEGA_UCB_1]
+        df = df.loc[df[APPROACH] != OMEGA_UCB_2]
+        df = df.loc[df[APPROACH] != OMEGA_UCB_3]
+        df = df.loc[df[APPROACH] != OMEGA_UCB_4]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_5]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_6]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_4]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_3]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_2]
+        df = df.loc[df[APPROACH] != ETA_UCB_1]
+        df = df.loc[df[APPROACH] != ETA_UCB_2]
+        df = df.loc[df[APPROACH] != ETA_UCB_3]
+        df = df.loc[df[APPROACH] != ETA_UCB_4]
+        plot_regret(df, filename)
