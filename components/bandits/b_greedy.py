@@ -10,8 +10,8 @@ class BGreedy(AbstractBandit):
         self.k = k
         self.t = 0
         self.pulls = np.zeros(shape=self.k)
-        self.cumulative_cost = np.array([np.nan for _ in range(k)])
-        self.cumulative_reward = np.array([np.nan for _ in range(k)])
+        self.cumulative_cost = np.array([0.0 for _ in range(k)])
+        self.cumulative_reward = np.array([0.0 for _ in range(k)])
 
     def sample(self, c_min=None):
         if not self._startup_complete:
