@@ -9,6 +9,7 @@ from components.bandits.bts import BudgetedThompsonSampling
 from components.bandits.ucb_variants import UCB
 from components.bandits.ucbsc import UCBSC
 from components.bandits.wucb import WUCB
+from components.bandits.b_greedy import BGreedy
 from components.bandits.wucb_continuous import GeneralizedWUCB
 from components.experiments.abstract import Experiment, Environment, execute_bandit_on_env
 from components.experiments.environments import BernoulliSamplingEnvironment, BetaSamplingEnvironment
@@ -45,30 +46,31 @@ class BetaExperiment(Experiment):
 
     def _create_bandits(self, k: int, seed: int):
         return np.array([
-            UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
-            UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
-            WUCB(k=k, name=OMEGA_UCB_1_6, seed=seed, r=1 / 6, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_1_5, seed=seed, r=1 / 5, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_1_3, seed=seed, r=1 / 3, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_1, seed=seed, r=1, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_2, seed=seed, r=2, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_3, seed=seed, r=3, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_4, seed=seed, r=4, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1_6, seed=seed, r=1 / 6, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1_5, seed=seed, r=1 / 5, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1_3, seed=seed, r=1 / 3, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1, seed=seed, r=1, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_2, seed=seed, r=2, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_3, seed=seed, r=3, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_4, seed=seed, r=4, adaptive=True),
-            UCB(k=k, name=MUCB, type="m", seed=seed, adaptive=True),
-            UCB(k=k, name=IUCB, type="i", seed=seed, adaptive=True),
-            UCB(k=k, name=CUCB, type="c", seed=seed, adaptive=True),
-            BudgetedThompsonSampling(k=k, name="BTS", seed=seed),
+            BGreedy(k=k, name="b-greedy", seed=seed),
+            # UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
+            # UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
+            # WUCB(k=k, name=OMEGA_UCB_1_6, seed=seed, r=1 / 6, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_1_5, seed=seed, r=1 / 5, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_1_3, seed=seed, r=1 / 3, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_1, seed=seed, r=1, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_2, seed=seed, r=2, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_3, seed=seed, r=3, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_4, seed=seed, r=4, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1_6, seed=seed, r=1 / 6, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1_5, seed=seed, r=1 / 5, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1_3, seed=seed, r=1 / 3, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1, seed=seed, r=1, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_2, seed=seed, r=2, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_3, seed=seed, r=3, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_4, seed=seed, r=4, adaptive=True),
+            # UCB(k=k, name=MUCB, type="m", seed=seed, adaptive=True),
+            # UCB(k=k, name=IUCB, type="i", seed=seed, adaptive=True),
+            # UCB(k=k, name=CUCB, type="c", seed=seed, adaptive=True),
+            # BudgetedThompsonSampling(k=k, name="BTS", seed=seed),
         ])
 
 

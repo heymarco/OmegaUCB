@@ -19,7 +19,7 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{nicefrac}'
 mpl.rc('font', family='serif')
 
 
-def compute_ylims(df: pd.DataFrame, y_var, x_cut=0.5):
+def compute_ylims(df: pd.DataFrame, y_var, x_cut=0.3):
     lims = []
     df = df[df[NORMALIZED_BUDGET] <= x_cut]
     max_regret = df[y_var].max()
@@ -37,10 +37,9 @@ def plot_regret(df: pd.DataFrame, filename: str):
     g = sns.relplot(data=df, x=x, y=y, hue=hue,
                     kind="line", palette=palette,
                     facet_kws={"sharey": False}, err_style="bars")
-    # g.set(yscale="log")
     g.set(xscale="log")
-    # for lim, ax in zip(lims, g.axes.flatten()):
-    #     ax.set_ylim(lim)
+    for lim, ax in zip(lims, g.axes.flatten()):
+        ax.set_ylim(lim)
     plt.gcf().set_size_inches(cm2inch((12, 6)))
     plt.tight_layout(pad=.5)
     plt.subplots_adjust(right=0.62)

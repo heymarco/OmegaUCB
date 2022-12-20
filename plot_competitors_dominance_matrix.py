@@ -31,17 +31,33 @@ if __name__ == '__main__':
         r"$\omega$-UCB"
     ]
 
+    approaches_with_years = [
+        r"$\epsilon$-first (2010)",
+        "KUBE (2012)",
+        "UCB-BV1 (2013)",
+        "PD-BwK (2013)",
+        "Budget-UCB (2015)",
+        "BTS (2015)",
+        "b-greedy (2017)",
+        "m-UCB (2017)",
+        "c-UCB (2017)",
+        "i-UCB (2017)",
+        "KL-UCB-SC (2017)",
+        "UCB-SC+ (2018)",
+        r"$\omega$-UCB (2023)"
+    ]
+
     matrix = [
         [0, -1, 0, 0, 0, -1, -1, -1, -1, -1, 0, 0, -2],
         [1, 0, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0, -2],
         [-2, 1, 0, 0, -1, -1, 0, 0, 0, 0, -1, -1, -2],
         [-2, -2, -2, 0, 0, -1, -1, -1, -1, -1, 0, -1, -2],
         [-2, -2, 1, -2, 0, 0, 0, 0, 0, 0, 0, 0, -1],
-        [1, 1, 1, 1, -2, 0, 0, -1, -1, -1, 0, 0, -1],
-        [1, -2, -2, 1, -2, 0, 0, -1, -1, -1, 0, 0, -2],
-        [1, -2, -2, 1, -2, 1, 1, 0, -1, -1, 0, 0, -1],
-        [1, -2, -2, 1, -2, 1, 1, 1, 0, 0, 0, 0, -1],
-        [1, -2, -2, 1, -2, 1, 1, 1, 0, 0, 0, 0, -1],
+        [1, 1, 1, 1, -2, 0, -1, -1, -1, -1, 0, 0, -1],
+        [1, -2, -2, 1, -2, 1, 0, 0, 0, 0, 0, 0, -2],
+        [1, -2, -2, 1, -2, 1, 0, 0, -1, -1, 0, 0, -1],
+        [1, -2, -2, 1, -2, 1, 0, 1, 0, 0, 0, 0, -1],
+        [1, -2, -2, 1, -2, 1, 0, 1, 0, 0, 0, 0, -1],
         [-2, 0, 1, 0, -2, 0, -2, -2, -2, -2, 0, 0, 0],
         [-2, -2, 1, 1, -2, 0, -2, -2, -2, -2, 0, 0, -1],
         [-2, -2, -2, -2, 1, 1, -2, 1, 1, 1, 0, 1, 0]
@@ -55,7 +71,7 @@ if __name__ == '__main__':
     matrix_inv = [matrix[-i-1] for i in range(len(matrix))]
     mask = np.triu(np.ones_like(matrix_inv))
     mask = np.array([mask[-(i+1)] for i in range(len(mask))])
-    approaches_inv = [approaches[-(i+1)] for i in range(len(approaches))]
+    approaches_inv = [approaches_with_years[-(i+1)] for i in range(len(approaches_with_years))]
 
     show_full = True
     palette = sns.color_palette("vlag_r", n_colors=3)
@@ -68,7 +84,7 @@ if __name__ == '__main__':
         ax = sns.heatmap(df.iloc[:-1, :-1], cmap=palette,
                          linewidth=1, cbar=False, square=True, mask=mask[:-1, :-1])
     else:
-        df = pd.DataFrame(np.array(matrix), columns=approaches, index=approaches)
+        df = pd.DataFrame(np.array(matrix), columns=approaches, index=approaches_with_years)
         ax = sns.heatmap(df, cmap=palette,
                          linewidth=1, cbar=False, square=True)
     ax.set_xlabel(r"\ldots competitor")
