@@ -53,7 +53,7 @@ class UCBSC(AbstractBandit):
             result = [i for i, a in enumerate(self.arms) if not a.startup_complete()][0]
             return result
         samples = [a.sample() for a in self.arms]
-        return np.random.choice(
+        return self.rng.choice(
             np.flatnonzero(samples == np.max(samples))
         )
 

@@ -20,10 +20,10 @@ class BGreedy(AbstractBandit):
         else:
             epsilon_t = min(1.0, self.k / self.t)
             if self.rng.uniform() < epsilon_t:
-                return np.random.choice(np.arange(self.k))
+                return self.rng.choice(np.arange(self.k))
             else:
                 efficiencies = self.cumulative_reward / (self.cumulative_cost + 1e-10)
-                return np.random.choice(
+                return self.rng.choice(
                     np.flatnonzero(efficiencies == np.max(efficiencies))
                 )
 

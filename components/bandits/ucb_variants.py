@@ -141,7 +141,7 @@ class UCB(AbstractBandit):
             samples = [a.sample(c_min) for a in self.arms]
         else:
             samples = [a.sample() for a in self.arms]
-        return np.random.choice(
+        return self.rng.choice(
             np.flatnonzero(samples == np.max(samples))
         )
 
