@@ -5,12 +5,13 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from util import load_df, prepare_df2, cm2inch, create_palette, move_legend_below_graph
 from components.bandit_logging import *
-
+from approach_names import *
 
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
@@ -37,7 +38,7 @@ def plot_regret(df: pd.DataFrame):
     col = K
     lims = compute_ylims(df, x, hue, col_var=col)
     palette = create_palette(df)
-    df = df.sort_values(by=APPROACH_ORDER)
+    df = df.sort_values(by=[APPROACH_ORDER, RHO])
     g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
                     kind="line", palette=palette,
                     facet_kws={"sharey": False}, err_style="bars")
@@ -55,12 +56,25 @@ def plot_regret(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    filename = "uniform_vary_costs"
+    filename = "synth_bernoulli"
     df = load_df(filename)
     df = prepare_df2(df, n_steps=10)
-    df = df.loc[df[APPROACH] != "w-UCB (rho=1/5)"]
-    df = df.loc[df[APPROACH] != "w-UCB (rho=1/6)"]
-    df = df.loc[df[APPROACH] != "w-UCB (rho=2)"]
-    df = df.loc[df[APPROACH] != "w-UCB (rho=3)"]
-    df = df.loc[df[APPROACH] != "w-UCB (rho=4)"]
+    df = df.loc[df[APPROACH] != OMEGA_UCB_1_5]
+    df = df.loc[df[APPROACH] != OMEGA_UCB_1_6]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_3]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
+    df = df.loc[df[APPROACH] != OMEGA_UCB_2]
+    df = df.loc[df[APPROACH] != OMEGA_UCB_3]
+    df = df.loc[df[APPROACH] != OMEGA_UCB_4]
+    df = df.loc[df[APPROACH] != ETA_UCB_1_5]
+    df = df.loc[df[APPROACH] != ETA_UCB_1_6]
+    df = df.loc[df[APPROACH] != ETA_UCB_1_4]
+    df = df.loc[df[APPROACH] != ETA_UCB_1_3]
+    df = df.loc[df[APPROACH] != ETA_UCB_1_2]
+    df = df.loc[df[APPROACH] != ETA_UCB_1]
+    df = df.loc[df[APPROACH] != ETA_UCB_2]
+    df = df.loc[df[APPROACH] != ETA_UCB_3]
+    df = df.loc[df[APPROACH] != ETA_UCB_4]
     plot_regret(df)

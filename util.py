@@ -20,11 +20,12 @@ approach_order = {
     BTS: 0,
     UCB_SC_PLUS: 1,
     BUDGET_UCB: 2,
-    CUCB: 3,
-    IUCB: 4,
-    MUCB: 5,
-    OMEGA_UCB_: 6,
-    ETA_UCB_: 7
+    B_GREEDY: 3,
+    CUCB: 4,
+    IUCB: 5,
+    MUCB: 6,
+    OMEGA_UCB_: 7,
+    ETA_UCB_: 8,
 }
 
 
@@ -78,7 +79,7 @@ def create_palette(df: pd.DataFrame):
     ts = [BTS]
     wucb = [OMEGA_UCB_]
     eta_ucb = [ETA_UCB_]
-    ucb = [MUCB, CUCB, IUCB, BUDGET_UCB]
+    ucb = [MUCB, CUCB, IUCB, BUDGET_UCB, B_GREEDY]
     ucb_sc = [UCB_SC_PLUS]
     id_list = [ts, ucb_sc, ucb, wucb, eta_ucb]
     color_palettes = ["Wistia", "Reds", "Greens", "Blues", "Purples"]
@@ -104,6 +105,7 @@ def extract_rho(s: str):
     if "rho" not in s:
         return np.nan
     relevant_part = s.split("=")[-1].split("$")[0]
+    relevant_part = relevant_part.replace("(", "").replace(")", "")
     if "/" in relevant_part:
         numerator, denominator = relevant_part.split("/")
         numerator = float(numerator)
@@ -137,11 +139,13 @@ def normalize_regret(df: pd.DataFrame):
         df.loc[gdf.index, NORMALIZED_REGRET] = gdf[REGRET] / achievable_reward
     return df
 
-#
-# def adjust_approach_names(df: pd.DataFrame):
-#     assert not np.any(np.isnan(df.loc[:, RHO]))
-#     df.loc[:, APPROACH] = df.loc[:, APPROACH].apply(lambda x: OMEGA_UCB_STUMP.format(round(df.loc[x.index][RHO], 2)
-#                                                                                      if "w-UCB" in x))
+
+def adjust_approach_names(df: pd.DataFrame):
+    assert not np.any(np.isnan(df.loc[:, RHO]))
+    df[APPROACH] = df[RHO].apply(
+        lambda x: OMEGA_UCB_STUMP.format(round(x, 2) if x < 1 else int(x))
+    )
+    return df
 
 
 def prepare_df2(df: pd.DataFrame, n_steps=10):
@@ -157,6 +161,9 @@ def prepare_df2(df: pd.DataFrame, n_steps=10):
     df.loc[:, RHO] = df[APPROACH].apply(lambda x: extract_rho(x))
     df.loc[:, IS_OUR_APPROACH] = False
     df.loc[:, IS_OUR_APPROACH] = df[APPROACH].apply(lambda x: "w-UCB" in x)
+    df[df[IS_OUR_APPROACH]] = adjust_approach_names(
+        df[df[IS_OUR_APPROACH]]
+    )
     df.loc[:, APPROACH_ORDER] = np.nan
     df[APPROACH_ORDER] = df[APPROACH].apply(
         lambda x: next(approach_order[key] for key in approach_order.keys() if key in x)
