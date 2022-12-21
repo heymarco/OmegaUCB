@@ -18,10 +18,14 @@ class BGreedy(AbstractBandit):
             result = next(i for i in range(self.k) if self.pulls[i] == 0)
             return result
         else:
-            efficiencies = self.cumulative_reward / (self.cumulative_cost + 1e-10)
-            return np.random.choice(
-                np.flatnonzero(efficiencies == np.max(efficiencies))
-            )
+            epsilon_t = min(1.0, self.k / self.t)
+            if self.rng.uniform() < epsilon_t:
+                return np.random.choice(np.arange(self.k))
+            else:
+                efficiencies = self.cumulative_reward / (self.cumulative_cost + 1e-10)
+                return np.random.choice(
+                    np.flatnonzero(efficiencies == np.max(efficiencies))
+                )
 
     def update(self, arm: int, reward: float, cost: float):
         self.t += 1
