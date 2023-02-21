@@ -15,13 +15,13 @@ class BernoulliSamplingEnvironment(Environment):
 
 
 class BetaSamplingEnvironment(Environment):
-    def __init__(self, mean_rewards: np.ndarray, mean_costs: np.ndarray, seed: int):
+    def __init__(self, mean_rewards: np.ndarray, mean_costs: np.ndarray, seed: int, min_param=1, max_param=100):
         super(BetaSamplingEnvironment, self).__init__(mean_rewards, mean_costs, seed)
         # first we sample some parameters
-        self.alpha_r = self.rng.uniform(1, 5, size=mean_rewards.shape)
-        self.alpha_c = self.rng.uniform(1, 5, size=mean_costs.shape)
-        self.beta_r = self.rng.uniform(1, 5, size=mean_rewards.shape)
-        self.beta_c = self.rng.uniform(1, 5, size=mean_costs.shape)
+        self.alpha_r = self.rng.uniform(min_param, max_param, size=mean_rewards.shape)
+        self.alpha_c = self.rng.uniform(min_param, max_param, size=mean_costs.shape)
+        self.beta_r = self.rng.uniform(min_param, max_param, size=mean_rewards.shape)
+        self.beta_c = self.rng.uniform(min_param, max_param, size=mean_costs.shape)
         # then we adjust the parameters to the mean_rewards and mean_costs
         rew_mask_less_05 = mean_rewards <= 0.5
         cost_mask_less_05 = mean_costs <= 0.5

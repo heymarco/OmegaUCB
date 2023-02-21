@@ -102,7 +102,7 @@ class BudgetUCBArm(AbstractArm):
         eps = self._epsilon()
         term1 = self._avg_reward / self._avg_cost
         term2 = eps / self._avg_cost
-        term3 = eps / self._avg_cost * min(self._avg_reward + eps, 1) / max(self._avg_cost - eps, c_min)
+        term3 = term2 * min(self._avg_reward + eps, 1) / max(self._avg_cost - eps, c_min)
         return term1 + term2 + term3
 
     def set(self, *args, **kwargs):
