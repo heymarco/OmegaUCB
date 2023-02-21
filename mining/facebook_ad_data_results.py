@@ -37,6 +37,7 @@ def plot_regret(df: pd.DataFrame, filename: str):
     g = sns.relplot(data=df, x=x, y=y, hue=hue,
                     kind="line", palette=palette,
                     facet_kws={"sharey": False}, err_style="bars")
+    g._legend.set_title("")
     g.set(xscale="log")
     for lim, ax in zip(lims, g.axes.flatten()):
         ax.set_ylim(lim)

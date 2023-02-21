@@ -13,10 +13,10 @@ def combine_dataframes(directory: str, filenames: list):
 if __name__ == '__main__':
     directory = os.path.join(os.getcwd(), "results")
     filenames = [
-        "synth_bernoulli_bgreedy.csv",
-        "uniform_vary_costs.csv"
+        "facebook_beta_bgreedy.csv",
+        "facebook_beta.csv"
     ]
-    final_df_name = "synth_bernoulli.csv"
+    final_df_name = "facebook_beta_combined.csv"
     df = combine_dataframes(directory, filenames)
     assert not os.path.exists(os.path.join(directory, final_df_name))
     df.to_csv(os.path.join(directory, final_df_name), index=False)

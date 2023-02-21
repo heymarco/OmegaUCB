@@ -50,12 +50,12 @@ def plot_regret(df: pd.DataFrame):
     plt.gcf().set_size_inches(cm2inch(24, 6))
     plt.tight_layout(pad=.5)
     plt.subplots_adjust(right=.82, wspace=.22)
-    plt.savefig(os.path.join(os.getcwd(), "..", "figures", "synth_beta.pdf"))
+    plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
     plt.show()
 
 
 if __name__ == '__main__':
-    filename = "synth_beta_combined"
+    filename = "synth_beta"
     df = load_df(filename)
     df = prepare_df2(df, n_steps=10)
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_5]

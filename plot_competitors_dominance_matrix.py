@@ -1,3 +1,4 @@
+import copy
 import os
 
 import numpy as np
@@ -9,8 +10,7 @@ from util import cm2inch
 
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{times}'
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{nicefrac}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
@@ -22,8 +22,9 @@ if __name__ == '__main__':
         "PD-BwK",
         "Budget-UCB",
         "BTS",
-        "b-greedy",
+        "MRCB",
         "m-UCB",
+        "b-greedy",
         "c-UCB",
         "i-UCB",
         "KL-UCB-SC",
@@ -38,16 +39,17 @@ if __name__ == '__main__':
         "PD-BwK (2013)",
         "Budget-UCB (2015)",
         "BTS (2015)",
-        "b-greedy (2017)",
+        "MRCB (2016)",
         "m-UCB (2017)",
+        "b-greedy (2017)",
         "c-UCB (2017)",
         "i-UCB (2017)",
         "KL-UCB-SC (2017)",
         "UCB-SC+ (2018)",
-        r"$\omega$-UCB (2023)"
+        r"$\omega$-UCB (ours)"
     ]
 
-    matrix = [
+    old_matrix = [
         [0, -1, 0, 0, 0, -1, -1, -1, -1, -1, 0, 0, -2],
         [1, 0, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0, -2],
         [-2, 1, 0, 0, -1, -1, 0, 0, 0, 0, -1, -1, -2],
@@ -63,6 +65,25 @@ if __name__ == '__main__':
         [-2, -2, -2, -2, 1, 1, -2, 1, 1, 1, 0, 1, 0]
     ]
 
+    matrix = [
+        [0, -1, 0, 0, 0, -1, -1, -1, -1, -1, -1, 0, 0, -2],
+        [1, 0, -1, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, -2],
+        [-2, 1, 0, 0, -1, -1, -2, 0, 0, 0, 0, -1, -1, -2],
+        [-2, -2, -2, 0, 0, -1, -2, -1, -1, -1, -1, 0, -1, -2],
+        [-2, -2, 1, -2, 0, 0, -2, 0, 0, 0, 0, 0, 0, -1],
+        [1, 1, 1, 1, -2, 0, -1, -1, -1, -1, -1, 0, 0, -1],
+        [1, 1, -2, -2, -2, 1, 0, -1, -2, -1, -1, -2, -2, -1],
+        [1, -2, -2, 1, -2, 1, 1, 0, 1, -1, -1, 0, 0, -1],
+        [1, -2, -2, 1, -2, 1, -2, -1, 0, -1, -1, 0, 0, -1],
+        [1, -2, -2, 1, -2, 1, 1, 1, 1, 0, 0, 0, 0, -1],
+        [1, -2, -2, 1, -2, 1, 1, 1, 1, 0, 0, 0, 0, -1],
+        [-2, 0, 1, 0, -2, 0, -2, -2, -2, -2, -2, 0, -2, -2],
+        [-2, -2, 1, 1, -2, 0, -2, -2, -2, -2, -2, -2, 0, -1],
+        [-2, -2, -2, -2, 1, 1, 1, 1, 1, 1, 1, -2, 1, 0]
+    ]
+
+    matrix = np.array(matrix)
+
     for row in range(len(matrix)):
         for col in range(len(matrix[row])):
             if matrix[row][col] == -2:
@@ -73,8 +94,17 @@ if __name__ == '__main__':
     mask = np.array([mask[-(i+1)] for i in range(len(mask))])
     approaches_inv = [approaches_with_years[-(i+1)] for i in range(len(approaches_with_years))]
 
+    first_row = matrix[7, :].copy()
+    matrix[7, :] = matrix[8, :]
+    matrix[8, :] = first_row
+
+    col_7 = matrix[:, 7].copy()
+    matrix[:, 7] = matrix[:, 8]
+    matrix[:, 8] = col_7
+
     show_full = True
-    palette = sns.color_palette("vlag_r", n_colors=3)
+    palette = list(sns.color_palette("vlag_r", n_colors=101))
+    palette = [palette[27]] + [palette[50]] + [palette[87]]
     palette = palette if show_full else palette[1:]
     palette = ["lightgray"] + palette
 
@@ -87,8 +117,8 @@ if __name__ == '__main__':
         df = pd.DataFrame(np.array(matrix), columns=approaches, index=approaches_with_years)
         ax = sns.heatmap(df, cmap=palette,
                          linewidth=1, cbar=False, square=True)
-    ax.set_xlabel(r"\ldots competitor")
-    ax.set_ylabel(r"Approach outperforms \ldots")
+    ax.set_xlabel("")
+    ax.set_ylabel("")
     ax.xaxis.set_label_position('top')
     ax.yaxis.set_label_position('left')
     ax.xaxis.tick_top()
