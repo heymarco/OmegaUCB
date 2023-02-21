@@ -207,14 +207,14 @@ if __name__ == '__main__':
 
     print("t_opt real = {}".format(r_eval[np.argmax(acc_clean)]))
 
-    # plt.plot(r_sim, label_quality, label=r"$q_{max}$", color="black", linestyle='dashed')
+    # plt.plot(r_sim, label_quality, label=rho"$q_{max}$", color="black", linestyle='dashed')
     # plt.plot(r_sim, percent_convergence, label="model convergence", color="black", linestyle='dotted')
     plt.plot(r_eval, acc_clean, label="acc. on clean data")
     plt.plot(r_eval, acc_noisy, label="acc. on noisy data")
     plt.plot(r_sim, acc_sim, label="predicted acc.")
     plt.legend()
-    plt.xlabel(r"$t$")
-    plt.ylabel(r"Accuracy")
+    plt.xlabel(rho"$t$")
+    plt.ylabel(rho"Accuracy")
     plt.gcf().set_size_inches((7, 4))
     plt.tight_layout(pad=.5)
     plt.savefig(os.path.join(os.getcwd(), "figures", "example_result.pdf"))

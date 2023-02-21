@@ -9,19 +9,23 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 import seaborn as sns
 
+import matplotlib as mpl
+mpl.rcParams['text.usetex'] = True
+mpl.rcParams['text.latex.preamble'] = rho'\usepackage{times}'
+mpl.rcParams['text.latex.preamble'] = rho'\usepackage{nicefrac}'
+mpl.rc('font', family='serif')
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from util import run_async
+from util import run_async, load_facebook_data
 from components.bandit import AdaptiveBudgetedThompsonSampling
 from components.bandits.bts import BudgetedThompsonSampling
 from components.bandits.ucb_variants import UCB
-from experiment import run_bandit, prepare_df
 
 
 def prepare_data():
-    data_path = os.path.join(os.getcwd(), "..", "data", "KAG_conversion_adapted.csv")
-    raw_data = pd.read_csv(data_path)
+    raw_data = load_facebook_data()
     is_zero_cost = raw_data["spent"] == 0
     is_zero_reward = raw_data["approved_conversion"] == 0
     is_nan_ratio = np.isnan(raw_data["reward_cost_ratio"])
@@ -52,17 +56,17 @@ def create_bandits(k: int, seed: int):
     return np.array([
         # UCB(k=k, name="j-UCB (a)", type="j", seed=seed, adaptive=True),
         # UCB(k=k, name="j-UCB", type="j", seed=seed, adaptive=False),
-        # UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
-        # UCB(k=k, name="w-UCB", type="w", seed=seed, adaptive=False),
+        UCB(k=k, name="w-UCB (a)", type="w", seed=seed, adaptive=True),
+        UCB(k=k, name="w-UCB", type="w", seed=seed, adaptive=False),
         # UCB(k=k, name="i-UCB (a)", type="i", seed=seed, adaptive=True),
         # UCB(k=k, name="c-UCB", type="c", seed=seed),
         UCB(k=k, name="m-UCB (a)", type="m", seed=seed, adaptive=True),
         # UCB(k=k, name="m-UCB", type="m", seed=seed, adaptive=False),
-        # AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
-        #                                  ci_reward="ts-cost", ci_cost="ts-cost"),
+        AdaptiveBudgetedThompsonSampling(k=k, name="TS (cost)", seed=seed,
+                                         ci_reward="ts-cost", ci_cost="ts-cost"),
         # AdaptiveBudgetedThompsonSampling(k=k, name="TS (reward)", seed=seed,
         #                                  ci_reward="ts-reward", ci_cost="ts-reward"),
-        # BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
+        BudgetedThompsonSampling(k=k, name="BTS", seed=seed)
     ])
 
 
@@ -88,6 +92,7 @@ def plot_regret_over_k(df: pd.DataFrame):
     result_df = pd.DataFrame(data, columns=["k", "c-min", "Regret", "Approach", "rep"])
     result_df = result_df[result_df["k"] > 3]
     sns.lineplot(data=result_df, x="c-min", y="Regret", hue="Approach", marker="o")
+    plt.yscale("log")
     plt.show()
 
 
