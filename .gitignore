@@ -1,6 +1,7 @@
 *.pyc
 .idea
 *.csv
+*.parquet
 *.pdf
 __pycache__
 *.npy

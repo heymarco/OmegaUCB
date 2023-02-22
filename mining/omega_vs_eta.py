@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from util import load_df, prepare_df2, cm2inch, create_palette, move_legend_below_graph
+from util import load_df, prepare_df, cm2inch, create_palette, move_legend_below_graph
 from components.bandit_logging import *
 from approach_names import *
 
@@ -77,7 +77,7 @@ def plot_regret(df: pd.DataFrame):
 if __name__ == '__main__':
     filename = "synth_beta"
     df = load_df(filename)
-    df = prepare_df2(df, n_steps=50)
+    df = prepare_df(df, n_steps=50)
     # df = df.loc[df[APPROACH] != OMEGA_UCB_1_5]
     # df = df.loc[df[APPROACH] != OMEGA_UCB_1_6]
     # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
@@ -97,6 +97,7 @@ if __name__ == '__main__':
     # df = df.loc[df[APPROACH] != ETA_UCB_3]
     # df = df.loc[df[APPROACH] != ETA_UCB_4]
     df = df.loc[df[APPROACH] != UCB_SC_PLUS]
+    df = df.loc[df[APPROACH] != B_GREEDY]
     # df = df.loc[df[APPROACH] != BTS]
     df = df.loc[df[APPROACH] != CUCB]
     df = df.loc[df[APPROACH] != MUCB]

@@ -8,10 +8,12 @@ import numpy as np
 import pandas
 import pandas as pd
 from matplotlib import pyplot as plt
+from matplotlib.lines import Line2D
 from scipy import stats
 from tqdm import tqdm
 import seaborn as sns
 
+from colors import color_list, get_palette_for_approaches
 from components.bandit_logging import *
 from approach_names import *
 
@@ -75,22 +77,8 @@ def subsample_csv(csv_path: str, every_nth: int = 1):
 
 
 def create_palette(df: pd.DataFrame):
-    df.sort_values(by=[APPROACH_ORDER, RHO])
-    ts = [BTS]
-    wucb = [OMEGA_UCB_]
-    eta_ucb = [ETA_UCB_]
-    ucb = [MUCB, CUCB, IUCB, BUDGET_UCB, B_GREEDY]
-    ucb_sc = [UCB_SC_PLUS]
-    id_list = [ts, ucb_sc, ucb, wucb, eta_ucb]
-    color_palettes = ["Wistia", "Reds", "Greens", "Blues", "Purples"]
-    final_palette = []
-    for c, ids in zip(color_palettes, id_list):
-        mask = df[APPROACH].apply(lambda x: np.any([id in x for id in ids])).astype(bool)
-        data = df[APPROACH].loc[mask]
-        n_colors = len(np.unique(data))
-        palette = sns.color_palette(c, n_colors=n_colors + 1)[1:]
-        final_palette += palette
-    return final_palette
+    approaches = np.unique(df[APPROACH])
+    return get_palette_for_approaches(approaches)
 
 
 def cm2inch(*tupl):
@@ -105,9 +93,10 @@ def extract_rho(s: str):
     if "rho" not in s:
         return np.nan
     relevant_part = s.split("=")[-1].split("$")[0]
-    relevant_part = relevant_part.replace("(", "").replace(")", "")
-    if "/" in relevant_part:
-        numerator, denominator = relevant_part.split("/")
+    if r"\frac" in relevant_part:
+        relevant_part = relevant_part.split(r"\frac")[-1]
+        relevant_part = relevant_part[1:-1]
+        numerator, denominator = relevant_part.split("}{")
         numerator = float(numerator)
         denominator = float(denominator)
         return numerator / denominator
@@ -121,14 +110,20 @@ def incremental_regret(rew_this, cost_this, rew_best, cost_best):
 
 def save_df(df: pd.DataFrame, name: str):
     this_dir = pathlib.Path(__file__).parent.resolve()
-    fp = os.path.join(this_dir, "results", name + ".csv")
-    df.to_csv(fp, index=False)
+    fp = os.path.join(this_dir, "results", name + ".parquet")
+    df.to_parquet(fp, index=False)
 
 
 def load_df(name: str):
     this_dir = pathlib.Path(__file__).parent.resolve()
-    fp = os.path.join(this_dir, "results", name + ".csv")
-    return pd.read_csv(fp)
+    parquet_dir = os.path.join(this_dir, "results", name + ".parquet")
+    if os.path.exists(parquet_dir):
+        return pd.read_parquet(parquet_dir)
+    else:
+        fp = os.path.join(this_dir, "results", name + ".csv")
+        df = pd.read_csv(fp)
+        df.to_parquet(parquet_dir, index=False)
+        return df
 
 
 def normalize_regret(df: pd.DataFrame):
@@ -148,7 +143,7 @@ def adjust_approach_names(df: pd.DataFrame):
     return df
 
 
-def prepare_df2(df: pd.DataFrame, n_steps=10):
+def prepare_df(df: pd.DataFrame, n_steps=10):
     df.ffill(inplace=True)
     if "normalized-budget" in df.columns:
         df.rename({"normalized-budget": NORMALIZED_BUDGET}, axis=1, inplace=True)
@@ -160,10 +155,10 @@ def prepare_df2(df: pd.DataFrame, n_steps=10):
     df.loc[:, RHO] = np.nan
     df.loc[:, RHO] = df[APPROACH].apply(lambda x: extract_rho(x))
     df.loc[:, IS_OUR_APPROACH] = False
-    df.loc[:, IS_OUR_APPROACH] = df[APPROACH].apply(lambda x: "w-UCB" in x)
-    df[df[IS_OUR_APPROACH]] = adjust_approach_names(
-        df[df[IS_OUR_APPROACH]]
-    )
+    df.loc[:, IS_OUR_APPROACH] = df[APPROACH].apply(lambda x: OMEGA_UCB_ in x)
+    # df[df[IS_OUR_APPROACH]] = adjust_approach_names(
+    #     df[df[IS_OUR_APPROACH]]
+    # )
     df.loc[:, APPROACH_ORDER] = np.nan
     df[APPROACH_ORDER] = df[APPROACH].apply(
         lambda x: next(approach_order[key] for key in approach_order.keys() if key in x)
@@ -175,3 +170,23 @@ def prepare_df2(df: pd.DataFrame, n_steps=10):
 def move_legend_below_graph(grid, ncol: int, title: str):
     sns.move_legend(grid, "lower center", ncols=ncol, title=title)
     plt.tight_layout()
+
+
+def create_custom_legend(grid: sns.FacetGrid):
+    app_color_list = color_list()
+    approaches = [entry[0] for entry in app_color_list]
+    colors = [entry[1] for entry in app_color_list]
+
+    custom_lines = [Line2D([0], [0], color=color, lw=2) for color in colors]
+
+    axes = grid.axes
+    for ax in axes.flatten():
+        if ax.legend():
+            ax.legend().remove()
+    plt.figlegend(custom_lines, approaches,
+                  bbox_to_anchor=(0, 0.6, 1, 0.2),
+                  loc="lower left",
+                  mode="expand",
+                  borderaxespad=1,
+                  ncol=6
+                  )
