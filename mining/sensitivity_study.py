@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from util import load_df, prepare_df2, cm2inch, create_palette
+from util import load_df, prepare_df, cm2inch, create_palette
 from components.bandit_logging import *
 
 
@@ -28,9 +28,9 @@ def plot_sensitivity_study(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    filename = "uniform_vary_costs"
+    filename = "synth_beta"
     df = load_df(filename)
-    df = prepare_df2(df)
+    df = prepare_df(df)
     df = df.loc[df[IS_OUR_APPROACH]]
     plot_sensitivity_study(df)
 

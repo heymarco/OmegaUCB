@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from util import load_df, prepare_df2, cm2inch, create_palette, move_legend_below_graph
+from util import load_df, prepare_df, cm2inch, create_palette, move_legend_below_graph, create_custom_legend
 from components.bandit_logging import *
 from approach_names import *
 
@@ -37,10 +37,10 @@ def plot_regret(df: pd.DataFrame):
     hue = APPROACH
     col = K
     lims = compute_ylims(df, x, hue, col_var=col)
+    df = df.sort_values(by=[APPROACH])
     palette = create_palette(df)
-    df = df.sort_values(by=[APPROACH_ORDER, RHO])
     g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
-                    kind="line", palette=palette,
+                    kind="line", palette=palette, legend=False,
                     facet_kws={"sharey": False}, err_style="bars")
     # g.set(yscale="log")
     g.set(xscale="log")
@@ -48,9 +48,12 @@ def plot_regret(df: pd.DataFrame):
         ax.set_ylim(lim)
         if i > 0:
             ax.set_ylabel("")
-    plt.gcf().set_size_inches(cm2inch(24, 6))
-    plt.tight_layout(pad=.5)
-    plt.subplots_adjust(right=.82, wspace=.22)
+        if ax.get_legend():
+            sns.move_legend(ax, "upper center", bbox_to_anchor=(1, 1))
+    plt.gcf().set_size_inches(cm2inch(20, 7.5))
+    create_custom_legend(g)
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.53)
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", "synth_bernoulli.pdf"))
     plt.show()
 
@@ -58,23 +61,12 @@ def plot_regret(df: pd.DataFrame):
 if __name__ == '__main__':
     filename = "synth_bernoulli"
     df = load_df(filename)
-    df = prepare_df2(df, n_steps=10)
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_5]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_6]
-    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
-    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_3]
-    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
-    # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_2]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_3]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_4]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_5]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_6]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_4]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_3]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_2]
-    df = df.loc[df[APPROACH] != ETA_UCB_1]
-    df = df.loc[df[APPROACH] != ETA_UCB_2]
-    df = df.loc[df[APPROACH] != ETA_UCB_3]
-    df = df.loc[df[APPROACH] != ETA_UCB_4]
+    df = prepare_df(df, n_steps=10)
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
+    # # df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
+    # # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
+    # # df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
+    # # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_2]
     plot_regret(df)
