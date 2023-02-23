@@ -45,6 +45,6 @@ class BetaSamplingEnvironment(Environment):
     def sample(self, arm_index: int) -> Tuple[float, float, float, float]:
         mean_reward = self.mean_rewards[arm_index]
         mean_cost = self.mean_costs[arm_index]
-        reward = self.rng.beta(self.alpha_r, self.beta_c)[arm_index]
-        cost = self.rng.beta(self.alpha_c, self.beta_c)[arm_index]
+        reward = self.rng.beta(self.alpha_r[arm_index], self.beta_c[arm_index])
+        cost = self.rng.beta(self.alpha_c[arm_index], self.beta_c[arm_index])
         return reward, cost, mean_reward, mean_cost
