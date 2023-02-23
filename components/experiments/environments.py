@@ -15,7 +15,7 @@ class BernoulliSamplingEnvironment(Environment):
 
 
 class BetaSamplingEnvironment(Environment):
-    def __init__(self, mean_rewards: np.ndarray, mean_costs: np.ndarray, seed: int, min_param=1, max_param=100):
+    def __init__(self, mean_rewards: np.ndarray, mean_costs: np.ndarray, seed: int, min_param=1, max_param=10):
         super(BetaSamplingEnvironment, self).__init__(mean_rewards, mean_costs, seed)
         # first we sample some parameters
         self.alpha_r = self.rng.uniform(min_param, max_param, size=mean_rewards.shape)
@@ -45,6 +45,8 @@ class BetaSamplingEnvironment(Environment):
     def sample(self, arm_index: int) -> Tuple[float, float, float, float]:
         mean_reward = self.mean_rewards[arm_index]
         mean_cost = self.mean_costs[arm_index]
-        reward = self.rng.beta(self.alpha_r[arm_index], self.beta_c[arm_index])
-        cost = self.rng.beta(self.alpha_c[arm_index], self.beta_c[arm_index])
+        reward = self.rng.beta(self.alpha_r[arm_index],
+                               self.beta_r[arm_index])
+        cost = self.rng.beta(self.alpha_c[arm_index],
+                             self.beta_c[arm_index])
         return reward, cost, mean_reward, mean_cost
