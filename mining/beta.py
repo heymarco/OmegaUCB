@@ -21,7 +21,7 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
-def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=0.3):
+def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=0.9):
     lims = []
     df = df.groupby([x, hue, col_var]).mean().reset_index()
     df = df[df[x] <= x_cut]
@@ -59,19 +59,19 @@ if __name__ == '__main__':
     filename = "synth_beta"
     df = load_df(filename)
     df = prepare_df(df, n_steps=10)
-    print(np.unique(df[APPROACH]))
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_2]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_32]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_16]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_8]
-    # # df = df.loc[df[APPROACH] != ETA_UCB_1_4]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_2]
-    # # df = df.loc[df[APPROACH] != ETA_UCB_1]
-    df = df.loc[df[APPROACH] != ETA_UCB_2]
+    print(df[df[APPROACH] == ETA_UCB_1_32].groupby(K).mean()[NORMALIZED_REGRET])
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_2]
+    # df = df.loc[df[APPROACH] != ETA_UCB_1_32]
+    # df = df.loc[df[APPROACH] != ETA_UCB_1_16]
+    # df = df.loc[df[APPROACH] != ETA_UCB_1_8]
+    # df = df.loc[df[APPROACH] != ETA_UCB_1_4]
+    # df = df.loc[df[APPROACH] != ETA_UCB_1_2]
+    # df = df.loc[df[APPROACH] != ETA_UCB_1]
+    # df = df.loc[df[APPROACH] != ETA_UCB_2]
     plot_regret(df)
