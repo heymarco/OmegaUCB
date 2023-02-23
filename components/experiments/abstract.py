@@ -23,7 +23,7 @@ class Environment(ABC):
         self.rng = np.random.default_rng(seed)
 
     @abstractmethod
-    def sample(self, arm_index: int) -> Tuple[int, int, float, float]:
+    def sample(self, arm_index: int) -> Tuple[float, float, float, float]:
         """
         Observe reward and cost from this environment by pulling arm with index `arm_index`
         :param arm_index: the index of the pulled arm
@@ -83,12 +83,9 @@ def iterate(bandit: AbstractBandit, env: Environment, rng):
         arm = bandit.sample(c_min=c_min)
     else:
         arm = bandit.sample()
-    mean_reward = env.mean_rewards[arm]
-    mean_cost = env.mean_costs[arm]
-    this_reward = int(rng.uniform() < mean_reward)
-    this_cost = int(rng.uniform() < mean_cost)
-    bandit.update(arm, this_reward, this_cost)
-    return this_reward, this_cost, arm
+    reward, cost, mean_reward, mean_cost = env.sample(arm)
+    bandit.update(arm, reward, cost)
+    return reward, cost, arm
 
 
 def execute_bandit_on_env(bandit: AbstractBandit, env: Environment, num_steps: int, rep: int) -> pd.DataFrame:

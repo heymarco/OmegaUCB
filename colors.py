@@ -38,22 +38,22 @@ import seaborn as sns
 def color_list():
     final_list = []
     omega_ucbs = [
-        OMEGA_UCB_1_32,
-        OMEGA_UCB_1_16,
-        OMEGA_UCB_1_8,
+        # OMEGA_UCB_1_32,
+        # OMEGA_UCB_1_16,
+        # OMEGA_UCB_1_8,
         OMEGA_UCB_1_4,
-        OMEGA_UCB_1_2,
+        # OMEGA_UCB_1_2,
         OMEGA_UCB_1,
-        OMEGA_UCB_2
+        # OMEGA_UCB_2
     ]
     eta_ucbs = [
-        ETA_UCB_1_32,
-        ETA_UCB_1_16,
-        ETA_UCB_1_8,
+        # ETA_UCB_1_32,
+        # ETA_UCB_1_16,
+        # ETA_UCB_1_8,
         ETA_UCB_1_4,
-        ETA_UCB_1_2,
+        # ETA_UCB_1_2,
         ETA_UCB_1,
-        ETA_UCB_2
+        # ETA_UCB_2
     ]
     other_ucbs = [
         UCB_SC_PLUS,
@@ -73,11 +73,11 @@ def color_list():
     omega_ucb_n_colors = len(omega_ucbs)
     eta_ucb_base_color = "Purples"
     eta_ucb_n_colors = len(eta_ucbs)
-    other_ucb_base_color = "Reds"
+    other_ucb_base_color = "light:#5A9"
     other_ucb_n_colors = len(other_ucbs)
     bts_base_color = "Wistia"
     bts_n_colors = len(bts)
-    others_colors = "Greens"
+    others_colors = "flare"
     others_n_colors = len(others)
 
     all_info = [(omega_ucbs, omega_ucb_base_color, omega_ucb_n_colors),
