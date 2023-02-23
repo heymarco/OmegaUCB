@@ -184,7 +184,7 @@ def create_custom_legend(grid: sns.FacetGrid):
         if ax.legend():
             ax.legend().remove()
     plt.figlegend(custom_lines, approaches,
-                  bbox_to_anchor=(0, 0.6, 1, 0.2),
+                  bbox_to_anchor=(0, 0.72, 1, 0.2),
                   loc="lower left",
                   mode="expand",
                   borderaxespad=1,

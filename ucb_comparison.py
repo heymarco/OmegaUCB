@@ -9,6 +9,8 @@ import seaborn as sns
 from approach_names import *
 from util import cm2inch, move_legend_below_graph
 
+sns.set_style("ticks")
+
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
 mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'

@@ -42,9 +42,9 @@ class BetaSamplingEnvironment(Environment):
         mu[mu == 1] = 0.9999
         return beta * (mu / (1 - mu))
 
-    def sample(self, arm_index: int) -> Tuple[int, int, float, float]:
+    def sample(self, arm_index: int) -> Tuple[float, float, float, float]:
         mean_reward = self.mean_rewards[arm_index]
         mean_cost = self.mean_costs[arm_index]
-        reward = self.rng.beta(self.alpha_r, self.beta_c)
-        cost = self.rng.beta(self.alpha_c, self.beta_c)
+        reward = self.rng.beta(self.alpha_r, self.beta_c)[arm_index]
+        cost = self.rng.beta(self.alpha_c, self.beta_c)[arm_index]
         return reward, cost, mean_reward, mean_cost

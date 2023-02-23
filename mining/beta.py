@@ -13,10 +13,11 @@ from components.bandit_logging import *
 from approach_names import *
 
 
+sns.set_style(style="ticks")
+
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{times}'
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{nicefrac}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
@@ -47,9 +48,9 @@ def plot_regret(df: pd.DataFrame):
         ax.set_ylim(lim)
         if i > 0:
             ax.set_ylabel("")
-    plt.gcf().set_size_inches(cm2inch(20, 7.5 * 0.62))
+    plt.gcf().set_size_inches(cm2inch(20, 6 * 0.7))
     # create_custom_legend(g)
-    plt.tight_layout()
+    plt.tight_layout(pad=.5)
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
     plt.show()
 
@@ -62,19 +63,15 @@ if __name__ == '__main__':
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
-    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
+    df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
-    # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
+    df = df.loc[df[APPROACH] != OMEGA_UCB_1]
     df = df.loc[df[APPROACH] != OMEGA_UCB_2]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_3]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_4]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_5]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_6]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_4]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_3]
+    df = df.loc[df[APPROACH] != ETA_UCB_1_32]
+    df = df.loc[df[APPROACH] != ETA_UCB_1_16]
+    df = df.loc[df[APPROACH] != ETA_UCB_1_8]
+    # # df = df.loc[df[APPROACH] != ETA_UCB_1_4]
     df = df.loc[df[APPROACH] != ETA_UCB_1_2]
-    df = df.loc[df[APPROACH] != ETA_UCB_1]
+    # # df = df.loc[df[APPROACH] != ETA_UCB_1]
     df = df.loc[df[APPROACH] != ETA_UCB_2]
-    df = df.loc[df[APPROACH] != ETA_UCB_3]
-    df = df.loc[df[APPROACH] != ETA_UCB_4]
     plot_regret(df)

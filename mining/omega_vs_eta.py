@@ -16,8 +16,7 @@ from approach_names import *
 import matplotlib as mpl
 from matplotlib.legend import Legend
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{times}'
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{nicefrac}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
@@ -58,16 +57,18 @@ def plot_regret(df: pd.DataFrame):
     yellow = sns.color_palette("Wistia", n_colors=1)
     palette = sns.color_palette("Blues", n_colors=2)
     g = sns.catplot(data=df, kind="box", x=x, y=y, hue=hue, col=col, palette=palette,
-                    sharey=True, linewidth=1, showfliers=False)
+                    sharey=False, linewidth=1, showfliers=False)
     g.set(yscale="log")
-    lims = [0.00025, 0.02, 0.05]
+    # lims = [0.00008, 0.02, 0.05]
     bts_line = None
+    xtick_labels = [r"$\frac{1}{32}$", r"$\frac{1}{16}$", r"$\frac{1}{8}$", r"$\frac{1}{4}$", r"$\frac{1}{2}$", "$1$", "$2$"]
     for i, ax in enumerate(g.axes.flatten()):
-        ax.set_ylim(bottom=lims[0])
+        # ax.set_ylim(bottom=lims[0])
         ax.axhspan(bts_quantiles[0][i], bts_quantiles[2][i], color=yellow[0], alpha=0.25, zorder=0, lw=0)
         bts_line = ax.axhline(bts_quantiles[1][i], color=yellow[0], zorder=0, label=BTS)
+        ax.set_xticklabels(xtick_labels)
     extend_legend(g, bts_line, BTS)
-    plt.gcf().set_size_inches(cm2inch(24, 6))
+    plt.gcf().set_size_inches(cm2inch(20, 5))
     plt.tight_layout(pad=.5)
     plt.subplots_adjust(right=.88)
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", "omega_vs_eta.pdf"))

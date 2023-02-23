@@ -29,12 +29,12 @@ class Aggregate:
         return np.sqrt(self.variance())
 
 
-def compute_eta(mean: float, pop_var: float, m=0, M=1) -> float:
+def compute_eta(mean: float, variance: float, m=0, M=1) -> float:
     bernoulli_variance = (M - mean) * (mean - m)
     if bernoulli_variance == 0:
         # bernoulli variance == pop_variance
         return 1.0
-    return min(pop_var / bernoulli_variance, 1.0)
+    return min(variance / bernoulli_variance, 1.0)
 
 
 class GeneralizedWUCBArm(AbstractArm):

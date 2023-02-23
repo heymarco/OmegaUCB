@@ -12,10 +12,11 @@ from util import load_df, prepare_df, cm2inch, create_palette
 from components.bandit_logging import *
 from approach_names import *
 
+sns.set_style(style="darkgrid")
+
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{times}'
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{nicefrac}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
@@ -39,8 +40,8 @@ def plot_regret(df: pd.DataFrame, filename: str):
     g.set(xscale="log")
     for lim, ax in zip(lims, g.axes.flatten()):
         ax.set_ylim(lim)
-    plt.gcf().set_size_inches(cm2inch((9.5, 7.5 * 0.6)))
-    plt.tight_layout(pad=.5)
+    plt.gcf().set_size_inches(cm2inch((9.5, 7.5 * 0.55)))
+    plt.tight_layout(pad=.7)
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
     plt.show()
 
