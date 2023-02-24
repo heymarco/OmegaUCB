@@ -21,7 +21,7 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
-def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=0.5):
+def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=0.3):
     lims = []
     df = df.groupby([x, hue, col_var]).mean().reset_index()
     df = df[df[x] <= x_cut]
@@ -39,7 +39,7 @@ def plot_regret(df: pd.DataFrame):
     hue = APPROACH
     col = K
     lims = compute_ylims(df, x, hue, col_var=col)
-    df = df.sort_values(by=[APPROACH])
+    # df = df.sort_values(by=[APPROACH])
     palette = create_palette(df)
     g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
                     kind="line", palette=palette, legend=False,
@@ -49,9 +49,9 @@ def plot_regret(df: pd.DataFrame):
         ax.set_ylim(lim)
         if i > 0:
             ax.set_ylabel("")
-    plt.gcf().set_size_inches(cm2inch(20, 6 * 0.7))
+    plt.gcf().set_size_inches(cm2inch(20, 6 * 0.75))
     # create_custom_legend(g)
-    plt.tight_layout(pad=.5)
+    plt.tight_layout(pad=.8)
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
     plt.show()
 
@@ -60,13 +60,15 @@ if __name__ == '__main__':
     filename = "synth_beta"
     df = load_df(filename)
     df = prepare_df(df, n_steps=10)
+    df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
     df = df.loc[df[APPROACH] != OMEGA_UCB_2]
+    df = df.loc[df[APPROACH] != ETA_UCB_1_64]
     df = df.loc[df[APPROACH] != ETA_UCB_1_32]
     # df = df.loc[df[APPROACH] != ETA_UCB_1_16]
     df = df.loc[df[APPROACH] != ETA_UCB_1_8]
@@ -78,5 +80,8 @@ if __name__ == '__main__':
     df = df.loc[df[APPROACH] != BUDGET_UCB]
     df = df.loc[df[APPROACH] != BTS]
     df = df.loc[df[APPROACH] != B_GREEDY]
+    df = df.loc[df[APPROACH] != CUCB]
+    df = df.loc[df[APPROACH] != MUCB]
+    df = df.loc[df[APPROACH] != IUCB]
 
     plot_regret(df)

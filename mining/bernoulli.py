@@ -39,7 +39,7 @@ def plot_regret(df: pd.DataFrame):
     hue = APPROACH
     col = K
     lims = compute_ylims(df, x, hue, col_var=col)
-    df = pd.sort_values(by=APPROACH)
+    df = df.sort_values(by=APPROACH).reset_index()
     g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
                     kind="line", palette=create_palette(df), legend=False,
                     facet_kws={"sharey": False}, err_style="bars")
@@ -52,7 +52,7 @@ def plot_regret(df: pd.DataFrame):
         lines = ax.get_lines()
     plt.gcf().set_size_inches(cm2inch(20, 6))
     create_custom_legend(g)
-    plt.tight_layout(pad=.7)
+    plt.tight_layout(pad=.5)
     plt.subplots_adjust(top=0.65)
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", "synth_bernoulli.pdf"))
     plt.show()
