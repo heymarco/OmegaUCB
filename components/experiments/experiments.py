@@ -20,7 +20,7 @@ from util import run_async
 class BernoulliExperiment(Experiment):
     def _generate_environments(self, k: int, seed: int) -> List[Environment]:
         rng = np.random.default_rng(seed)
-        c_min = 0.01
+        c_min = 0.0001
         mean_rewards = rng.uniform(0, 1, size=k)
         mean_costs = rng.uniform(c_min, 1.0, size=k)
         eff_invers = mean_costs / mean_rewards
@@ -35,6 +35,14 @@ class BernoulliExperiment(Experiment):
             BGreedy(k=k, name="b-greedy", seed=seed),
             UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
             UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
+            GeneralizedWUCB(k=k, name=ETA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
+            GeneralizedWUCB(k=k, name=ETA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
+            GeneralizedWUCB(k=k, name=ETA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
+            GeneralizedWUCB(k=k, name=ETA_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
+            GeneralizedWUCB(k=k, name=ETA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
+            GeneralizedWUCB(k=k, name=ETA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
+            GeneralizedWUCB(k=k, name=ETA_UCB_1, seed=seed, r=1, adaptive=True),
+            GeneralizedWUCB(k=k, name=ETA_UCB_2, seed=seed, r=2, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
@@ -53,7 +61,7 @@ class BernoulliExperiment(Experiment):
 class BetaExperiment(Experiment):
     def _generate_environments(self, k: int, seed: int) -> List[Environment]:
         rng = np.random.default_rng(seed)
-        c_min = 0.01
+        c_min = 0.0001
         mean_rewards = rng.uniform(0, 1, size=k)
         mean_costs = rng.uniform(c_min, 1.0, size=k)
         eff_invers = mean_costs / mean_rewards
@@ -127,6 +135,14 @@ class FacebookBernoulliExperiment(Experiment):
             BGreedy(k=k, name="b-greedy", seed=seed),
             UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
             UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
+            GeneralizedWUCB(k=k, name=ETA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
+            GeneralizedWUCB(k=k, name=ETA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
+            GeneralizedWUCB(k=k, name=ETA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
+            GeneralizedWUCB(k=k, name=ETA_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
+            GeneralizedWUCB(k=k, name=ETA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
+            GeneralizedWUCB(k=k, name=ETA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
+            GeneralizedWUCB(k=k, name=ETA_UCB_1, seed=seed, r=1, adaptive=True),
+            GeneralizedWUCB(k=k, name=ETA_UCB_2, seed=seed, r=2, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
