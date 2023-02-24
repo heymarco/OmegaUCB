@@ -28,7 +28,8 @@ def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=0.3):
     df.sort_values(by=[col_var], inplace=True)
     for _, row_df in df.groupby(col_var):
         max_regret = row_df[NORMALIZED_REGRET].max()
-        lims.append((0, max_regret))
+        min_regret = row_df[NORMALIZED_REGRET].min()
+        lims.append((min_regret * 0.8, max_regret))
     return lims
 
 
@@ -38,10 +39,9 @@ def plot_regret(df: pd.DataFrame):
     hue = APPROACH
     col = K
     lims = compute_ylims(df, x, hue, col_var=col)
-    df = df.sort_values(by=[APPROACH])
-    palette = create_palette(df)
+    df = pd.sort_values(by=APPROACH)
     g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
-                    kind="line", palette=palette, legend=False,
+                    kind="line", palette=create_palette(df), legend=False,
                     facet_kws={"sharey": False}, err_style="bars")
     # g.set(yscale="log")
     g.set(xscale="log")
@@ -49,8 +49,7 @@ def plot_regret(df: pd.DataFrame):
         ax.set_ylim(lim)
         if i > 0:
             ax.set_ylabel("")
-        if ax.get_legend():
-            sns.move_legend(ax, "upper center", bbox_to_anchor=(1, 1))
+        lines = ax.get_lines()
     plt.gcf().set_size_inches(cm2inch(20, 6))
     create_custom_legend(g)
     plt.tight_layout(pad=.7)
