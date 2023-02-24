@@ -15,7 +15,7 @@ class BernoulliSamplingEnvironment(Environment):
 
 
 class BetaSamplingEnvironment(Environment):
-    def __init__(self, mean_rewards: np.ndarray, mean_costs: np.ndarray, seed: int, min_param=1, max_param=10):
+    def __init__(self, mean_rewards: np.ndarray, mean_costs: np.ndarray, seed: int, min_param=0, max_param=5):
         super(BetaSamplingEnvironment, self).__init__(mean_rewards, mean_costs, seed)
         # first we sample some parameters
         self.alpha_r = self.rng.uniform(min_param, max_param, size=mean_rewards.shape)
