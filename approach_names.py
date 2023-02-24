@@ -1,4 +1,5 @@
 OMEGA_UCB_STUMP = r"$\omega$-UCB ($\rho = {}$)"
+OMEGA_UCB_1_64 = r"$\omega$-UCB ($\rho = \frac{1}{64}$)"
 OMEGA_UCB_1_32 = r"$\omega$-UCB ($\rho = \frac{1}{32}$)"
 OMEGA_UCB_1_16 = r"$\omega$-UCB ($\rho = \frac{1}{16}$)"
 OMEGA_UCB_1_8 = r"$\omega$-UCB ($\rho = \frac{1}{8}$)"
@@ -14,6 +15,7 @@ OMEGA_UCB_4 = r"$\omega$-UCB ($\rho = 4$)"
 OMEGA_UCB_ = r"$\omega$-UCB"
 
 ETA_UCB_STUMP = r"$\eta$-UCB ($\rho = {}$)"
+ETA_UCB_1_64 = r"$\omega$-UCB ($\rho = \frac{1}{64}$)"
 ETA_UCB_1_32 = r"$\eta$-UCB ($\rho = \frac{1}{32}$)"
 ETA_UCB_1_16 = r"$\eta$-UCB ($\rho = \frac{1}{16}$)"
 ETA_UCB_1_8 = r"$\eta$-UCB ($\rho = \frac{1}{8}$)"

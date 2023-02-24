@@ -12,6 +12,7 @@ eta_ucb_base_color = "Oranges"
 def color_list():
     final_list = []
     omega_ucbs = [
+        # OMEGA_UCB_1_64,
         # OMEGA_UCB_1_32,
         # OMEGA_UCB_1_16,
         # OMEGA_UCB_1_8,
@@ -21,6 +22,7 @@ def color_list():
         # OMEGA_UCB_2
     ]
     eta_ucbs = [
+        # ETA_UCB_1_64,
         # ETA_UCB_1_32,
         ETA_UCB_1_16,
         # ETA_UCB_1_8,
