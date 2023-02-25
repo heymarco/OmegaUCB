@@ -20,7 +20,7 @@ from util import run_async
 class BernoulliExperiment(Experiment):
     def _generate_environments(self, k: int, seed: int) -> List[Environment]:
         rng = np.random.default_rng(seed)
-        c_min = 0.0001
+        c_min = 0.01
         mean_rewards = rng.uniform(0, 1, size=k)
         mean_costs = rng.uniform(c_min, 1.0, size=k)
         eff_invers = mean_costs / mean_rewards
@@ -61,7 +61,7 @@ class BernoulliExperiment(Experiment):
 class BetaExperiment(Experiment):
     def _generate_environments(self, k: int, seed: int) -> List[Environment]:
         rng = np.random.default_rng(seed)
-        c_min = 0.0001
+        c_min = 0.01
         mean_rewards = rng.uniform(0, 1, size=k)
         mean_costs = rng.uniform(c_min, 1.0, size=k)
         eff_invers = mean_costs / mean_rewards

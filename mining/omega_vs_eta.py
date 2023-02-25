@@ -87,6 +87,9 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", figname + ".pdf"))
     plt.show()
 
+    df = df.groupby([row, col, hue]).mean().reset_index()
+    print(df)
+
 
 if __name__ == '__main__':
     filename = "synth_beta"
