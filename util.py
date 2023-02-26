@@ -131,7 +131,25 @@ def normalize_regret(df: pd.DataFrame):
     for _, gdf in df.groupby([APPROACH, REP, K]):
         budget = np.max(gdf[SPENT_BUDGET])
         achievable_reward = budget * gdf[OPTIMAL_REWARD] / gdf[OPTIMAL_COST]
-        df.loc[gdf.index, NORMALIZED_REGRET] = gdf[REGRET] / achievable_reward
+        df.loc[gdf.index, NORMALIZED_REGRET] = (gdf[REGRET] / achievable_reward)
+    return df
+
+def normalize_budget(df: pd.DataFrame):
+    df = df.sort_values(by=EXPECTED_SPENT_BUDGET)
+    for _, gdf in df.groupby([APPROACH, REP, K]):
+        expected_spent_budget = gdf[EXPECTED_SPENT_BUDGET]
+        budget = np.max(gdf[SPENT_BUDGET])
+        normalized = expected_spent_budget / budget
+        df.loc[gdf.index, NORMALIZED_BUDGET] = normalized
+    return df
+
+def remove_outliers(df: pd.DataFrame):
+    for _, gdf in df.groupby([APPROACH, K, NORMALIZED_BUDGET]):
+        min_percentile = np.percentile(gdf[NORMALIZED_REGRET], q=2)
+        max_percentile = np.percentile(gdf[NORMALIZED_REGRET], q=98)
+        mask = np.logical_or(gdf[NORMALIZED_REGRET] <= min_percentile, gdf[NORMALIZED_REGRET] >= max_percentile)
+        nan_indices = gdf.index[mask]
+        df.loc[nan_indices, NORMALIZED_REGRET] = np.nan
     return df
 
 
@@ -145,25 +163,29 @@ def adjust_approach_names(df: pd.DataFrame):
 
 def prepare_df(df: pd.DataFrame, n_steps=10):
     df.ffill(inplace=True)
-    if "normalized-budget" in df.columns:
-        df.rename({"normalized-budget": NORMALIZED_BUDGET}, axis=1, inplace=True)
-    df.loc[:, APPROACH] = df.loc[:, APPROACH].apply(lambda x: x[:5] + "$" + x[5:] if "$\eta-UCB" in x else x)
+    df = df[df[ROUND] <= 1.5e5]
+    df = normalize_budget(df)
     df = normalize_regret(df)
     df.sort_values(by=APPROACH, inplace=True)
-    df.loc[:, NORMALIZED_BUDGET] = np.ceil((df[NORMALIZED_BUDGET] * n_steps)) / n_steps
+    df.loc[:, NORMALIZED_BUDGET] = np.ceil((df[NORMALIZED_BUDGET] * n_steps)) / (n_steps)
     df = df[df[NORMALIZED_BUDGET] <= 1]
-    df = df.groupby([K, NORMALIZED_BUDGET, APPROACH, REP]).max().reset_index()
+    df = df.groupby([K, APPROACH, NORMALIZED_BUDGET, REP]).max().reset_index()
+    df = remove_outliers(df)
     df.loc[:, RHO] = np.nan
     df.loc[:, RHO] = df[APPROACH].apply(lambda x: extract_rho(x))
     df.loc[:, IS_OUR_APPROACH] = False
     df.loc[:, IS_OUR_APPROACH] = df[APPROACH].apply(lambda x: OMEGA_UCB_ in x)
-    # df[df[IS_OUR_APPROACH]] = adjust_approach_names(
-    #     df[df[IS_OUR_APPROACH]]
-    # )
     df.loc[:, APPROACH_ORDER] = np.nan
     df[APPROACH_ORDER] = df[APPROACH].apply(
         lambda x: next(approach_order[key] for key in approach_order.keys() if key in x)
     )
+    lens = []
+    dists = []
+    for _, gdf in df[np.logical_and(df[APPROACH] == ETA_UCB_1_4, df[K] == 50)].groupby([NORMALIZED_BUDGET]):
+        lens.append(len(gdf))
+        dists.append(gdf[NORMALIZED_REGRET])
+    print(lens)
+    print(dists)
     assert not np.any(np.isnan(df[APPROACH_ORDER]))
     return df
 
