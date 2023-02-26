@@ -17,10 +17,10 @@ from approach_names import *
 
 
 class Environment(ABC):
-    def __init__(self, mean_rewards: np.ndarray, mean_costs: np.ndarray, seed: int):
+    def __init__(self, mean_rewards: np.ndarray, mean_costs: np.ndarray, rng):
         self.mean_rewards = mean_rewards
         self.mean_costs = mean_costs
-        self.rng = np.random.default_rng(seed)
+        self.rng = rng
 
     @abstractmethod
     def sample(self, arm_index: int) -> Tuple[float, float, float, float]:
@@ -91,6 +91,7 @@ def iterate(bandit: AbstractBandit, env: Environment, rng):
 def execute_bandit_on_env(bandit: AbstractBandit, env: Environment, num_steps: int, rep: int) -> pd.DataFrame:
     logger = BanditLogger()
     spent_budget = 0
+    expected_spent_budget = 0
     env_stats = env.get_stats()
     logger.track_approach(bandit.name)
     logger.track_c_min(env_stats[MINIMUM_AVERAGE_COST])
@@ -112,6 +113,7 @@ def execute_bandit_on_env(bandit: AbstractBandit, env: Environment, num_steps: i
         r_sum += r
         mu_r_this = env.mean_rewards[arm]
         mu_c_this = env.mean_costs[arm]
+        expected_spent_budget += mu_c_this
         regret_sum += incremental_regret(rew_this=mu_r_this, cost_this=mu_c_this,
                                          rew_best=reward_optimal_arm, cost_best=cost_optimal_arm)
         should_track = t % int(1e3) == 0
@@ -122,6 +124,7 @@ def execute_bandit_on_env(bandit: AbstractBandit, env: Environment, num_steps: i
             logger.track_mean_rew_current_arm(mu_r_this)
             logger.track_mean_cost_current_arm(mu_c_this)
             logger.track_spent_budget(spent_budget)
+            logger.track_expected_spent_budget(expected_spent_budget)
             logger.track_normalized_budget(spent_budget / budget)
             logger.track_total_reward(r_sum)
             logger.track_time()

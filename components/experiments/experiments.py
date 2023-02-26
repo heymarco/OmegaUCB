@@ -1,5 +1,4 @@
 import multiprocessing
-import os
 from copy import deepcopy
 from typing import List
 
@@ -12,7 +11,7 @@ from components.bandits.wucb import WUCB
 from components.bandits.b_greedy import BGreedy
 from components.bandits.wucb_continuous import GeneralizedWUCB
 from components.experiments.abstract import Experiment, Environment, execute_bandit_on_env
-from components.experiments.environments import BernoulliSamplingEnvironment, BetaSamplingEnvironment
+from components.experiments.environments import BernoulliSamplingEnvironment, FacebookBetaSamplingEnvironment, RandomBetaSamplingEnvironment
 from facebook_ad_data_util import get_facebook_ad_data_settings, get_facebook_ad_stats
 from util import run_async
 
@@ -27,85 +26,79 @@ class BernoulliExperiment(Experiment):
         sorted_indices = np.argsort(eff_invers)
         mean_rewards = mean_rewards[sorted_indices]
         mean_costs = mean_costs[sorted_indices]
-        env = BernoulliSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, seed=seed)
+        env = BernoulliSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, rng=rng)
         return [env]
 
     def _create_bandits(self, k: int, seed: int):
         return np.array([
-            BGreedy(k=k, name="b-greedy", seed=seed),
-            UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
-            UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1, seed=seed, r=1, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_2, seed=seed, r=2, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
+            # BGreedy(k=k, name="b-greedy", seed=seed),
+            # UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
+            # UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1, seed=seed, r=1, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_2, seed=seed, r=2, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_1, seed=seed, r=1, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_2, seed=seed, r=2, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_1, seed=seed, r=1, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_2, seed=seed, r=2, adaptive=True),
             UCB(k=k, name=MUCB, type="m", seed=seed, adaptive=True),
-            UCB(k=k, name=IUCB, type="i", seed=seed, adaptive=True),
-            UCB(k=k, name=CUCB, type="c", seed=seed, adaptive=True),
-            BudgetedThompsonSampling(k=k, name="BTS", seed=seed),
+            # UCB(k=k, name=IUCB, type="i", seed=seed, adaptive=True),
+            # UCB(k=k, name=CUCB, type="c", seed=seed, adaptive=True),
+            # BudgetedThompsonSampling(k=k, name="BTS", seed=seed),
         ])
 
 
 class BetaExperiment(Experiment):
     def _generate_environments(self, k: int, seed: int) -> List[Environment]:
         rng = np.random.default_rng(seed)
-        c_min = 0.01
-        mean_rewards = rng.uniform(0, 1, size=k)
-        mean_costs = rng.uniform(c_min, 1.0, size=k)
-        eff_invers = mean_costs / mean_rewards
-        sorted_indices = np.argsort(eff_invers)
-        mean_rewards = mean_rewards[sorted_indices]
-        mean_costs = mean_costs[sorted_indices]
-        env = BetaSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, seed=seed)
+        env = RandomBetaSamplingEnvironment(k=k, rng=rng)
         return [env]
 
     def _create_bandits(self, k: int, seed: int):
         return np.array([
-            BGreedy(k=k, name="b-greedy", seed=seed),
-            UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
-            UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
+            # BGreedy(k=k, name="b-greedy", seed=seed),
+            # UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
+            # UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
             GeneralizedWUCB(k=k, name=ETA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
             GeneralizedWUCB(k=k, name=ETA_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
             GeneralizedWUCB(k=k, name=ETA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
             GeneralizedWUCB(k=k, name=ETA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_1, seed=seed, r=1, adaptive=True),
-            GeneralizedWUCB(k=k, name=ETA_UCB_2, seed=seed, r=2, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_1, seed=seed, r=1, adaptive=True),
-            WUCB(k=k, name=OMEGA_UCB_2, seed=seed, r=2, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_1, seed=seed, r=1, adaptive=True),
+            # GeneralizedWUCB(k=k, name=ETA_UCB_2, seed=seed, r=2, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_1, seed=seed, r=1, adaptive=True),
+            # WUCB(k=k, name=OMEGA_UCB_2, seed=seed, r=2, adaptive=True),
             UCB(k=k, name=MUCB, type="m", seed=seed, adaptive=True),
-            UCB(k=k, name=IUCB, type="i", seed=seed, adaptive=True),
-            UCB(k=k, name=CUCB, type="c", seed=seed, adaptive=True),
-            BudgetedThompsonSampling(k=k, name="BTS", seed=seed),
+            # UCB(k=k, name=IUCB, type="i", seed=seed, adaptive=True),
+            # UCB(k=k, name=CUCB, type="c", seed=seed, adaptive=True),
+            # BudgetedThompsonSampling(k=k, name="BTS", seed=seed),
         ])
 
 
 class FacebookBernoulliExperiment(Experiment):
     def _generate_environments(self, k: int,  # k is derived from the data in this environment
                                seed: int) -> List[Environment]:
-        settings = get_facebook_ad_data_settings(random_state=seed)
+        rng = np.random.default_rng(seed)
+        settings = get_facebook_ad_data_settings(rng=rng)
         envs = []
         for mean_rewards, mean_costs in settings:
-            env = BernoulliSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, seed=seed)
+            env = BernoulliSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, rng=rng)
             envs.append(env)
         return envs
 
@@ -161,9 +154,10 @@ class FacebookBernoulliExperiment(Experiment):
 class FacebookBetaExperiment(Experiment):
     def _generate_environments(self, k: int,  # k is derived from the data in this environment
                                seed: int) -> List[Environment]:
-        settings = get_facebook_ad_data_settings(random_state=seed)
+        rng = np.random.default_rng(seed)
+        settings = get_facebook_ad_data_settings(rng=rng)
         envs = [
-            BetaSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, seed=seed)
+            FacebookBetaSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, rng=rng)
             for mean_rewards, mean_costs in settings
         ]
         return envs

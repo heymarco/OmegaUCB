@@ -14,6 +14,7 @@ CURRENT_ARM = r"$I_t$"
 OPTIMAL_REWARD = r"$r_1$"
 OPTIMAL_COST = r"$c_1$"
 SPENT_BUDGET = r"spent-budget"
+EXPECTED_SPENT_BUDGET = r"expected-spent-budget"
 TOTAL_REWARD = "reward"
 AVG_COST_OF_CURRENT_ARM = r"$\mu_i^c$"
 AVG_REWARD_OF_CURRENT_ARM = r"$\mu_i^r$"
@@ -38,6 +39,7 @@ all_ids = [
     OPTIMAL_REWARD,
     OPTIMAL_COST,
     SPENT_BUDGET,
+    EXPECTED_SPENT_BUDGET,
     TOTAL_REWARD,
     AVG_COST_OF_CURRENT_ARM,
     AVG_REWARD_OF_CURRENT_ARM,
@@ -100,6 +102,9 @@ class BanditLogger:
 
     def track_cost_sample(self, value: float):
         self._track_value(value, COST_OF_CURRENT_ARM)
+
+    def track_expected_spent_budget(self, value: float):
+        self._track_value(value, EXPECTED_SPENT_BUDGET)
 
     def track_spent_budget(self, value: float):
         self._track_value(value, SPENT_BUDGET)
