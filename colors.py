@@ -15,8 +15,8 @@ def color_list():
         # OMEGA_UCB_1_64,
         # OMEGA_UCB_1_32,
         # OMEGA_UCB_1_16,
-        OMEGA_UCB_1_8,
-        # OMEGA_UCB_1_4,
+        # OMEGA_UCB_1_8,
+        OMEGA_UCB_1_4,
         # OMEGA_UCB_1_2,
         OMEGA_UCB_1,
         # OMEGA_UCB_2
@@ -25,8 +25,8 @@ def color_list():
         # ETA_UCB_1_64,
         # ETA_UCB_1_32,
         # ETA_UCB_1_16,
-        ETA_UCB_1_8,
-        # ETA_UCB_1_4,
+        # ETA_UCB_1_8,
+        ETA_UCB_1_4,
         # ETA_UCB_1_2,
         ETA_UCB_1,
         # ETA_UCB_2

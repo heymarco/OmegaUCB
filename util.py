@@ -152,6 +152,7 @@ def prepare_df(df: pd.DataFrame, n_steps=10):
     df.sort_values(by=APPROACH, inplace=True)
     df.loc[:, NORMALIZED_BUDGET] = np.ceil((df[NORMALIZED_BUDGET] * n_steps)) / n_steps
     df = df[df[NORMALIZED_BUDGET] <= 1]
+    df = df.groupby([K, NORMALIZED_BUDGET, APPROACH, REP]).max().reset_index()
     df.loc[:, RHO] = np.nan
     df.loc[:, RHO] = df[APPROACH].apply(lambda x: extract_rho(x))
     df.loc[:, IS_OUR_APPROACH] = False
