@@ -8,7 +8,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 def load_facebook_data():
     this_dir = pathlib.Path(__file__).parent.resolve()
-    fp = os.path.join(this_dir, "data", "KAG_conversion_adapted_cpy.csv")
+    fp = os.path.join(this_dir, "data", "KAG_conversion_adapted.csv")
     return pd.read_csv(fp)
 
 
