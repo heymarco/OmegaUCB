@@ -23,11 +23,8 @@ def prepare_raw_data():
     rpm = revenue / impressions_thousands
     raw_data["cost_per_1000_impressions"] = cpm
     raw_data["revenue_per_1000_impressions"] = rpm
-    # raw_data = raw_data[raw_data["cost_per_1000_impressions"] <= 1.0]
-    # raw_data = raw_data[raw_data["revenue_per_1000_impressions"] <= 1.0]
-
-    raw_data["cost_per_1000_impressions"][raw_data["cost_per_1000_impressions"] > 1] = 1.0
-    raw_data["revenue_per_1000_impressions"][raw_data["revenue_per_1000_impressions"] > 1] = 1.0
+    raw_data = raw_data[raw_data["cost_per_1000_impressions"] <= 1.0]
+    raw_data = raw_data[raw_data["revenue_per_1000_impressions"] <= 1.0]
     raw_data["reward_cost_ratio"] = raw_data["revenue_per_1000_impressions"] / raw_data["cost_per_1000_impressions"]
     this_dir = pathlib.Path(__file__).parent.resolve()
     fp = os.path.join(this_dir, "data", "KAG_conversion_adapted.csv")
