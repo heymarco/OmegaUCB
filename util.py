@@ -169,7 +169,7 @@ def prepare_df(df: pd.DataFrame, n_steps=10):
     df.loc[:, NORMALIZED_BUDGET] = np.ceil(df[NORMALIZED_BUDGET] * n_steps) / n_steps
     df = df[df[NORMALIZED_BUDGET] <= 1]
     df = df.groupby([K, APPROACH, NORMALIZED_BUDGET, REP]).max().reset_index()
-    df = remove_outliers(df)
+    # df = remove_outliers(df)
     df.loc[:, RHO] = np.nan
     df.loc[:, RHO] = df[APPROACH].apply(lambda x: extract_rho(x))
     df.loc[:, IS_OUR_APPROACH] = False

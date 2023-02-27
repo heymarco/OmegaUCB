@@ -11,6 +11,7 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 from util import load_df, prepare_df, cm2inch, create_palette
 from components.bandit_logging import *
 from approach_names import *
+from scipy.stats import gmean
 
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
@@ -36,7 +37,8 @@ def plot_regret(df: pd.DataFrame, filename: str):
     palette = create_palette(df)
     g = sns.relplot(data=df, x=x, y=y, hue=hue,
                     kind="line", palette=palette, legend=False,
-                    facet_kws={"sharey": False}, err_style="bars")
+                    facet_kws={"sharey": False},
+                    err_style="bars")
     g.set(xscale="log")
     for lim, ax in zip(lims, g.axes.flatten()):
         ax.set_ylim(lim)
@@ -54,20 +56,24 @@ if __name__ == '__main__':
     for filename in filenames:
         df = load_df(filename)
         df = prepare_df(df, n_steps=10)
-        df = df[df[K] == 57]
+        # df = df[np.logical_and(df[K] > 20, df[K] < 60)]
+        df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
-        df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
+        # df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
         # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
-        # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
+        df = df.loc[df[APPROACH] != OMEGA_UCB_1]
         df = df.loc[df[APPROACH] != OMEGA_UCB_2]
         df = df.loc[df[APPROACH] != ETA_UCB_1_64]
         df = df.loc[df[APPROACH] != ETA_UCB_1_32]
         df = df.loc[df[APPROACH] != ETA_UCB_1_16]
         df = df.loc[df[APPROACH] != ETA_UCB_1_8]
-        # df = df.loc[df[APPROACH] != ETA_UCB_1_4]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_4]
         df = df.loc[df[APPROACH] != ETA_UCB_1_2]
-        # df = df.loc[df[APPROACH] != ETA_UCB_1]
+        df = df.loc[df[APPROACH] != ETA_UCB_1]
         df = df.loc[df[APPROACH] != ETA_UCB_2]
+        df = df.loc[df[APPROACH] != UCB_SC_PLUS]
+        df = df.loc[df[APPROACH] != BUDGET_UCB]
+        print(df)
         plot_regret(df, filename)
