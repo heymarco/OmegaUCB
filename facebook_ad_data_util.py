@@ -11,7 +11,34 @@ def load_facebook_data():
     return pd.read_csv(fp)
 
 
+def prepare_raw_data():
+    raw_data = load_facebook_data()
+    raw_data = raw_data[raw_data["spent"] > 0]
+    spent = raw_data["clicks"]
+    revenue = raw_data["total_conversion"]
+    impressions = raw_data["impressions"]
+    impressions_thousands = impressions / 1000
+    cpm = spent / impressions_thousands
+    rpm = revenue / impressions_thousands
+    raw_data["cost_per_1000_impressions"] = cpm
+    raw_data["revenue_per_1000_impressions"] = rpm
+    for _, gdf in raw_data.groupby(["age", "gender", "campaign_id"]):
+        if gdf["revenue_per_1000_impressions"].max() > 1:
+            gdf["revenue_per_1000_impressions"] = gdf["revenue_per_1000_impressions"] / gdf["revenue_per_1000_impressions"].max()
+            raw_data.loc[gdf.index, "revenue_per_1000_impressions"] = gdf["revenue_per_1000_impressions"]
+    for _, gdf in raw_data.groupby(["age", "gender", "campaign_id"]):
+        if gdf["cost_per_1000_impressions"].max() > 1:
+            gdf["cost_per_1000_impressions"] = gdf["cost_per_1000_impressions"] / gdf[
+                "cost_per_1000_impressions"].max()
+            raw_data.loc[gdf.index, "revenue_per_1000_impressions"] = gdf["revenue_per_1000_impressions"]
+    raw_data["reward_cost_ratio"] = raw_data["revenue_per_1000_impressions"] / raw_data["cost_per_1000_impressions"]
+    this_dir = pathlib.Path(__file__).parent.resolve()
+    fp = os.path.join(this_dir, "data", "KAG_conversion_adapted.csv")
+    raw_data.to_csv(fp, index=False)
+
+
 def prepare_facebook_data():
+    prepare_raw_data()
     raw_data = load_facebook_data()
     is_zero_cost = raw_data["spent"] == 0
     is_zero_reward = raw_data["approved_conversion"] == 0
