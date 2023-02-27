@@ -17,14 +17,14 @@ if __name__ == '__main__':
     n_reps = 100
     n_steps = int(1.5e5)
 
-    synth_beta = BetaExperiment("synth_beta_rest", num_steps=n_steps)
-    execute_experiment(synth_beta, arms, num_reps=n_reps)
+    # synth_beta = BetaExperiment("synth_beta_rest", num_steps=n_steps)
+    # execute_experiment(synth_beta, arms, num_reps=n_reps)
+    #
+    # synth_bernoulli = BernoulliExperiment("synth_bernoulli_rest", num_steps=n_steps)
+    # execute_experiment(synth_bernoulli, arms, num_reps=n_reps)
 
-    synth_bernoulli = BernoulliExperiment("synth_bernoulli_rest", num_steps=n_steps)
-    execute_experiment(synth_bernoulli, arms, num_reps=n_reps)
-    #
-    # facebook_bernoulli = FacebookBernoulliExperiment("facebook_bernoulli", num_steps=n_steps)
-    # execute_experiment(facebook_bernoulli, arms=[0], num_reps=n_reps)
-    #
-    # facebook_beta = FacebookBetaExperiment("facebook_beta", num_steps=n_steps)
-    # execute_experiment(facebook_beta, arms=[0], num_reps=n_reps)
+    facebook_bernoulli = FacebookBernoulliExperiment("facebook_bernoulli", num_steps=n_steps)
+    execute_experiment(facebook_bernoulli, arms=[0], num_reps=n_reps)
+
+    facebook_beta = FacebookBetaExperiment("facebook_beta", num_steps=n_steps)
+    execute_experiment(facebook_beta, arms=[0], num_reps=n_reps)

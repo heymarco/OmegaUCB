@@ -58,8 +58,10 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
     hue = APPROACH
     col = K
     row = "Distribution"
-    g = sns.catplot(data=df, kind="box", x=x, y=y, hue=hue, col=col, row=row, palette=palette[:2],
-                    sharey=False, sharex=True, linewidth=.8, showfliers=False)
+    g = sns.catplot(data=df, kind="bar", x=x, y=y, hue=hue, col=col, row=row, palette=palette[:2],
+                    sharey=False, sharex=True, linewidth=.8, errwidth=1, errorbar=("se", 1)
+                    # showfliers=False
+                    )
     g.set(yscale="log")
     # lims = [0.00008, 0.02, 0.05]
     bts_line = None
@@ -68,8 +70,8 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
                     ]
     for i, ax in enumerate(g.axes.flatten()):
         # ax.set_ylim(bottom=lims[0])
-        ax.axhspan(bts_quantiles[0][i], bts_quantiles[2][i], color=palette[-1], alpha=0.25, zorder=0, lw=0)
-        bts_line = ax.axhline(bts_quantiles[1][i], color=palette[-1], zorder=0, label=BTS)
+        # ax.axhspan(bts_quantiles[0][i], bts_quantiles[2][i], color=palette[-1], alpha=0.25, zorder=0, lw=0)
+        # bts_line = ax.axhline(bts_quantiles[1][i], color=palette[-1], zorder=0, label=BTS)
         ax.set_xticklabels(xtick_labels)
         ax_title = ax.get_title()
         dist_title, K_title = ax_title.split(" | ")
@@ -83,7 +85,7 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
     extend_legend(g, bts_line, BTS)
     plt.gcf().set_size_inches(cm2inch(figsize))
     plt.tight_layout(pad=.5)
-    plt.subplots_adjust(right=0.86, wspace=.26, hspace=.13)
+    plt.subplots_adjust(right=0.86, wspace=.4, hspace=.13)
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", figname + ".pdf"))
     plt.show()
 

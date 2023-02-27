@@ -5,7 +5,7 @@ import pandas as pd
 
 def combine_dataframes(directory: str, filenames: list):
     dfs = [
-        pd.read_csv(os.path.join(directory, fn)) for fn in filenames
+        pd.read_parquet(os.path.join(directory, fn)) for fn in filenames
     ]
     return pd.concat(dfs, ignore_index=True)
 
@@ -13,10 +13,10 @@ def combine_dataframes(directory: str, filenames: list):
 if __name__ == '__main__':
     directory = os.path.join(os.getcwd(), "results")
     filenames = [
-        "facebook_beta_bgreedy.csv",
-        "facebook_beta.csv"
+        "synth_bernoulli.parquet",
+        "synth_bernoulli_rest.parquet"
     ]
-    final_df_name = "facebook_beta_combined.csv"
+    final_df_name = "synth_bernoulli_combined.parquet"
     df = combine_dataframes(directory, filenames)
     assert not os.path.exists(os.path.join(directory, final_df_name))
-    df.to_csv(os.path.join(directory, final_df_name), index=False)
+    df.to_parquet(os.path.join(directory, final_df_name), index=False)

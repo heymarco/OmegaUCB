@@ -163,11 +163,10 @@ def adjust_approach_names(df: pd.DataFrame):
 
 def prepare_df(df: pd.DataFrame, n_steps=10):
     df.ffill(inplace=True)
-    df = df[df[ROUND] <= 1.5e5]
     df = normalize_budget(df)
     df = normalize_regret(df)
     df.sort_values(by=APPROACH, inplace=True)
-    df.loc[:, NORMALIZED_BUDGET] = np.ceil((df[NORMALIZED_BUDGET] * n_steps)) / (n_steps)
+    df.loc[:, NORMALIZED_BUDGET] = np.ceil(df[NORMALIZED_BUDGET] * n_steps) / n_steps
     df = df[df[NORMALIZED_BUDGET] <= 1]
     df = df.groupby([K, APPROACH, NORMALIZED_BUDGET, REP]).max().reset_index()
     df = remove_outliers(df)
@@ -184,8 +183,6 @@ def prepare_df(df: pd.DataFrame, n_steps=10):
     for _, gdf in df[np.logical_and(df[APPROACH] == ETA_UCB_1_4, df[K] == 50)].groupby([NORMALIZED_BUDGET]):
         lens.append(len(gdf))
         dists.append(gdf[NORMALIZED_REGRET])
-    print(lens)
-    print(dists)
     assert not np.any(np.isnan(df[APPROACH_ORDER]))
     return df
 
