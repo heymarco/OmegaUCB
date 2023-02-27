@@ -12,15 +12,13 @@ from util import load_df, prepare_df, cm2inch, create_palette
 from components.bandit_logging import *
 from approach_names import *
 
-sns.set_style(style="darkgrid")
-
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
 mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
-def compute_ylims(df: pd.DataFrame, x, hue, x_cut=0.3):
+def compute_ylims(df: pd.DataFrame, x, hue, x_cut=0.8):
     lims = []
     df = df.groupby([x, hue]).mean().reset_index()
     df = df[df[x] <= x_cut]
@@ -49,21 +47,26 @@ def plot_regret(df: pd.DataFrame, filename: str):
 
 
 if __name__ == '__main__':
-    filenames = ["facebook_beta", "facebook_bernoulli"]
+    filenames = [
+        # "facebook_beta",
+        "facebook_bernoulli"
+    ]
     for filename in filenames:
         df = load_df(filename)
         df = prepare_df(df, n_steps=10)
+        df = df[df[K] == 57]
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
-        df = df.loc[df[APPROACH] != OMEGA_UCB_1_6]
+        df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
+        df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
         # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
-        df = df.loc[df[APPROACH] != OMEGA_UCB_1_3]
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
         # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
         df = df.loc[df[APPROACH] != OMEGA_UCB_2]
-        df = df.loc[df[APPROACH] != ETA_UCB_1_5]
-        df = df.loc[df[APPROACH] != ETA_UCB_1_6]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_64]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_32]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_16]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_8]
         # df = df.loc[df[APPROACH] != ETA_UCB_1_4]
-        df = df.loc[df[APPROACH] != ETA_UCB_1_3]
         df = df.loc[df[APPROACH] != ETA_UCB_1_2]
         # df = df.loc[df[APPROACH] != ETA_UCB_1]
         df = df.loc[df[APPROACH] != ETA_UCB_2]
