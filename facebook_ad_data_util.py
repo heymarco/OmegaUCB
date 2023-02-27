@@ -30,7 +30,7 @@ def get_setting(df):
     mean_rewards = np.array(df["revenue_per_1000_impressions"])
     mean_costs = np.array(df["cost_per_1000_impressions"])
     mean_costs = mean_costs[mean_costs > 0]
-    mean_rewards = mean_rewards[mean_costs > 0]
+    mean_rewards = mean_rewards[mean_costs > 0] + 0.01
     return mean_rewards, mean_costs
 
 

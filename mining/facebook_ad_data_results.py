@@ -63,7 +63,7 @@ if __name__ == '__main__':
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
         # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
-        df = df.loc[df[APPROACH] != OMEGA_UCB_1]
+        # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
         df = df.loc[df[APPROACH] != OMEGA_UCB_2]
         df = df.loc[df[APPROACH] != ETA_UCB_1_64]
         df = df.loc[df[APPROACH] != ETA_UCB_1_32]
