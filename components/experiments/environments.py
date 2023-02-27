@@ -74,6 +74,11 @@ class FacebookBetaSamplingEnvironment(BetaSamplingEnvironment):
         alpha_c[cost_mask_less_05 == 0] = self.compute_alpha_from_beta(mean_costs[cost_mask_less_05 == 0],
                                                                        beta_c[cost_mask_less_05 == 0])
 
+        assert np.alltrue(alpha_r > 0)
+        assert np.alltrue(beta_r > 0)
+        assert np.alltrue(alpha_c > 0)
+        assert np.alltrue(beta_c > 0)
+
         super(FacebookBetaSamplingEnvironment, self).__init__(ar=alpha_r, br=beta_r, ac=alpha_c, bc=beta_c,
                                                               mean_rewards=mean_rewards, mean_costs=mean_costs, rng=rng)
 
