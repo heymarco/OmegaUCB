@@ -30,7 +30,7 @@ def prepare_raw_data():
         if gdf["cost_per_1000_impressions"].max() > 1:
             gdf["cost_per_1000_impressions"] = gdf["cost_per_1000_impressions"] / gdf[
                 "cost_per_1000_impressions"].max()
-            raw_data.loc[gdf.index, "revenue_per_1000_impressions"] = gdf["revenue_per_1000_impressions"]
+            raw_data.loc[gdf.index, "cost_per_1000_impressions"] = gdf["cost_per_1000_impressions"]
     raw_data["reward_cost_ratio"] = raw_data["revenue_per_1000_impressions"] / raw_data["cost_per_1000_impressions"]
     this_dir = pathlib.Path(__file__).parent.resolve()
     fp = os.path.join(this_dir, "data", "KAG_conversion_adapted.csv")
