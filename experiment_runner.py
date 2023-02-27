@@ -14,7 +14,7 @@ def execute_experiment(exp: Experiment, arms: List[int], num_reps: int):
 
 if __name__ == '__main__':
     arms = [100, 10, 50]
-    n_reps = 1
+    n_reps = 100
     n_steps = int(1.5e5)
 
     # synth_beta = BetaExperiment("synth_beta_rest", num_steps=n_steps)
@@ -23,8 +23,8 @@ if __name__ == '__main__':
     # synth_bernoulli = BernoulliExperiment("synth_bernoulli_rest", num_steps=n_steps)
     # execute_experiment(synth_bernoulli, arms, num_reps=n_reps)
 
-    # facebook_bernoulli = FacebookBernoulliExperiment("facebook_bernoulli", num_steps=n_steps)
-    # execute_experiment(facebook_bernoulli, arms=[0], num_reps=n_reps)
-
     facebook_beta = FacebookBetaExperiment("facebook_beta", num_steps=n_steps)
     execute_experiment(facebook_beta, arms=[0], num_reps=n_reps)
+
+    facebook_bernoulli = FacebookBernoulliExperiment("facebook_bernoulli", num_steps=n_steps)
+    execute_experiment(facebook_bernoulli, arms=[0], num_reps=n_reps)

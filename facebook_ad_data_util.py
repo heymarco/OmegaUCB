@@ -3,11 +3,12 @@ import pathlib
 
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
 
 
 def load_facebook_data():
     this_dir = pathlib.Path(__file__).parent.resolve()
-    fp = os.path.join(this_dir, "data", "KAG_conversion_adapted.csv")
+    fp = os.path.join(this_dir, "data", "KAG_conversion_adapted_cpy.csv")
     return pd.read_csv(fp)
 
 
@@ -22,15 +23,11 @@ def prepare_raw_data():
     rpm = revenue / impressions_thousands
     raw_data["cost_per_1000_impressions"] = cpm
     raw_data["revenue_per_1000_impressions"] = rpm
-    for _, gdf in raw_data.groupby(["age", "gender", "campaign_id"]):
-        if gdf["revenue_per_1000_impressions"].max() > 1:
-            gdf["revenue_per_1000_impressions"] = gdf["revenue_per_1000_impressions"] / gdf["revenue_per_1000_impressions"].max()
-            raw_data.loc[gdf.index, "revenue_per_1000_impressions"] = gdf["revenue_per_1000_impressions"]
-    for _, gdf in raw_data.groupby(["age", "gender", "campaign_id"]):
-        if gdf["cost_per_1000_impressions"].max() > 1:
-            gdf["cost_per_1000_impressions"] = gdf["cost_per_1000_impressions"] / gdf[
-                "cost_per_1000_impressions"].max()
-            raw_data.loc[gdf.index, "cost_per_1000_impressions"] = gdf["cost_per_1000_impressions"]
+    # raw_data = raw_data[raw_data["cost_per_1000_impressions"] <= 1.0]
+    # raw_data = raw_data[raw_data["revenue_per_1000_impressions"] <= 1.0]
+
+    raw_data["cost_per_1000_impressions"][raw_data["cost_per_1000_impressions"] > 1] = 1.0
+    raw_data["revenue_per_1000_impressions"][raw_data["revenue_per_1000_impressions"] > 1] = 1.0
     raw_data["reward_cost_ratio"] = raw_data["revenue_per_1000_impressions"] / raw_data["cost_per_1000_impressions"]
     this_dir = pathlib.Path(__file__).parent.resolve()
     fp = os.path.join(this_dir, "data", "KAG_conversion_adapted.csv")
@@ -41,7 +38,7 @@ def prepare_facebook_data():
     prepare_raw_data()
     raw_data = load_facebook_data()
     is_zero_cost = raw_data["spent"] == 0
-    is_zero_reward = raw_data["approved_conversion"] == 0
+    is_zero_reward = raw_data["total_conversion"] == 0
     is_nan_ratio = np.isnan(raw_data["reward_cost_ratio"])
     non_informative_rows = np.logical_and(is_zero_reward, is_zero_cost)  # do not include ads for which we have no data
     corrupted_rows = np.logical_and(np.invert(is_zero_reward), is_zero_cost)  # cost although no clicks occurred
@@ -57,21 +54,29 @@ def get_setting(df):
     mean_rewards = np.array(df["revenue_per_1000_impressions"])
     mean_costs = np.array(df["cost_per_1000_impressions"])
     mean_costs = mean_costs[mean_costs > 0]
-    mean_rewards = mean_rewards[mean_costs > 0] + 0.01
+    mean_rewards = mean_rewards[mean_costs > 0]
     return mean_rewards, mean_costs
 
 
-def add_noise(setting, rng):
+def scale_randomly(setting, rng):
     rew = setting[0]
     cost = setting[1]
-    noise_rew = rng.uniform(-1, 1, size=rew.shape) * 0.05
-    noise_cost = rng.uniform(-1, 1, size=cost.shape) * 0.05
-    rew = rew + noise_rew
-    cost = cost + noise_cost
-    rew = np.maximum(rew, 0.0)
-    rew = np.minimum(rew, 1.0)
-    cost = np.maximum(cost, 0.01)
-    cost = np.minimum(cost, 1.0)
+    min_r = rng.uniform(0, 0.5)
+    max_r = rng.uniform(0.5, 1)
+    min_c = rng.uniform(0, 0.5)
+    max_c = rng.uniform(0.5, 1)
+    rew = MinMaxScaler(feature_range=(min_r, max_r)).fit_transform(np.expand_dims(rew, -1)).flatten()
+    cost = MinMaxScaler(feature_range=(min_c, max_c)).fit_transform(np.expand_dims(cost, -1)).flatten()
+    return rew, cost
+
+
+def standardize_setting(setting):
+    rew = setting[0]
+    cost = setting[1]
+    rew = rew + 0.001
+    rew = rew
+    cost = cost + 0.001
+    cost = cost * 0.999 / np.max(cost)
     return rew, cost
 
 
@@ -88,10 +93,9 @@ def get_facebook_ad_data_settings(rng):
     settings = []
     for _, gdf in data.groupby(["campaign_id", "age", "gender"]):
         setting = get_setting(gdf)
+        setting = scale_randomly(setting, rng)
+        # setting = standardize_setting(setting)
         setting = sort_setting(setting)
-        mask = setting[0] > 0
-        mask = np.logical_and(mask, setting[1] > 0)
-        setting = setting[0][mask], setting[1][mask]
         k = len(setting[0])
         if k >= 2:
             settings.append(setting)
