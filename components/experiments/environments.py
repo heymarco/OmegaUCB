@@ -65,14 +65,14 @@ class FacebookBetaSamplingEnvironment(BetaSamplingEnvironment):
         beta_c = rng.uniform(min_param, max_param, size=mean_costs.shape)
         rew_mask_less_05 = mean_rewards <= 0.5
         cost_mask_less_05 = mean_costs <= 0.5
-        beta_r[rew_mask_less_05] = self.compute_beta_from_alpha(mean_rewards[rew_mask_less_05],
-                                                                alpha_r[rew_mask_less_05])
-        alpha_r[rew_mask_less_05 == 0] = self.compute_alpha_from_beta(mean_rewards[rew_mask_less_05 == 0],
-                                                                      beta_r[rew_mask_less_05 == 0])
-        beta_c[cost_mask_less_05] = self.compute_beta_from_alpha(mean_costs[cost_mask_less_05],
-                                                                 alpha_c[cost_mask_less_05])
-        alpha_c[cost_mask_less_05 == 0] = self.compute_alpha_from_beta(mean_costs[cost_mask_less_05 == 0],
-                                                                       beta_c[cost_mask_less_05 == 0])
+        beta_r[rew_mask_less_05 == 0] = self.compute_beta_from_alpha(mean_rewards[rew_mask_less_05 == 0],
+                                                                     alpha_r[rew_mask_less_05 == 0])
+        alpha_r[rew_mask_less_05] = self.compute_alpha_from_beta(mean_rewards[rew_mask_less_05],
+                                                                 beta_r[rew_mask_less_05])
+        beta_c[cost_mask_less_05 == 0] = self.compute_beta_from_alpha(mean_costs[cost_mask_less_05 == 0],
+                                                                      alpha_c[cost_mask_less_05 == 0])
+        alpha_c[cost_mask_less_05] = self.compute_alpha_from_beta(mean_costs[cost_mask_less_05],
+                                                                  beta_c[cost_mask_less_05])
 
         assert np.alltrue(alpha_r > 0)
         assert np.alltrue(beta_r > 0)
