@@ -63,6 +63,7 @@ def get_facebook_ad_data_settings(rng):
         setting = get_setting(gdf)
         setting = sort_setting(setting)
         mask = setting[0] > 0
+        mask = np.logical_and(mask, setting[1] > 0)
         setting = setting[0][mask], setting[1][mask]
         k = len(setting[0])
         if k >= 2:
