@@ -51,9 +51,8 @@ def add_noise(setting, rng):
 def sort_setting(setting):
     rew = setting[0]
     cost = setting[1]
-    efficiency = rew / cost
-    argsort = np.argsort(efficiency)
-    argsort = [argsort[-(i+1)] for i in range(len(argsort))]
+    efficiency_inv = cost / rew
+    argsort = np.argsort(efficiency_inv)
     return rew[argsort], cost[argsort]
 
 
@@ -62,7 +61,6 @@ def get_facebook_ad_data_settings(rng):
     settings = []
     for _, gdf in data.groupby(["campaign_id", "age", "gender"]):
         setting = get_setting(gdf)
-        setting = add_noise(setting, rng=rng)
         setting = sort_setting(setting)
         k = len(setting[0])
         if k >= 2:

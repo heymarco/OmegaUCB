@@ -14,7 +14,7 @@ def execute_experiment(exp: Experiment, arms: List[int], num_reps: int):
 
 if __name__ == '__main__':
     arms = [100, 10, 50]
-    n_reps = 100
+    n_reps = 1
     n_steps = int(1.5e5)
 
     # synth_beta = BetaExperiment("synth_beta_rest", num_steps=n_steps)
