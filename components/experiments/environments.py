@@ -60,6 +60,7 @@ class FacebookBetaSamplingEnvironment(BetaSamplingEnvironment):
     def __init__(self, mean_rewards: np.ndarray, mean_costs: np.ndarray, rng, min_param=0, max_param=5):
         # first we sample some parameters
         mean_rewards = mean_rewards * 0.99
+        mean_costs = mean_costs * 0.99
         alpha_r = rng.uniform(min_param, max_param, size=mean_rewards.shape)
         alpha_c = rng.uniform(min_param, max_param, size=mean_rewards.shape)
         beta_r = rng.uniform(min_param, max_param, size=mean_costs.shape)
