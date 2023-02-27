@@ -14,7 +14,7 @@ def color_list():
     omega_ucbs = [
         # OMEGA_UCB_1_64,
         # OMEGA_UCB_1_32,
-        # OMEGA_UCB_1_16,
+        OMEGA_UCB_1_16,
         # OMEGA_UCB_1_8,
         OMEGA_UCB_1_4,
         # OMEGA_UCB_1_2,
