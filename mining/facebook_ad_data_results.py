@@ -38,43 +38,66 @@ def plot_regret(df: pd.DataFrame, filename: str):
     palette = create_palette(df)
     g = sns.relplot(data=df, x=x, y=y, hue=hue,
                     kind="line", palette=palette, legend=False,
-                    facet_kws={"sharey": False},
+                    facet_kws={"sharey": False}, errorbar=("se", 1),
                     err_style="bars")
     g.set(xscale="log")
     for lim, ax in zip(lims, g.axes.flatten()):
         ax.set_ylim(lim)
     plt.gcf().set_size_inches(cm2inch((20 / 3, 7.5 * 0.55)))
-    plt.tight_layout(pad=.7)
+    plt.tight_layout(pad=.5)
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
     plt.show()
 
 
 if __name__ == '__main__':
     filenames = [
-        # "facebook_beta",
+        "facebook_beta",
         "facebook_bernoulli"
     ]
     for filename in filenames:
         df = load_df(filename)
         df = prepare_df(df, n_steps=10)
         # df = df[np.logical_and(df[K] > 20, df[K] < 60)]
-        df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
-        df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
-        df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
-        df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
-        # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
-        df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
-        # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
-        df = df.loc[df[APPROACH] != OMEGA_UCB_2]
-        df = df.loc[df[APPROACH] != ETA_UCB_1_64]
-        df = df.loc[df[APPROACH] != ETA_UCB_1_32]
-        df = df.loc[df[APPROACH] != ETA_UCB_1_16]
-        df = df.loc[df[APPROACH] != ETA_UCB_1_8]
-        df = df.loc[df[APPROACH] != ETA_UCB_1_4]
-        df = df.loc[df[APPROACH] != ETA_UCB_1_2]
-        df = df.loc[df[APPROACH] != ETA_UCB_1]
-        df = df.loc[df[APPROACH] != ETA_UCB_2]
-        # df = df.loc[df[APPROACH] != UCB_SC_PLUS]
-        # df = df.loc[df[APPROACH] != BUDGET_UCB]
+        if "beta" in filename:
+            df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
+            df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
+            df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
+            df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
+            df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
+            df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
+            df = df.loc[df[APPROACH] != OMEGA_UCB_1]
+            df = df.loc[df[APPROACH] != OMEGA_UCB_2]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_64]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_32]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_16]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_8]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_4]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_2]
+            # df = df.loc[df[APPROACH] != ETA_UCB_1]
+            df = df.loc[df[APPROACH] != ETA_UCB_2]
+        if "bernoulli" in filename:
+            df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
+            df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
+            df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
+            df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
+            # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
+            df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
+            # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
+            df = df.loc[df[APPROACH] != OMEGA_UCB_2]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_64]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_32]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_16]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_8]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_4]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_2]
+            df = df.loc[df[APPROACH] != ETA_UCB_1]
+            df = df.loc[df[APPROACH] != ETA_UCB_2]
+        df = df.loc[df[APPROACH] != UCB_SC_PLUS]
+        df = df.loc[df[APPROACH] != BUDGET_UCB]
+        # df = df.loc[df[APPROACH] != IUCB]
+        # df = df.loc[df[APPROACH] != MUCB]
+        # df = df.loc[df[APPROACH] != CUCB]
+        # df = df.loc[df[APPROACH] != BTS]
+        # df = df.loc[df[APPROACH] != B_GREEDY]
         print(df)
         plot_regret(df, filename)
