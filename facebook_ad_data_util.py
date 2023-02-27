@@ -14,7 +14,7 @@ def load_facebook_data():
 def prepare_raw_data():
     raw_data = load_facebook_data()
     raw_data = raw_data[raw_data["spent"] > 0]
-    spent = raw_data["clicks"]
+    spent = raw_data["spent"]
     revenue = raw_data["total_conversion"]
     impressions = raw_data["impressions"]
     impressions_thousands = impressions / 1000

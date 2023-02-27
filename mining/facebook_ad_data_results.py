@@ -19,7 +19,7 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
-def compute_ylims(df: pd.DataFrame, x, hue, x_cut=0.8):
+def compute_ylims(df: pd.DataFrame, x, hue, x_cut=0.3):
     lims = []
     df = df.groupby([x, hue]).mean().reset_index()
     df = df[df[x] <= x_cut]
@@ -30,6 +30,7 @@ def compute_ylims(df: pd.DataFrame, x, hue, x_cut=0.8):
 
 
 def plot_regret(df: pd.DataFrame, filename: str):
+    # df = df[df[K] == 57]
     x = NORMALIZED_BUDGET
     y = NORMALIZED_REGRET
     hue = APPROACH
@@ -59,7 +60,7 @@ if __name__ == '__main__':
         # df = df[np.logical_and(df[K] > 20, df[K] < 60)]
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
-        # df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
+        df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
         # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
@@ -73,7 +74,7 @@ if __name__ == '__main__':
         df = df.loc[df[APPROACH] != ETA_UCB_1_2]
         df = df.loc[df[APPROACH] != ETA_UCB_1]
         df = df.loc[df[APPROACH] != ETA_UCB_2]
-        df = df.loc[df[APPROACH] != UCB_SC_PLUS]
-        df = df.loc[df[APPROACH] != BUDGET_UCB]
+        # df = df.loc[df[APPROACH] != UCB_SC_PLUS]
+        # df = df.loc[df[APPROACH] != BUDGET_UCB]
         print(df)
         plot_regret(df, filename)
