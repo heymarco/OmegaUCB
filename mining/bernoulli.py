@@ -21,7 +21,7 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
-def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=0.3):
+def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.4):
     lims = []
     df = df.groupby([x, hue, col_var]).mean().reset_index()
     df = df[df[x] <= x_cut]
