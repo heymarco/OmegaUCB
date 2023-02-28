@@ -38,7 +38,7 @@ def prepare_raw_data():
 
 
 def prepare_facebook_data():
-    # prepare_raw_data()
+    prepare_raw_data()
     raw_data = load_facebook_data()
     is_zero_cost = raw_data["spent"] == 0
     is_zero_reward = raw_data["total_conversion"] == 0
