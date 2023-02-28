@@ -32,9 +32,9 @@ def prepare_raw_data():
     # raw_data = raw_data[raw_data["revenue_per_1000_impressions"] <= 1.0]
     raw_data = raw_data[clicks >= revenue]
     raw_data["reward_cost_ratio"] = raw_data["rpc"] / raw_data["cpc"]
-    # this_dir = pathlib.Path(__file__).parent.resolve()
-    # fp = os.path.join(this_dir, "data", "KAG_conversion_adapted.csv")
-    # raw_data.to_csv(fp, index=False)
+    this_dir = pathlib.Path(__file__).parent.resolve()
+    fp = os.path.join(this_dir, "data", "KAG_conversion_adapted.csv")
+    raw_data.to_csv(fp, index=False)
 
 
 def prepare_facebook_data():
