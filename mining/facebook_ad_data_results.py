@@ -19,7 +19,7 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
-def compute_ylims(df: pd.DataFrame, x, hue, x_cut=.3):
+def compute_ylims(df: pd.DataFrame, x, hue, x_cut=1):
     lims = []
     df = df.groupby([x, hue]).mean().reset_index()
     df = df[df[x] <= x_cut]
@@ -74,7 +74,7 @@ if __name__ == '__main__':
             df = df.loc[df[APPROACH] != ETA_UCB_1_8]
             # df = df.loc[df[APPROACH] != ETA_UCB_1_4]
             df = df.loc[df[APPROACH] != ETA_UCB_1_2]
-            df = df.loc[df[APPROACH] != ETA_UCB_1]
+            # df = df.loc[df[APPROACH] != ETA_UCB_1]
             df = df.loc[df[APPROACH] != ETA_UCB_2]
         if "bernoulli" in filename:
             df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
@@ -93,12 +93,11 @@ if __name__ == '__main__':
             df = df.loc[df[APPROACH] != ETA_UCB_1_2]
             df = df.loc[df[APPROACH] != ETA_UCB_1]
             df = df.loc[df[APPROACH] != ETA_UCB_2]
-        df = df.loc[df[APPROACH] != UCB_SC_PLUS]
-        df = df.loc[df[APPROACH] != BUDGET_UCB]
+        # df = df.loc[df[APPROACH] != UCB_SC_PLUS]
+        # df = df.loc[df[APPROACH] != BUDGET_UCB]
         # df = df.loc[df[APPROACH] != IUCB]
         # df = df.loc[df[APPROACH] != MUCB]
         # df = df.loc[df[APPROACH] != CUCB]
-        df = df.loc[df[APPROACH] != BTS]
-        df = df.loc[df[APPROACH] != B_GREEDY]
-        print(df)
+        # df = df.loc[df[APPROACH] != BTS]
+        # df = df.loc[df[APPROACH] != B_GREEDY]
         plot_regret(df, filename)

@@ -67,16 +67,6 @@ def scale_randomly(setting, rng):
     return rew, cost
 
 
-def standardize_setting(setting):
-    rew = setting[0]
-    cost = setting[1]
-    rew = rew + 0.001
-    rew = rew
-    cost = cost + 0.001
-    cost = cost * 0.999 / np.max(cost)
-    return rew, cost
-
-
 def sort_setting(setting):
     rew = setting[0]
     cost = setting[1]
@@ -91,7 +81,6 @@ def get_facebook_ad_data_settings(rng):
     for _, gdf in data.groupby(["campaign_id", "age", "gender"]):
         setting = get_setting(gdf)
         setting = scale_randomly(setting, rng)
-        # setting = standardize_setting(setting)
         setting = sort_setting(setting)
         k = len(setting[0])
         if k >= 2:

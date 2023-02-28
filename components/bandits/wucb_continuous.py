@@ -34,7 +34,9 @@ def compute_eta(mean: float, variance: float, m=0, M=1) -> float:
     if bernoulli_variance == 0:
         # bernoulli variance == pop_variance
         return 1.0
-    return min(variance / bernoulli_variance, 1.0)
+    # eta = variance / bernoulli_variance
+    eta = np.sqrt(variance / bernoulli_variance)
+    return min(eta, 1.0)
 
 
 class GeneralizedWUCBArm(AbstractArm):
