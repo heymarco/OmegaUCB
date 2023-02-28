@@ -17,22 +17,28 @@ def prepare_raw_data():
     raw_data = raw_data[raw_data["spent"] > 0]
     spent = raw_data["spent"]
     revenue = raw_data["total_conversion"]
+    clicks = raw_data["clicks"]
     impressions = raw_data["impressions"]
     impressions_thousands = impressions / 1000
     cpm = spent / impressions_thousands
     rpm = revenue / impressions_thousands
-    raw_data["cost_per_1000_impressions"] = cpm
-    raw_data["revenue_per_1000_impressions"] = rpm
-    raw_data = raw_data[raw_data["cost_per_1000_impressions"] <= 1.0]
-    raw_data = raw_data[raw_data["revenue_per_1000_impressions"] <= 1.0]
-    raw_data["reward_cost_ratio"] = raw_data["revenue_per_1000_impressions"] / raw_data["cost_per_1000_impressions"]
-    this_dir = pathlib.Path(__file__).parent.resolve()
-    fp = os.path.join(this_dir, "data", "KAG_conversion_adapted.csv")
-    raw_data.to_csv(fp, index=False)
+    cpc = spent / clicks
+    rpc = revenue / clicks
+    raw_data["cpc"] = cpc
+    raw_data["rpc"] = rpc
+    # raw_data["cost_per_1000_impressions"] = cpm
+    # raw_data["revenue_per_1000_impressions"] = rpm
+    # raw_data = raw_data[raw_data["cost_per_1000_impressions"] <= 1.0]
+    # raw_data = raw_data[raw_data["revenue_per_1000_impressions"] <= 1.0]
+    raw_data = raw_data[clicks >= revenue]
+    raw_data["reward_cost_ratio"] = raw_data["rpc"] / raw_data["cpc"]
+    # this_dir = pathlib.Path(__file__).parent.resolve()
+    # fp = os.path.join(this_dir, "data", "KAG_conversion_adapted.csv")
+    # raw_data.to_csv(fp, index=False)
 
 
 def prepare_facebook_data():
-    prepare_raw_data()
+    # prepare_raw_data()
     raw_data = load_facebook_data()
     is_zero_cost = raw_data["spent"] == 0
     is_zero_reward = raw_data["total_conversion"] == 0
@@ -42,14 +48,14 @@ def prepare_facebook_data():
     mask = np.invert(np.logical_or(non_informative_rows, corrupted_rows))
     mask = np.logical_or(mask, np.invert(is_nan_ratio))
     filtered_df = raw_data.loc[mask].reset_index()
-    high_revenue_outliers = filtered_df["revenue_per_1000_impressions"] >= 1
-    filtered_df = filtered_df.loc[np.invert(high_revenue_outliers)]
+    # high_revenue_outliers = filtered_df["revenue_per_1000_impressions"] >= 1
+    # filtered_df = filtered_df.loc[np.invert(high_revenue_outliers)]
     return filtered_df
 
 
 def get_setting(df):
-    mean_rewards = np.array(df["revenue_per_1000_impressions"])
-    mean_costs = np.array(df["cost_per_1000_impressions"])
+    mean_rewards = np.array(df["rpc"])
+    mean_costs = np.array(df["cpc"])
     mean_costs = mean_costs[mean_costs > 0]
     mean_rewards = mean_rewards[mean_costs > 0]
     return mean_rewards, mean_costs
@@ -75,12 +81,23 @@ def sort_setting(setting):
     return rew[argsort], cost[argsort]
 
 
+def normalize_setting(setting):
+    rew, cost = setting
+    rew[rew == 0] = 0.01
+    cost[cost == 0] = 0.01
+    norm_rew = rew / np.max(rew) * 0.99
+    norm_cost = cost / np.max(cost) * 0.99
+    return norm_rew, norm_cost
+
+
 def get_facebook_ad_data_settings(rng):
     data = prepare_facebook_data()
     settings = []
     for _, gdf in data.groupby(["campaign_id", "age", "gender"]):
         setting = get_setting(gdf)
-        setting = scale_randomly(setting, rng)
+
+        # setting = scale_randomly(setting, rng)
+        setting = normalize_setting(setting)
         setting = sort_setting(setting)
         k = len(setting[0])
         if k >= 2:
