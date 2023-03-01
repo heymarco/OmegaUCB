@@ -94,7 +94,7 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
 
 
 if __name__ == '__main__':
-    filename = "synth_beta"
+    filename = "synth_beta_rest"
     df_beta = load_df(filename)
     df_beta = prepare_df(df_beta, n_steps=10)
     df_beta = df_beta.loc[df_beta[APPROACH] != UCB_SC_PLUS]

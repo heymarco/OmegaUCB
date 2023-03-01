@@ -58,12 +58,12 @@ if __name__ == '__main__':
     for filename in filenames:
         df = load_df(filename)
         df = prepare_df(df, n_steps=10)
-        # df = df[np.logical_and(df[K] > 20, df[K] < 60)]
+        # df = df[np.logical_and(df[K] < 20, df[K] < 20)]
         if "beta" in filename:
             df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
             df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
             df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
-            df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
+            # df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
             # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
             df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
             # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
@@ -73,9 +73,10 @@ if __name__ == '__main__':
             df = df.loc[df[APPROACH] != ETA_UCB_1_16]
             df = df.loc[df[APPROACH] != ETA_UCB_1_8]
             # df = df.loc[df[APPROACH] != ETA_UCB_1_4]
-            df = df.loc[df[APPROACH] != ETA_UCB_1_2]
+            # df = df.loc[df[APPROACH] != ETA_UCB_1_2]
             # df = df.loc[df[APPROACH] != ETA_UCB_1]
             df = df.loc[df[APPROACH] != ETA_UCB_2]
+            pass
         if "bernoulli" in filename:
             df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
             df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
@@ -93,8 +94,8 @@ if __name__ == '__main__':
             df = df.loc[df[APPROACH] != ETA_UCB_1_2]
             df = df.loc[df[APPROACH] != ETA_UCB_1]
             df = df.loc[df[APPROACH] != ETA_UCB_2]
-        # df = df.loc[df[APPROACH] != UCB_SC_PLUS]
-        # df = df.loc[df[APPROACH] != BUDGET_UCB]
+        df = df.loc[df[APPROACH] != UCB_SC_PLUS]
+        df = df.loc[df[APPROACH] != BUDGET_UCB]
         # df = df.loc[df[APPROACH] != IUCB]
         # df = df.loc[df[APPROACH] != MUCB]
         # df = df.loc[df[APPROACH] != CUCB]
