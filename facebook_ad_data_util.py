@@ -19,37 +19,29 @@ def prepare_raw_data():
     revenue = raw_data["total_conversion"]
     clicks = raw_data["clicks"]
     impressions = raw_data["impressions"]
-    impressions_thousands = impressions / 1000
-    cpm = spent / impressions_thousands
-    rpm = revenue / impressions_thousands
     cpc = spent / clicks
     rpc = revenue / clicks
     raw_data["cpc"] = cpc
     raw_data["rpc"] = rpc
-    # raw_data["cost_per_1000_impressions"] = cpm
-    # raw_data["revenue_per_1000_impressions"] = rpm
-    # raw_data = raw_data[raw_data["cost_per_1000_impressions"] <= 1.0]
-    # raw_data = raw_data[raw_data["revenue_per_1000_impressions"] <= 1.0]
     raw_data = raw_data[clicks >= revenue]
     raw_data["reward_cost_ratio"] = raw_data["rpc"] / raw_data["cpc"]
-    this_dir = pathlib.Path(__file__).parent.resolve()
-    fp = os.path.join(this_dir, "data", "KAG_conversion_adapted.csv")
-    raw_data.to_csv(fp, index=False)
+    # this_dir = pathlib.Path(__file__).parent.resolve()
+    # fp = os.path.join(this_dir, "data", "KAG_conversion_adapted.csv")
+    # raw_data.to_csv(fp, index=False)
 
 
 def prepare_facebook_data():
     prepare_raw_data()
     raw_data = load_facebook_data()
     is_zero_cost = raw_data["spent"] == 0
+    has_no_clicks = raw_data["clicks"] == 0
     is_zero_reward = raw_data["total_conversion"] == 0
     is_nan_ratio = np.isnan(raw_data["reward_cost_ratio"])
-    non_informative_rows = np.logical_and(is_zero_reward, is_zero_cost)  # do not include ads for which we have no data
+    non_informative_rows = np.logical_and(np.logical_and(is_zero_reward, is_zero_cost), has_no_clicks)  # do not include ads for which we have no data
     corrupted_rows = np.logical_and(np.invert(is_zero_reward), is_zero_cost)  # cost although no clicks occurred
     mask = np.invert(np.logical_or(non_informative_rows, corrupted_rows))
     mask = np.logical_or(mask, np.invert(is_nan_ratio))
     filtered_df = raw_data.loc[mask].reset_index()
-    # high_revenue_outliers = filtered_df["revenue_per_1000_impressions"] >= 1
-    # filtered_df = filtered_df.loc[np.invert(high_revenue_outliers)]
     return filtered_df
 
 
@@ -95,7 +87,6 @@ def get_facebook_ad_data_settings(rng):
     settings = []
     for _, gdf in data.groupby(["campaign_id", "age", "gender"]):
         setting = get_setting(gdf)
-
         # setting = scale_randomly(setting, rng)
         setting = normalize_setting(setting)
         setting = sort_setting(setting)

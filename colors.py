@@ -12,14 +12,14 @@ eta_ucb_base_color = "Wistia"
 def color_list():
     final_list = []
     omega_ucbs = [
-        # OMEGA_UCB_1_64,
-        # OMEGA_UCB_1_32,
-        # OMEGA_UCB_1_16,
-        # OMEGA_UCB_1_8,
+        OMEGA_UCB_1_64,
+        OMEGA_UCB_1_32,
+        OMEGA_UCB_1_16,
+        OMEGA_UCB_1_8,
         OMEGA_UCB_1_4,
-        # OMEGA_UCB_1_2,
+        OMEGA_UCB_1_2,
         OMEGA_UCB_1,
-        # OMEGA_UCB_2
+        OMEGA_UCB_2
     ]
     eta_ucbs = [
         ETA_UCB_1_64,
