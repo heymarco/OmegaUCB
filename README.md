@@ -20,6 +20,6 @@ To do
 ### Graphs
 To do
 
-## Using $\omega$-UCB
+## Applying $\omega$-UCB in other projects
 
-To do
+To fuel further research, we will link another repository with installation instructions after paper acceptance.
