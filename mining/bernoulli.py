@@ -5,6 +5,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+from colors import get_markers_for_approaches
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
@@ -21,11 +22,11 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
-def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.4):
+def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.2):
     lims = []
     df = df.groupby([x, hue, col_var]).mean().reset_index()
     df = df[df[x] <= x_cut]
-    df.sort_values(by=[col_var], inplace=True)
+    # df.sort_values(by=[col_var], inplace=True)
     for _, row_df in df.groupby(col_var):
         max_regret = row_df[NORMALIZED_REGRET].max()
         min_regret = row_df[NORMALIZED_REGRET].min()
@@ -39,10 +40,13 @@ def plot_regret(df: pd.DataFrame):
     hue = APPROACH
     col = K
     lims = compute_ylims(df, x, hue, col_var=col)
-    df = df.sort_values(by=APPROACH).reset_index()
+    palette = create_palette(df)
+    markers = get_markers_for_approaches(np.unique(df[APPROACH]))
     g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
-                    kind="line", palette=create_palette(df), legend=False,
-                    facet_kws={"sharey": False}, err_style="bars")
+                    # lw=1, markersize=3,
+                    markeredgewidth=0.1,
+                    kind="line", palette=palette, legend=False, errorbar=None,
+                    facet_kws={"sharey": False}, style=hue, markers=markers, dashes=False)
     # g.set(yscale="log")
     g.set(xscale="log")
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):

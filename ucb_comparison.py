@@ -91,7 +91,7 @@ def evaluate_once(approaches: dict, exp_c, n, seed, delta=0.05):
 if __name__ == '__main__':
     ns = [100, 1000, 10000, 100000]
     repetitions = 10000
-    delta = 0.01
+    alpha = 0.01
     results = None
     columns = ["Approach", "Samples", r"$\mu_r$", r"$\mu_c$", "UCB"]
     approaches = {
@@ -114,7 +114,7 @@ if __name__ == '__main__':
     for n in ns:
         for rep in range(repetitions):
             exp_c = cost_rng.uniform()
-            result = evaluate_once(approaches, exp_c, n, seed=rep + 1, delta=delta)
+            result = evaluate_once(approaches, exp_c, n, seed=rep + 1, delta=alpha)
             if results is None:
                 results = result
             else:
@@ -141,13 +141,13 @@ if __name__ == '__main__':
                     sharex=True, sharey=False, errwidth=1.0)
     g.axes.flatten()[0].set_yscale("log")
     g.axes.flatten()[0].set_ylim(bottom=0.5)
-    hlines_ucb = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 50, 100]
+    hlines_ucb = [1, 10, 100]  # [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 50, 100]
     hlines_cov = [0.8, 0.85, 0.9, 0.95, 1.0]
     for hline in hlines_ucb:
         g.axes.flatten()[0].axhline(hline, ls="--", lw=0.7, color="black", zorder=0)
     for hline in hlines_cov:
         g.axes.flatten()[1].axhline(hline, ls="--", lw=0.7, color="black", zorder=0)
-    g.axes.flatten()[0].set_ylim(0, 10.0)
+    # g.axes.flatten()[0].set_ylim(0, 10.0)
     g.axes.flatten()[1].set_ylim(0.8, 1.0)
     g.set(xlabel=None)
     for ax in g.axes.flatten():

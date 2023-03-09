@@ -11,6 +11,7 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 from util import load_df, prepare_df, cm2inch, create_palette, move_legend_below_graph, create_custom_legend
 from components.bandit_logging import *
 from approach_names import *
+from colors import get_markers_for_approaches
 
 
 sns.set_style(style="ticks")
@@ -41,10 +42,12 @@ def plot_regret(df: pd.DataFrame):
     lims = compute_ylims(df, x, hue, col_var=col)
     # df = df.sort_values(by=[APPROACH])
     palette = create_palette(df)
+    markers = get_markers_for_approaches(np.unique(df[APPROACH]))
     g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
-                    kind="line", palette=palette, legend=False,
-                    facet_kws={"sharey": False},
-                    err_style="bars", errorbar=("se", 1))
+                    # lw=1, markersize=3,
+                    markeredgewidth=0.1,
+                    kind="line", palette=palette, legend=False, errorbar=None,
+                    facet_kws={"sharey": False}, style=hue, markers=markers, dashes=False)
     g.set(xscale="log")
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):
         ax.set_ylim(lim)
@@ -65,9 +68,9 @@ if __name__ == '__main__':
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1]
+    # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
     df = df.loc[df[APPROACH] != OMEGA_UCB_2]
     df = df.loc[df[APPROACH] != ETA_UCB_1_64]
     df = df.loc[df[APPROACH] != ETA_UCB_1_32]
