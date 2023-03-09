@@ -1,4 +1,25 @@
-# ω-UCB
+# Budgeted Multi-Armed Bandits with Asymmetric Confidence Intervals
 
-This repository contains code for the paper "ω-UCB: A Budgeted Multi-Armed Bandit
-for Low-Cost Environments" currently WIP
+This repository contains code for the paper "Budgeted Multi-Armed Bandits with Asymmetric Confidence Intervals".
+
+## Abstract
+
+We focus on the Budgeted Multi-Armed Bandit (MAB) problem, where a player chooses from $K$ arms with unknown expected rewards and associated costs. The goal is to maximize the cumulative reward within the given budget by choosing the arm with the highest reward-cost ratio as frequently as possible. We propose a new upper confidence bound (UCB) sampling policy, $\omega$-UCB, that solves issues of existing policies by using asymmetric confidence intervals. These intervals allow a more accurate estimation of the reward-cost ratio. We prove that our approach has logarithmic regret and our experiments show that it outperforms the current state of the art, both in synthetic and real settings.
+
+## Directory structure
+To do
+
+## Reproducing the experimental results
+
+### Installing the dependencies
+To do
+
+### Running the experiments
+To do
+
+### Graphs
+To do
+
+## Applying $\omega$-UCB in other projects
+
+To fuel further research, we will link another repository with installation instructions after paper acceptance.
