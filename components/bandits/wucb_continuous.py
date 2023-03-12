@@ -29,8 +29,8 @@ class Aggregate:
         return np.sqrt(self.variance())
 
 
-def compute_eta(mean: float, variance: float, n: int, m=0, M=1) -> float:
-    if n < 100:
+def compute_eta(mean: float, variance: float, n: int, m=0, M=1, min_samples=30) -> float:
+    if n < min_samples:
         return 1.0
     bernoulli_variance = (M - mean) * (mean - m)
     bernoulli_sample_variance = n / (n - 1) * bernoulli_variance
@@ -41,10 +41,11 @@ def compute_eta(mean: float, variance: float, n: int, m=0, M=1) -> float:
 
 
 class GeneralizedWUCBArm(AbstractArm):
-    def __init__(self, alpha=None, confidence=0.95, r=4.0, adaptive=False):
+    def __init__(self, alpha=None, confidence=0.95, r=4.0, adaptive=False, min_samples=30):
         self.rho = r
         self.adaptive = adaptive
         self.confidence = confidence
+        self.min_samples = min_samples
         self.z = norm.interval(self.confidence)[1]
         self.pulls = 0
         self.t = 0
@@ -69,7 +70,7 @@ class GeneralizedWUCBArm(AbstractArm):
         n = self.pulls
         ns = mean * n
         nf = n - ns
-        eta = compute_eta(mean, self._cost_aggregate.variance(), n=n)
+        eta = compute_eta(mean, self._cost_aggregate.variance(), n=n, min_samples=self.min_samples)
         if self.adaptive:
             z = self._adaptive_z()
         else:
@@ -85,7 +86,7 @@ class GeneralizedWUCBArm(AbstractArm):
         n = self.pulls
         ns = mean * n
         nf = n - ns
-        eta = compute_eta(mean, self._rew_aggregate.variance(), n=n)
+        eta = compute_eta(mean, self._rew_aggregate.variance(), n=n, min_samples=self.min_samples)
         if self.adaptive:
             z = self._adaptive_z()
         else:
@@ -132,12 +133,13 @@ class GeneralizedWUCBArm(AbstractArm):
 
 
 class GeneralizedWUCB(AbstractBandit):
-    def __init__(self, k: int, name: str, seed: int, r: float = 4.0, adaptive: bool = False):
+    def __init__(self, k: int, name: str, seed: int, r: float = 4.0, adaptive: bool = False, min_samples: int = 30):
         super(GeneralizedWUCB, self).__init__(k, name, seed)
+        self.min_samples = min_samples
         self.r = r
         self.adaptive = adaptive
         self._startup_complete = False
-        self.arms = [GeneralizedWUCBArm(r=r, adaptive=adaptive) for _ in range(k)]
+        self.arms = [GeneralizedWUCBArm(r=r, adaptive=adaptive, min_samples=min_samples) for _ in range(k)]
 
     def sample(self):
         if not self._startup_complete:

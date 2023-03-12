@@ -15,11 +15,13 @@ To do
 To do
 
 ### Running the experiments
-To do
+Simply execute `experiment_runner.py` to reproduce our results. Note that the script will occupy all but one core on your machine. On our 30-core machine, the runtime is around 20 hours. 
 
 ### Graphs
-To do
+- To reproduce Figure 1, run `tightness_coverage_comparison.py` and `ci_comparison.py`.
+- To reproduce Figure X, run `dominance_matrix.py`.
+- For the graphs in Figure 3, run the scripts under `mining/`
 
 ## Applying $\omega$-UCB in other projects
 
-To fuel further research, we will link another repository with installation instructions after paper acceptance.
+To support further research, we will link another repository with installation instructions after paper acceptance.
