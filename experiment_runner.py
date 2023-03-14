@@ -13,8 +13,12 @@ def execute_experiment(exp: Experiment, arms: List[int], num_reps: int):
 
 
 if __name__ == '__main__':
-    arms = [100, 10, 50]
-    n_reps = 100
+    arms = [
+        100,
+        10,
+        50
+    ]
+    n_reps = 5
     n_steps = int(1.5e5)
 
     facebook_beta = FacebookBetaExperiment("facebook_beta_30", num_steps=n_steps)

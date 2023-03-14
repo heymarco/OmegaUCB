@@ -65,10 +65,10 @@ class BernoulliNormalExperiment(Experiment):
 
     def _generate_environments(self, k: int, seed: int) -> List[Environment]:
         rng = np.random.default_rng(seed)
-        mean_rewards = rng.normal(loc=self.loc, scale=self.scale)
+        mean_rewards = rng.normal(loc=self.loc, scale=self.scale, size=k)
         mean_rewards[mean_rewards > 1] = 1.0
         mean_rewards[mean_rewards < 0] = 0.0
-        mean_costs = rng.normal(loc=self.loc, scale=self.scale)
+        mean_costs = rng.normal(loc=self.loc, scale=self.scale, size=k)
         mean_costs[mean_costs > 1] = 1.0
         mean_costs[mean_costs < 0] = 0.01
         eff_invers = mean_costs / mean_rewards
