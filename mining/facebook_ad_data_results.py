@@ -56,7 +56,7 @@ def plot_regret(df: pd.DataFrame, filename: str, x_cut: float):
 
 if __name__ == '__main__':
     filenames = [
-        "facebook_beta_30",
+        "facebook_beta_combined",
         "facebook_bernoulli"
     ]
     x_cuts = [1.0, 0.3]
@@ -72,14 +72,14 @@ if __name__ == '__main__':
             df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
             # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
             # df = df.loc[df[APPROACH] != OMEGA_UCB_2]
-            # df = df.loc[df[APPROACH] != ETA_UCB_1_64]
-            # df = df.loc[df[APPROACH] != ETA_UCB_1_32]
-            # df = df.loc[df[APPROACH] != ETA_UCB_1_16]
-            # df = df.loc[df[APPROACH] != ETA_UCB_1_8]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_64]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_32]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_16]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_8]
             # df = df.loc[df[APPROACH] != ETA_UCB_1_4]
-            # df = df.loc[df[APPROACH] != ETA_UCB_1_2]
+            df = df.loc[df[APPROACH] != ETA_UCB_1_2]
             # df = df.loc[df[APPROACH] != ETA_UCB_1]
-            # df = df.loc[df[APPROACH] != ETA_UCB_2]
+            df = df.loc[df[APPROACH] != ETA_UCB_2]
             # df = df.loc[df[APPROACH] != UCB_SC_PLUS]
             df = df.loc[df[APPROACH] != BUDGET_UCB]
             pass
