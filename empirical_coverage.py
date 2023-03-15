@@ -65,9 +65,9 @@ if __name__ == '__main__':
     TIME = r"$t$"
     ID_ACHIEVED_CONF = r"Achieved conf."
     ID_DESIRED_CONF = r"Min. conf. for log. regret"
-    ID_NOM_CONF = r"Theoretical conf."
+    ID_NOM_CONF = r"Sharp lower bound."
     ID_TRUE_NOM_CONF = r"$1 - \mathrm{erf}\left(\sqrt{\rho\log t}\right)$"
-    n_tries = 10000
+    n_tries = 300
     rho = [2.0] + [2.0 ** (-x) for x in range(9)]
     rho_test = np.arange(1, 101) / 100
     max_steps = [1 * 10 ** x for x in range(1, 6)]
@@ -83,16 +83,11 @@ if __name__ == '__main__':
         avg_costs = bernoulli_average(n, exp_costs, rng)
         for r in rho_test:
             z = np.sqrt(2 * r * np.log(n_steps))
-            p_ab = 0  # 1 / 4 * (1 - np.sqrt(1 - n_steps ** (-r))) ** 2
-            p_ab_true = 0  # 1 / 4 * (1 - erf(z / np.sqrt(2))) ** 2
+            p_ab = 1 / 4 * (1 - np.sqrt(1 - n_steps ** (-r))) ** 2
+            p_ab_true = 1 / 4 * (1 - erf(z / np.sqrt(2))) ** 2
             conf = np.sqrt(1 - n_steps ** (-1.0))
-            nom_conf = 1 - (1 - np.sqrt(1 - n_steps ** (-r)) - p_ab)
-            nom_conf_2 = 1 - (1 - erf(z / np.sqrt(2)) - p_ab_true)
-            if n_steps == 100 and r == 0.25:
-                print(nom_conf_2 - nom_conf)
-            # nom_conf = 1 - (p_ab + p_mu_c_large_enough + p_mu_r_large_enough)
-            true_z = norm.interval(conf)[1]
-            true_nom_conf = 1 - (1 - erf(z / np.sqrt(2)) - p_ab_true)
+            nom_conf = 1 - 3 / 4 * (1 - np.sqrt(1 - n_steps ** (-r)))  # 1 / 4 + 3 / 4 * n_steps ** (-r)  # 1 - (1 - np.sqrt(1 - n_steps ** (-r))) + p_ab
+            true_nom_conf = 1 - (1 - erf(z / np.sqrt(2))) + p_ab_true
             ucb = ucb_wilson_generalized(avg_rewards, n, z, eta=1)
             lcb = lcb_wilson_generalized(avg_costs, n, z, eta=1)
             for u, l, er, ec in zip(ucb, lcb, exp_rewards, exp_costs):
@@ -106,7 +101,7 @@ if __name__ == '__main__':
     df[ID_ACHIEVED_CONF] = df["UCB (ratio)"] > df["Ratio"]
     print(df)
     df = pd.melt(df, id_vars=[RHO, TIME], value_vars=[ID_DESIRED_CONF, ID_NOM_CONF,
-                                                      # ID_TRUE_NOM_CONF,
+                                                      ID_TRUE_NOM_CONF,
                                                       ID_ACHIEVED_CONF],
                  var_name="Type", value_name="Confidence")
 
@@ -116,15 +111,15 @@ if __name__ == '__main__':
                     style="Type",
                     palette=["black",
                              sns.color_palette("RdBu", n_colors=5)[0],
-                             # "#cab873",
+                             "#cab873",
                              sns.color_palette("RdBu_r", n_colors=5)[0]],
                     dashes={ID_DESIRED_CONF: (2, 2), ID_ACHIEVED_CONF: "",
                             ID_NOM_CONF: (1, 1), ID_TRUE_NOM_CONF: (1, 2)},
                     lw=1.5
                     )
-    # plt.xscale("log")
+    plt.xscale("log")
     for t, ax in zip(max_steps, g.axes.flatten()):
-        ax.set_ylim((0.55, 1.01))
+        ax.set_ylim((0.0, 1.01))
         ax.set_xlim((.01, .7))
         log_conf = np.sqrt(1 - 1 / t)
         for r in rho:

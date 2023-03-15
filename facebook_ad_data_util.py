@@ -35,21 +35,26 @@ def prepare_facebook_data():
     raw_data = load_facebook_data()
     is_zero_cost = raw_data["spent"] == 0
     has_no_clicks = raw_data["clicks"] == 0
+    not_enough_impressions = raw_data["clicks"] < 100
     is_zero_reward = raw_data["total_conversion"] == 0
     is_nan_ratio = np.isnan(raw_data["reward_cost_ratio"])
     non_informative_rows = np.logical_and(np.logical_and(is_zero_reward, is_zero_cost), has_no_clicks)  # do not include ads for which we have no data
     corrupted_rows = np.logical_and(np.invert(is_zero_reward), is_zero_cost)  # cost although no clicks occurred
     mask = np.invert(np.logical_or(non_informative_rows, corrupted_rows))
     mask = np.logical_or(mask, np.invert(is_nan_ratio))
+    mask = np.logical_or(mask, np.invert(not_enough_impressions))
     filtered_df = raw_data.loc[mask].reset_index()
     return filtered_df
 
 
 def get_setting(df):
-    mean_rewards = np.array(df["rpc"])
-    mean_costs = np.array(df["cpc"])
-    mean_costs = mean_costs[mean_costs > 0]
+    clicks = df["clicks"]
+    impressions = df["impressions"]
+    ctr = clicks / impressions
+    mean_rewards = np.array(df["rpc"] * ctr)
+    mean_costs = np.array(df["cpc"] * ctr)
     mean_rewards = mean_rewards[mean_costs > 0]
+    mean_costs = mean_costs[mean_costs > 0]
     return mean_rewards, mean_costs
 
 

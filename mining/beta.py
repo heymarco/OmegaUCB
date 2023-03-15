@@ -61,7 +61,7 @@ def plot_regret(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
-    filename = "synth_beta"
+    filename = "synth_beta_combined"
     df = load_df(filename)
     df = prepare_df(df, n_steps=10)
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]

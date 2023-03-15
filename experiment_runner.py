@@ -18,25 +18,25 @@ if __name__ == '__main__':
         10,
         50
     ]
-    n_reps = 100
+    n_reps = 5
     n_steps = int(1.5e5)
 
-    # facebook_beta = FacebookBetaExperiment("facebook_beta_30", num_steps=n_steps)
-    # execute_experiment(facebook_beta, arms=[0], num_reps=n_reps)
+    facebook_beta = FacebookBetaExperiment("facebook_beta_30", num_steps=n_steps)
+    execute_experiment(facebook_beta, arms=[0], num_reps=n_reps)
 
-    # facebook_bernoulli = FacebookBernoulliExperiment("facebook_bernoulli", num_steps=n_steps)
-    # execute_experiment(facebook_bernoulli, arms=[0], num_reps=n_reps)
-    #
-    synth_beta = BetaExperiment("synth_beta", num_steps=n_steps)
-    execute_experiment(synth_beta, arms, num_reps=n_reps)
+    facebook_bernoulli = FacebookBernoulliExperiment("facebook_bernoulli", num_steps=n_steps)
+    execute_experiment(facebook_bernoulli, arms=[0], num_reps=n_reps)
+
+    # synth_beta = BetaExperiment("synth_beta", num_steps=n_steps)
+    # execute_experiment(synth_beta, arms, num_reps=n_reps)
     #
     # synth_bernoulli = BernoulliExperiment("synth_bernoulli_rest", num_steps=n_steps)
     # execute_experiment(synth_bernoulli, arms, num_reps=n_reps)
-
-    synth_bernoulli_normal_05 = BernoulliNormalExperiment("synth_bernoulli_normal_05", num_steps=n_steps,
-                                                          loc=.5, scale=0.05)
-    execute_experiment(synth_bernoulli_normal_05, arms, num_reps=n_reps)
-
-    synth_bernoulli_normal_75 = BernoulliNormalExperiment("synth_bernoulli_normal_75", num_steps=n_steps,
-                                                          loc=.75, scale=0.075)
-    execute_experiment(synth_bernoulli_normal_75, arms, num_reps=n_reps)
+    #
+    # synth_bernoulli_normal_05 = BernoulliNormalExperiment("synth_bernoulli_normal_05", num_steps=n_steps,
+    #                                                       loc=.5, scale=0.05)
+    # execute_experiment(synth_bernoulli_normal_05, arms, num_reps=n_reps)
+    #
+    # synth_bernoulli_normal_75 = BernoulliNormalExperiment("synth_bernoulli_normal_75", num_steps=n_steps,
+    #                                                       loc=.75, scale=0.075)
+    # execute_experiment(synth_bernoulli_normal_75, arms, num_reps=n_reps)

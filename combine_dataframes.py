@@ -27,9 +27,10 @@ def combine_dataframes_exclude_approaches(direcory: str, filenames: list,
 
 if __name__ == '__main__':
     directory = os.path.join(os.getcwd(), "results")
+    final_df_name = "synth_beta_combined.parquet"
     filenames = [
-        "facebook_beta.parquet",
-        "facebook_beta_30.parquet"
+        "synth_beta.parquet",
+        "synth_beta_30.parquet"
     ]
     exclude = [
         [
@@ -61,7 +62,6 @@ if __name__ == '__main__':
             OMEGA_UCB_2,
         ]
     ]
-    final_df_name = "facebook_beta_combined.parquet"
     if not exclude:
         df = combine_dataframes(directory, filenames)
     else:

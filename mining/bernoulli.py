@@ -22,7 +22,7 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
-def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.2):
+def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.8):
     lims = []
     df = df.groupby([x, hue, col_var]).mean().reset_index()
     df = df[df[x] <= x_cut]
@@ -34,7 +34,7 @@ def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.2):
     return lims
 
 
-def plot_regret(df: pd.DataFrame):
+def plot_regret(df: pd.DataFrame, filename: str):
     x = NORMALIZED_BUDGET
     y = NORMALIZED_REGRET
     hue = APPROACH
@@ -58,35 +58,40 @@ def plot_regret(df: pd.DataFrame):
     create_custom_legend(g)
     plt.tight_layout(pad=.5)
     plt.subplots_adjust(top=0.65)
-    plt.savefig(os.path.join(os.getcwd(), "..", "figures", "synth_bernoulli.pdf"))
+    plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
     plt.show()
 
 
 if __name__ == '__main__':
-    filename = "synth_bernoulli"
-    df = load_df(filename)
-    df = prepare_df(df, n_steps=10)
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
-    # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
-    # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
-    df = df.loc[df[APPROACH] != OMEGA_UCB_2]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_64]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_32]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_16]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_8]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_4]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_2]
-    df = df.loc[df[APPROACH] != ETA_UCB_1]
-    df = df.loc[df[APPROACH] != ETA_UCB_2]
-    # df = df.loc[df[APPROACH] != UCB_SC_PLUS]
-    # df = df.loc[df[APPROACH] != BUDGET_UCB]
-    # df = df.loc[df[APPROACH] != BTS]
-    # df = df.loc[df[APPROACH] != B_GREEDY]
-    # df = df.loc[df[APPROACH] != CUCB]
-    # df = df.loc[df[APPROACH] != MUCB]
-    # df = df.loc[df[APPROACH] != IUCB]
-    plot_regret(df)
+    filenames = [
+        "synth_bernoulli_normal_05",
+        "synth_bernoulli_normal_75",
+        "synth_bernoulli",
+    ]
+    for filename in filenames:
+        df = load_df(filename)
+        df = prepare_df(df, n_steps=10)
+        df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
+        df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
+        df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
+        df = df.loc[df[APPROACH] != OMEGA_UCB_1_8]
+        # df = df.loc[df[APPROACH] != OMEGA_UCB_1_4]
+        df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
+        # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
+        df = df.loc[df[APPROACH] != OMEGA_UCB_2]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_64]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_32]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_16]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_8]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_4]
+        df = df.loc[df[APPROACH] != ETA_UCB_1_2]
+        df = df.loc[df[APPROACH] != ETA_UCB_1]
+        df = df.loc[df[APPROACH] != ETA_UCB_2]
+        # df = df.loc[df[APPROACH] != UCB_SC_PLUS]
+        # df = df.loc[df[APPROACH] != BUDGET_UCB]
+        # df = df.loc[df[APPROACH] != BTS]
+        # df = df.loc[df[APPROACH] != B_GREEDY]
+        # df = df.loc[df[APPROACH] != CUCB]
+        # df = df.loc[df[APPROACH] != MUCB]
+        # df = df.loc[df[APPROACH] != IUCB]
+        plot_regret(df, filename)

@@ -127,8 +127,8 @@ def normalize_budget(df: pd.DataFrame):
 
 def remove_outliers(df: pd.DataFrame):
     for _, gdf in df.groupby([APPROACH, K, NORMALIZED_BUDGET]):
-        min_percentile = np.percentile(gdf[NORMALIZED_REGRET], q=4)
-        max_percentile = np.percentile(gdf[NORMALIZED_REGRET], q=96)
+        min_percentile = np.percentile(gdf[NORMALIZED_REGRET], q=1)
+        max_percentile = np.percentile(gdf[NORMALIZED_REGRET], q=99)
         mask = np.logical_or(gdf[NORMALIZED_REGRET] <= min_percentile, gdf[NORMALIZED_REGRET] >= max_percentile)
         nan_indices = gdf.index[mask]
         df.loc[nan_indices, NORMALIZED_REGRET] = np.nan

@@ -46,7 +46,7 @@ all_approaches = omega_ucbs + eta_ucbs + other_ucbs + bts + others
 
 omega_palette = sns.color_palette(omega_ucb_base_color, n_colors=max(len(omega_ucbs) * 5, 6))[1:]
 eta_palette = sns.color_palette(eta_ucb_base_color, n_colors=max(len(eta_ucbs) * 5, 6))[1:]
-others_palette = sns.color_palette(other_colors, n_colors=len(other_ucbs) + len(bts) + len(others))
+others_palette = sns.color_palette(other_colors, n_colors=len(other_ucbs) + len(bts) + len(others) + 1)[1:]
 
 
 def color_list():
@@ -77,7 +77,7 @@ def get_palette_for_approaches(approaches):
 
 def get_markers_for_approaches(approaches):
     markers = [
-        ".", ">", "^", "*", "p",
+        "s", ">", "^", "*", "p",
         "v", "P", "d", "X", "H", "<"
     ]
     assert len(markers) >= len(all_approaches)
