@@ -58,18 +58,6 @@ def get_setting(df):
     return mean_rewards, mean_costs
 
 
-def scale_randomly(setting, rng):
-    rew = setting[0]
-    cost = setting[1]
-    min_r = rng.uniform(0, 0.5)
-    max_r = rng.uniform(0.5, 1)
-    min_c = rng.uniform(0, 0.5)
-    max_c = rng.uniform(0.5, 1)
-    rew = MinMaxScaler(feature_range=(min_r, max_r)).fit_transform(np.expand_dims(rew, -1)).flatten()
-    cost = MinMaxScaler(feature_range=(min_c, max_c)).fit_transform(np.expand_dims(cost, -1)).flatten()
-    return rew, cost
-
-
 def sort_setting(setting):
     rew = setting[0]
     cost = setting[1]
@@ -80,11 +68,20 @@ def sort_setting(setting):
 
 def normalize_setting(setting):
     rew, cost = setting
-    rew[rew == 0] = 0.01
-    cost[cost == 0] = 0.01
+    rew[rew <= 0] = 0.01
+    cost[cost <= 0] = 0.01
     norm_rew = rew / np.max(rew) * 0.99
     norm_cost = cost / np.max(cost) * 0.99
     return norm_rew, norm_cost
+
+
+def add_noise(setting, rng):
+    rew, cost = setting
+    rew_noise = rng.normal(scale=.01, size=len(rew))
+    cost_noise = rng.normal(scale=.01, size=len(cost))
+    rew = rew + rew_noise
+    cost = cost + cost_noise
+    return rew, cost
 
 
 def get_facebook_ad_data_settings(rng):
@@ -92,7 +89,7 @@ def get_facebook_ad_data_settings(rng):
     settings = []
     for _, gdf in data.groupby(["campaign_id", "age", "gender"]):
         setting = get_setting(gdf)
-        # setting = scale_randomly(setting, rng)
+        setting = add_noise(setting, rng)
         setting = normalize_setting(setting)
         setting = sort_setting(setting)
         k = len(setting[0])

@@ -56,8 +56,8 @@ def plot_regret(df: pd.DataFrame, filename: str, x_cut: float):
 
 if __name__ == '__main__':
     filenames = [
-        "facebook_beta_combined",
-        "facebook_bernoulli"
+        "facebook_beta_impressions",
+        "facebook_bernoulli_impressions"
     ]
     x_cuts = [1.0, 0.3]
     for cut, filename in zip(x_cuts, filenames):
