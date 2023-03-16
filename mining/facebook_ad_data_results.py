@@ -32,11 +32,11 @@ def compute_ylims(df: pd.DataFrame, x, hue, x_cut=.7):
 
 
 def plot_regret(df: pd.DataFrame, filename: str, x_cut: float):
-    # df = df[df[K] == 10]
-    df = df.sort_values(by=APPROACH)
+    df = df.iloc[::-1]
     x = NORMALIZED_BUDGET
     y = NORMALIZED_REGRET
     hue = APPROACH
+    col = "setting"
     lims = compute_ylims(df, x, hue, x_cut=x_cut)
     palette = create_palette(df)
     markers = get_markers_for_approaches(np.unique(df[APPROACH]))
@@ -55,11 +55,19 @@ def plot_regret(df: pd.DataFrame, filename: str, x_cut: float):
 
 
 if __name__ == '__main__':
+    # filenames = [
+    #     "facebook_beta_combined",
+    #     "facebook_bernoulli"
+    # ]
     filenames = [
+        "facebook_bernoulli_impressions",
         "facebook_beta_impressions",
-        "facebook_bernoulli_impressions"
     ]
-    x_cuts = [1.0, 0.3]
+    setting_ids = [
+        "FB-Br",
+        "FB-Bt"
+    ]
+    x_cuts = [0.3, 0.2]
     for cut, filename in zip(x_cuts, filenames):
         df = load_df(filename)
         df = prepare_df(df, n_steps=10)
@@ -82,6 +90,7 @@ if __name__ == '__main__':
             df = df.loc[df[APPROACH] != ETA_UCB_2]
             # df = df.loc[df[APPROACH] != UCB_SC_PLUS]
             df = df.loc[df[APPROACH] != BUDGET_UCB]
+            df["setting"] = "FB-Bt"
             pass
         if "bernoulli" in filename:
             df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
@@ -102,6 +111,7 @@ if __name__ == '__main__':
             df = df.loc[df[APPROACH] != ETA_UCB_2]
             # df = df.loc[df[APPROACH] != UCB_SC_PLUS]
             # df = df.loc[df[APPROACH] != BUDGET_UCB]
+            df["setting"] = "FB-Br"
         # df = df.loc[df[APPROACH] != IUCB]
         # df = df.loc[df[APPROACH] != MUCB]
         # df = df.loc[df[APPROACH] != CUCB]

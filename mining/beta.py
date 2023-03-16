@@ -35,6 +35,7 @@ def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.3):
 
 
 def plot_regret(df: pd.DataFrame):
+    df = df.iloc[::-1]
     x = NORMALIZED_BUDGET
     y = NORMALIZED_REGRET
     hue = APPROACH

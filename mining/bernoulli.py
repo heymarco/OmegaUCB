@@ -22,7 +22,7 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
-def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.8):
+def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.2):
     lims = []
     df = df.groupby([x, hue, col_var]).mean().reset_index()
     df = df[df[x] <= x_cut]
@@ -40,6 +40,7 @@ def plot_regret(df: pd.DataFrame, filename: str):
     hue = APPROACH
     col = K
     lims = compute_ylims(df, x, hue, col_var=col)
+    df = df.iloc[::-1]
     palette = create_palette(df)
     markers = get_markers_for_approaches(np.unique(df[APPROACH]))
     g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
@@ -53,11 +54,14 @@ def plot_regret(df: pd.DataFrame, filename: str):
         ax.set_ylim(lim)
         if i > 0:
             ax.set_ylabel("")
-        lines = ax.get_lines()
-    plt.gcf().set_size_inches(cm2inch(20, 6))
-    create_custom_legend(g)
-    plt.tight_layout(pad=.5)
-    plt.subplots_adjust(top=0.65)
+    if filename == "synth_bernoulli":
+        plt.gcf().set_size_inches(cm2inch(20, 6))
+        create_custom_legend(g)
+        plt.tight_layout(pad=.5)
+        plt.subplots_adjust(top=0.65)
+    else:
+        plt.gcf().set_size_inches(cm2inch(20, 6 * 0.75))
+        plt.tight_layout(pad=.5)
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
     plt.show()
 

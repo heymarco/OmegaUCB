@@ -72,6 +72,7 @@ def get_palette_for_approaches(approaches):
     apps_colors = color_list()
     app_color_dict = {app: col for app, col in apps_colors}
     colors = [app_color_dict[approach] for approach in approaches]
+    colors = {approach: app_color_dict[approach] for approach in approaches}
     return colors
 
 

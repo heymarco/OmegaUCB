@@ -89,6 +89,7 @@ def get_facebook_ad_data_settings(rng):
     settings = []
     for _, gdf in data.groupby(["campaign_id", "age", "gender"]):
         setting = get_setting(gdf)
+        setting = normalize_setting(setting)
         setting = add_noise(setting, rng)
         setting = normalize_setting(setting)
         setting = sort_setting(setting)
