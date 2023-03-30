@@ -14,6 +14,30 @@ class BernoulliSamplingEnvironment(Environment):
         return reward, cost, mean_reward, mean_cost
 
 
+class MultinomialSamplingEnvironment(Environment):
+    def __init__(self,
+                 mean_rewards: np.ndarray, mean_costs: np.ndarray, rng,
+                 reward_params: np.ndarray, cost_params: np.ndarray):
+        self.reward_params = reward_params
+        self.cost_params = cost_params
+        self.rng = rng
+        super(MultinomialSamplingEnvironment, self).__init__(rng=rng, mean_rewards=mean_rewards, mean_costs=mean_costs)
+
+    def _sample_multinomial(self, params: np.ndarray):
+        sample = self.rng.multinomial(n=1, pvals=params)
+        index = np.flatnonzero(sample == 1)[0]
+        return index / (len(params) - 1)
+
+    def sample(self, arm_index: int) -> Tuple[int, int, float, float]:
+        reward_params = self.reward_params[arm_index]
+        cost_params = self.cost_params[arm_index]
+        reward = self._sample_multinomial(reward_params)
+        cost = self._sample_multinomial(cost_params)
+        mean_reward = self.mean_rewards[arm_index]
+        mean_cost = self.mean_costs[arm_index]
+        return reward, cost, mean_reward, mean_cost
+
+
 class BetaSamplingEnvironment(Environment):
     def __init__(self, ar, br, ac, bc, mean_rewards, mean_costs, rng):
         super(BetaSamplingEnvironment, self).__init__(mean_rewards, mean_costs, rng)

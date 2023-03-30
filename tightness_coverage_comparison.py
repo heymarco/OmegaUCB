@@ -67,7 +67,7 @@ def b_ucb(mu_r, mu_c, n, delta=0.05):
 def ucb_sc(mu_r, mu_c, n, delta=0.05):
     top = mu_r * mu_c + np.sqrt(delta / 2 * (mu_r ** 2 + mu_c ** 2 - delta / 2))
     bottom = mu_c ** 2 - delta / 2
-    return top / max(0.001, bottom)
+    return top / max(0.001, bottom) #see eq 2 in the respective paper
 
 
 def evaluate_once(approaches: dict, exp_c, n, seed, delta=0.05):
@@ -96,18 +96,18 @@ if __name__ == '__main__':
     columns = ["Approach", "Samples", r"$\mu_r$", r"$\mu_c$", "UCB"]
     approaches = {
         OMEGA_UCB_ + " (c, ours)": our_method,
-        CUCB + " (u)": c_ucb,
+        CUCB + " (h)": c_ucb,
         MUCB + " (c)": m_ucb,
         IUCB + " (u)": i_ucb,
-        BUDGET_UCB + " (c)": b_ucb,
+        BUDGET_UCB + " (h)": b_ucb,
         UCB_SC + " (u)": ucb_sc
     }
     order = {
         OMEGA_UCB_ + " (c, ours)": 1,
-        CUCB + " (u)": 5,
         MUCB + " (c)": 2,
-        IUCB + " (u)": 4,
-        BUDGET_UCB + " (c)": 3,
+        BUDGET_UCB + " (h)": 3,
+        CUCB + " (h)": 4,
+        IUCB + " (u)": 5,
         UCB_SC + " (u)": 6
     }
     cost_rng = np.random.default_rng(seed=0)
@@ -125,30 +125,32 @@ if __name__ == '__main__':
     df["exp. ratio"] = df[r"$\mu_r$"] / df[r"$\mu_c$"]
     df["UCB > exp. ratio"] = np.nan
     df["Coverage"] = df["UCB"] > df["exp. ratio"]
-    df["UCB (relative)"] = np.nan
-    df["UCB (relative)"] = df["UCB"] / df["exp. ratio"]
+    df[r"\% UCB violations"] = df["UCB"] < df["exp. ratio"]
+    df["UCB/expectation"] = np.nan
+    df["UCB/expectation"] = df["UCB"] / df["exp. ratio"]
     df = df.groupby(["Samples", r"$\mu_c$", "Approach"]).mean().reset_index()
     df["order"] = np.nan
     for approach in order:
         df["order"].loc[df["Approach"] == approach] = order[approach]
 
-    df = pd.melt(df, id_vars=["Approach", "Samples", "order"], value_vars=["UCB (relative)", "Coverage"],
+    df = pd.melt(df, id_vars=["Approach", "Samples", "order"], value_vars=[r"\% UCB violations", "UCB/expectation"],
                  value_name="Score", var_name="Metric")
     df = df.sort_values(by="order")
 
     sns.set_palette(sns.cubehelix_palette(n_colors=len(ns)))
     g = sns.catplot(data=df, kind="bar", x="Approach", y="Score", hue="Samples", col="Metric",
                     sharex=True, sharey=False, errwidth=1.0)
-    g.axes.flatten()[0].set_yscale("log")
-    g.axes.flatten()[0].set_ylim(bottom=0.5)
+    g.axes.flatten()[1].set_yscale("log")
+    g.axes.flatten()[1].set_ylim(bottom=0.5)
     hlines_ucb = [1, 10, 100]  # [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 50, 100]
     hlines_cov = [0.8, 0.85, 0.9, 0.95, 1.0]
+    hlines_cov = 1 - np.array(hlines_cov)
     for hline in hlines_ucb:
-        g.axes.flatten()[0].axhline(hline, ls="--", lw=0.7, color="black", zorder=0)
-    for hline in hlines_cov:
         g.axes.flatten()[1].axhline(hline, ls="--", lw=0.7, color="black", zorder=0)
+    for hline in hlines_cov:
+        g.axes.flatten()[0].axhline(hline, ls="--", lw=0.7, color="black", zorder=0)
     # g.axes.flatten()[0].set_ylim(0, 10.0)
-    g.axes.flatten()[1].set_ylim(0.8, 1.0)
+    g.axes.flatten()[0].set_ylim(0, .18)
     g.set(xlabel=None)
     for ax in g.axes.flatten():
         title = ax.get_title()
@@ -156,7 +158,7 @@ if __name__ == '__main__':
         ax.set_ylabel(title)
         ax.set_title("")
         ax.set_xticks(ax.get_xticks(), ax.get_xticklabels(), rotation=30, ha='right')
-    plt.gcf().set_size_inches(cm2inch((15, 4)))
+    plt.gcf().set_size_inches(cm2inch((15, 4.5)))
     plt.tight_layout(pad=.5)
     plt.subplots_adjust(right=.82, wspace=.3)
     plt.savefig(os.path.join("figures", "ucb_comparison.pdf"))

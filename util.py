@@ -157,15 +157,15 @@ def prepare_df(df: pd.DataFrame, n_steps=10):
     df.loc[:, IS_OUR_APPROACH] = False
     df.loc[:, IS_OUR_APPROACH] = df[APPROACH].apply(lambda x: OMEGA_UCB_ in x)
     df.loc[:, APPROACH_ORDER] = np.nan
-    df[APPROACH_ORDER] = df[APPROACH].apply(
-        lambda x: next(approach_order[key] for key in approach_order.keys() if key in x)
-    )
-    lens = []
-    dists = []
-    for _, gdf in df[np.logical_and(df[APPROACH] == ETA_UCB_1_4, df[K] == 50)].groupby([NORMALIZED_BUDGET]):
-        lens.append(len(gdf))
-        dists.append(gdf[NORMALIZED_REGRET])
-    assert not np.any(np.isnan(df[APPROACH_ORDER]))
+    # df[APPROACH_ORDER] = df[APPROACH].apply(
+    #     lambda x: next(approach_order[key] for key in approach_order.keys() if key in x)
+    # )
+    # lens = []
+    # dists = []
+    # for _, gdf in df[np.logical_and(df[APPROACH] == ETA_UCB_1_4, df[K] == 50)].groupby([NORMALIZED_BUDGET]):
+    #     lens.append(len(gdf))
+    #     dists.append(gdf[NORMALIZED_REGRET])
+    # assert not np.any(np.isnan(df[APPROACH_ORDER]))
     df[K] = df[K].astype(int)
     return df
 
@@ -197,3 +197,22 @@ def create_custom_legend(grid: sns.FacetGrid):
                   borderaxespad=1,
                   ncol=6
                   )
+
+
+def create_multinomial_parameters(rng, k):
+    params = rng.uniform(size=(k, 5))
+    sum_params = np.sum(params, axis=1)
+    assert len(sum_params) == k
+    return params / np.expand_dims(sum_params, -1)
+
+
+def get_average_multinomial(params: np.ndarray):
+    indexes = np.array([
+        [0, 1, 2, 3, 4]
+        for _ in range(len(params))
+    ])
+    assert indexes.shape == params.shape
+    weighted_indexes = params * indexes
+    mean = np.mean(weighted_indexes, axis=1)
+    assert len(mean) == len(params)
+    return mean

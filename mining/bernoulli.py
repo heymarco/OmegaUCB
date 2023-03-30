@@ -68,13 +68,14 @@ def plot_regret(df: pd.DataFrame, filename: str):
 
 if __name__ == '__main__':
     filenames = [
-        "synth_bernoulli_normal_05",
-        "synth_bernoulli_normal_75",
+        # "synth_bernoulli_normal_05",
+        # "synth_bernoulli_normal_75",
         "synth_bernoulli",
     ]
     for filename in filenames:
         df = load_df(filename)
         df = prepare_df(df, n_steps=10)
+        df[APPROACH][df[APPROACH] == "B-UCB"] = BUDGET_UCB
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]

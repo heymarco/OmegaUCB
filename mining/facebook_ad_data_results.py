@@ -60,7 +60,7 @@ if __name__ == '__main__':
     #     "facebook_bernoulli"
     # ]
     filenames = [
-        "facebook_bernoulli_impressions",
+        # "facebook_bernoulli_impressions",
         "facebook_beta_impressions",
     ]
     setting_ids = [
