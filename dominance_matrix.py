@@ -27,7 +27,7 @@ if __name__ == '__main__':
         "b-greedy",
         "c-UCB",
         "i-UCB",
-        "KL-UCB-SC",
+        "KL-UCB-SC+",
         "UCB-SC+",
         r"$\omega$-UCB"
     ]
@@ -44,7 +44,7 @@ if __name__ == '__main__':
         "b-greedy (2017)",
         "c-UCB (2017)",
         "i-UCB (2017)",
-        "KL-UCB-SC (2017)",
+        "KL-UCB-SC+ (2017)",
         "UCB-SC+ (2018)",
         r"$\omega$-UCB (ours)"
     ]
@@ -103,10 +103,12 @@ if __name__ == '__main__':
     matrix[:, 8] = col_7
 
     show_full = True
+    grays = sns.color_palette("Greys", n_colors=101)
+    grays = [grays[30], grays[10]]
     palette = list(sns.color_palette("vlag_r", n_colors=101))
-    palette = [palette[27]] + [palette[50]] + [palette[87]]
+    palette = [palette[27]] + [grays[-1]] + [palette[87]]
     palette = palette if show_full else palette[1:]
-    palette = ["lightgray"] + palette
+    palette = [grays[0]] + palette
 
 
     if not show_full:
@@ -125,9 +127,10 @@ if __name__ == '__main__':
     # ax.set_title("Dominance matrix of related approaches")
     for item in ax.get_xticklabels():
         item.set_rotation(90)
+        # item.set_ha('left')
     for item in ax.get_yticklabels():
         item.set_rotation(0)
-    plt.gcf().set_size_inches(cm2inch((12, 9)))
+    plt.gcf().set_size_inches(cm2inch((12, 8.5)))
     plt.tight_layout(pad=.5)
     plt.savefig(os.path.join(os.getcwd(), "figures", "dominance_table.pdf"))
     plt.show()

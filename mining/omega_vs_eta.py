@@ -44,13 +44,11 @@ def extend_legend(grid: sns.FacetGrid, line, text):
 
 def plot_regret(df: pd.DataFrame, figsize, figname):
     df = df[df[NORMALIZED_BUDGET] == 1]
-    bts_quantiles = get_bts_hlines(df)
     df = df[df[APPROACH] != BTS]
     df.sort_values(by=["Distribution", K])
-    omega_ucb_color = sns.color_palette(omega_ucb_base_color, n_colors=6)[3]
-    eta_ucb_color = sns.color_palette(eta_ucb_base_color, n_colors=6)[3]
-    bts_color = sns.color_palette(other_colors, n_colors=6)[3]
-    palette = [omega_ucb_color, eta_ucb_color, bts_color]
+    omega_ucb_color = sns.color_palette(omega_ucb_base_color, n_colors=12)[3]
+    eta_ucb_color = sns.color_palette(eta_ucb_base_color, n_colors=12)[2]
+    palette = [omega_ucb_color, eta_ucb_color]
     df[APPROACH] = df[APPROACH].apply(lambda x: ETA_UCB_ if ETA_UCB_ in x else x)
     df[APPROACH] = df[APPROACH].apply(lambda x: OMEGA_UCB_ if OMEGA_UCB_ in x else x)
     x = RHO
@@ -58,15 +56,13 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
     hue = APPROACH
     col = K
     row = "Distribution"
-    g = sns.catplot(data=df, kind="bar", x=x, y=y, hue=hue, col=col, row=row, palette=palette[:2],
-                    sharey=False, sharex=True, linewidth=.8, errwidth=1, errorbar=("se", 1)
-                    # showfliers=False
-                    )
+    g = sns.catplot(data=df, kind="bar", x=x, y=y, hue=hue, col=col, row=row, palette=palette,
+                    sharey=False, sharex=True, linewidth=.8, errwidth=1)
     g.set(yscale="log")
     # lims = [0.00008, 0.02, 0.05]
     bts_line = None
     xtick_labels = [r"$\frac{1}{64}$", r"$\frac{1}{32}$", r"$\frac{1}{16}$", r"$\frac{1}{8}$",
-                    r"$\frac{1}{4}$", r"$\frac{1}{2}$", "$1$", # "$2$"
+                    r"$\frac{1}{4}$", r"$\frac{1}{2}$", "$1$", "$2$"
                     ]
     for i, ax in enumerate(g.axes.flatten()):
         # ax.set_ylim(bottom=lims[0])
@@ -84,7 +80,7 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
             ax.set_ylabel(r"Regret ({})".format(dist_title))
     extend_legend(g, bts_line, BTS)
     plt.gcf().set_size_inches(cm2inch(figsize))
-    plt.tight_layout(pad=.5)
+    plt.tight_layout(pad=.7)
     plt.subplots_adjust(right=0.86, wspace=.4, hspace=.13)
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", figname + ".pdf"))
     plt.show()
@@ -94,7 +90,7 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
 
 
 if __name__ == '__main__':
-    filename = "synth_beta_rest"
+    filename = "synth_beta_combined"
     df_beta = load_df(filename)
     df_beta = prepare_df(df_beta, n_steps=10)
     df_beta = df_beta.loc[df_beta[APPROACH] != UCB_SC_PLUS]
@@ -103,8 +99,8 @@ if __name__ == '__main__':
     df_beta = df_beta.loc[df_beta[APPROACH] != MUCB]
     df_beta = df_beta.loc[df_beta[APPROACH] != IUCB]
     df_beta = df_beta.loc[df_beta[APPROACH] != BUDGET_UCB]
-    df_beta = df_beta.loc[df_beta[APPROACH] != OMEGA_UCB_2]
-    df_beta = df_beta.loc[df_beta[APPROACH] != ETA_UCB_2]
+    # df_beta = df_beta.loc[df_beta[APPROACH] != OMEGA_UCB_2]
+    # df_beta = df_beta.loc[df_beta[APPROACH] != ETA_UCB_2]
     # plot_regret(df_beta, figsize=(20 * 1.8 / 3, 5), figname="sensitivity_" + filename, legend=True, subplots_adjust_right=0.78)
     df_beta["Distribution"] = "Beta"
 
@@ -117,8 +113,8 @@ if __name__ == '__main__':
     df_bern = df_bern.loc[df_bern[APPROACH] != MUCB]
     df_bern = df_bern.loc[df_bern[APPROACH] != IUCB]
     df_bern = df_bern.loc[df_bern[APPROACH] != BUDGET_UCB]
-    df_bern = df_bern.loc[df_bern[APPROACH] != OMEGA_UCB_2]
-    df_bern = df_bern.loc[df_bern[APPROACH] != ETA_UCB_2]
+    # df_bern = df_bern.loc[df_bern[APPROACH] != OMEGA_UCB_2]
+    # df_bern = df_bern.loc[df_bern[APPROACH] != ETA_UCB_2]
 
     df_bern["Distribution"] = "Bernoulli"
     df = pd.concat([df_bern, df_beta]).reset_index()

@@ -71,7 +71,7 @@ class Experiment(ABC):
         all_dfs = []
         for k in tqdm(arms):
             all_args = self._generate_args(k, num_reps)
-            dfs = run_async(execute_bandit_on_env, all_args, njobs=multiprocessing.cpu_count() - 1)
+            dfs = run_async(execute_bandit_on_env, all_args, njobs=multiprocessing.cpu_count())
             all_dfs += dfs
         df = pd.concat(all_dfs)
         return df

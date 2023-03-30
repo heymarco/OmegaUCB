@@ -35,34 +35,27 @@ def prepare_facebook_data():
     raw_data = load_facebook_data()
     is_zero_cost = raw_data["spent"] == 0
     has_no_clicks = raw_data["clicks"] == 0
+    not_enough_impressions = raw_data["clicks"] < 100
     is_zero_reward = raw_data["total_conversion"] == 0
     is_nan_ratio = np.isnan(raw_data["reward_cost_ratio"])
     non_informative_rows = np.logical_and(np.logical_and(is_zero_reward, is_zero_cost), has_no_clicks)  # do not include ads for which we have no data
     corrupted_rows = np.logical_and(np.invert(is_zero_reward), is_zero_cost)  # cost although no clicks occurred
     mask = np.invert(np.logical_or(non_informative_rows, corrupted_rows))
     mask = np.logical_or(mask, np.invert(is_nan_ratio))
+    mask = np.logical_or(mask, np.invert(not_enough_impressions))
     filtered_df = raw_data.loc[mask].reset_index()
     return filtered_df
 
 
 def get_setting(df):
-    mean_rewards = np.array(df["rpc"])
-    mean_costs = np.array(df["cpc"])
-    mean_costs = mean_costs[mean_costs > 0]
+    clicks = df["clicks"]
+    impressions = df["impressions"]
+    ctr = clicks / impressions
+    mean_rewards = np.array(df["rpc"] * ctr)
+    mean_costs = np.array(df["cpc"] * ctr)
     mean_rewards = mean_rewards[mean_costs > 0]
+    mean_costs = mean_costs[mean_costs > 0]
     return mean_rewards, mean_costs
-
-
-def scale_randomly(setting, rng):
-    rew = setting[0]
-    cost = setting[1]
-    min_r = rng.uniform(0, 0.5)
-    max_r = rng.uniform(0.5, 1)
-    min_c = rng.uniform(0, 0.5)
-    max_c = rng.uniform(0.5, 1)
-    rew = MinMaxScaler(feature_range=(min_r, max_r)).fit_transform(np.expand_dims(rew, -1)).flatten()
-    cost = MinMaxScaler(feature_range=(min_c, max_c)).fit_transform(np.expand_dims(cost, -1)).flatten()
-    return rew, cost
 
 
 def sort_setting(setting):
@@ -75,11 +68,20 @@ def sort_setting(setting):
 
 def normalize_setting(setting):
     rew, cost = setting
-    rew[rew == 0] = 0.01
-    cost[cost == 0] = 0.01
+    rew[rew <= 0] = 0.01
+    cost[cost <= 0] = 0.01
     norm_rew = rew / np.max(rew) * 0.99
     norm_cost = cost / np.max(cost) * 0.99
     return norm_rew, norm_cost
+
+
+def add_noise(setting, rng):
+    rew, cost = setting
+    rew_noise = rng.normal(scale=.01, size=len(rew))
+    cost_noise = rng.normal(scale=.01, size=len(cost))
+    rew = rew + rew_noise
+    cost = cost + cost_noise
+    return rew, cost
 
 
 def get_facebook_ad_data_settings(rng):
@@ -87,7 +89,8 @@ def get_facebook_ad_data_settings(rng):
     settings = []
     for _, gdf in data.groupby(["campaign_id", "age", "gender"]):
         setting = get_setting(gdf)
-        # setting = scale_randomly(setting, rng)
+        setting = normalize_setting(setting)
+        setting = add_noise(setting, rng)
         setting = normalize_setting(setting)
         setting = sort_setting(setting)
         k = len(setting[0])

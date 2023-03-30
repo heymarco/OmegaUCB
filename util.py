@@ -13,7 +13,7 @@ from scipy import stats
 from tqdm import tqdm
 import seaborn as sns
 
-from colors import color_list, get_palette_for_approaches
+from colors import color_list, get_palette_for_approaches, get_markers_for_approaches
 from components.bandit_logging import *
 from approach_names import *
 
@@ -114,19 +114,21 @@ def normalize_regret(df: pd.DataFrame):
         df.loc[gdf.index, NORMALIZED_REGRET] = (gdf[REGRET] / achievable_reward)
     return df
 
+
 def normalize_budget(df: pd.DataFrame):
     df = df.sort_values(by=EXPECTED_SPENT_BUDGET)
     for _, gdf in df.groupby([APPROACH, REP, K, MINIMUM_AVERAGE_COST]):
         expected_spent_budget = gdf[EXPECTED_SPENT_BUDGET]
         budget = np.max(gdf[SPENT_BUDGET])
+        expected_spent_budget = expected_spent_budget / np.max(expected_spent_budget) * budget
         normalized = expected_spent_budget / budget
         df.loc[gdf.index, NORMALIZED_BUDGET] = normalized
     return df
 
 def remove_outliers(df: pd.DataFrame):
     for _, gdf in df.groupby([APPROACH, K, NORMALIZED_BUDGET]):
-        min_percentile = np.percentile(gdf[NORMALIZED_REGRET], q=2)
-        max_percentile = np.percentile(gdf[NORMALIZED_REGRET], q=98)
+        min_percentile = np.percentile(gdf[NORMALIZED_REGRET], q=1)
+        max_percentile = np.percentile(gdf[NORMALIZED_REGRET], q=99)
         mask = np.logical_or(gdf[NORMALIZED_REGRET] <= min_percentile, gdf[NORMALIZED_REGRET] >= max_percentile)
         nan_indices = gdf.index[mask]
         df.loc[nan_indices, NORMALIZED_REGRET] = np.nan
@@ -149,21 +151,22 @@ def prepare_df(df: pd.DataFrame, n_steps=10):
     df.loc[:, NORMALIZED_BUDGET] = np.ceil(df[NORMALIZED_BUDGET] * n_steps) / n_steps
     df = df[df[NORMALIZED_BUDGET] <= 1]
     df = df.groupby([K, APPROACH, NORMALIZED_BUDGET, REP, MINIMUM_AVERAGE_COST]).max().reset_index()
-    # df = remove_outliers(df)
+    df = remove_outliers(df)
     df.loc[:, RHO] = np.nan
     df.loc[:, RHO] = df[APPROACH].apply(lambda x: extract_rho(x))
     df.loc[:, IS_OUR_APPROACH] = False
     df.loc[:, IS_OUR_APPROACH] = df[APPROACH].apply(lambda x: OMEGA_UCB_ in x)
     df.loc[:, APPROACH_ORDER] = np.nan
-    df[APPROACH_ORDER] = df[APPROACH].apply(
-        lambda x: next(approach_order[key] for key in approach_order.keys() if key in x)
-    )
-    lens = []
-    dists = []
-    for _, gdf in df[np.logical_and(df[APPROACH] == ETA_UCB_1_4, df[K] == 50)].groupby([NORMALIZED_BUDGET]):
-        lens.append(len(gdf))
-        dists.append(gdf[NORMALIZED_REGRET])
-    assert not np.any(np.isnan(df[APPROACH_ORDER]))
+    # df[APPROACH_ORDER] = df[APPROACH].apply(
+    #     lambda x: next(approach_order[key] for key in approach_order.keys() if key in x)
+    # )
+    # lens = []
+    # dists = []
+    # for _, gdf in df[np.logical_and(df[APPROACH] == ETA_UCB_1_4, df[K] == 50)].groupby([NORMALIZED_BUDGET]):
+    #     lens.append(len(gdf))
+    #     dists.append(gdf[NORMALIZED_REGRET])
+    # assert not np.any(np.isnan(df[APPROACH_ORDER]))
+    df[K] = df[K].astype(int)
     return df
 
 
@@ -175,9 +178,13 @@ def move_legend_below_graph(grid, ncol: int, title: str):
 def create_custom_legend(grid: sns.FacetGrid):
     app_color_list = color_list()
     approaches = [entry[0] for entry in app_color_list]
+    marker_dict = get_markers_for_approaches(approaches)
     colors = [entry[1] for entry in app_color_list]
 
-    custom_lines = [Line2D([0], [0], color=color, lw=2) for color in colors]
+    custom_lines = [Line2D([0], [0], color=color, marker=marker,
+                           # markersize=3, lw=1,
+                           markeredgewidth=0.2)
+                    for color, marker in zip(colors, marker_dict.values())]
 
     axes = grid.axes
     for ax in axes.flatten():
@@ -190,3 +197,22 @@ def create_custom_legend(grid: sns.FacetGrid):
                   borderaxespad=1,
                   ncol=6
                   )
+
+
+def create_multinomial_parameters(rng, k):
+    params = rng.uniform(size=(k, 5))
+    sum_params = np.sum(params, axis=1)
+    assert len(sum_params) == k
+    return params / np.expand_dims(sum_params, -1)
+
+
+def get_average_multinomial(params: np.ndarray):
+    indexes = np.array([
+        [0, 1, 2, 3, 4]
+        for _ in range(len(params))
+    ])
+    assert indexes.shape == params.shape
+    weighted_indexes = params * indexes
+    mean = np.mean(weighted_indexes, axis=1)
+    assert len(mean) == len(params)
+    return mean
