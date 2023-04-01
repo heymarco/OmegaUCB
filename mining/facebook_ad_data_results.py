@@ -43,11 +43,11 @@ def plot_regret(df: pd.DataFrame, filename: str, x_cut: float):
     g = sns.relplot(data=df, x=x, y=y, hue=hue, lw=1,
                     # markersize=3,
                     markeredgewidth=0.1,
-                    kind="line", palette=palette, legend=False, errorbar=None,
+                    kind="line", palette=palette, legend=False, errorbar="ci", err_style="bars",
                     facet_kws={"sharey": False}, style=hue, markers=markers, dashes=False)
-    g.set(xscale="log")
+    g.set(xscale="symlog")
     for lim, ax in zip(lims, g.axes.flatten()):
-        ax.set_ylim(lim)
+        ax.set_ylim(0, lim)
     plt.gcf().set_size_inches(cm2inch((20 / 2, 7.5 * 0.55)))
     plt.tight_layout(pad=.5)
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
@@ -55,14 +55,14 @@ def plot_regret(df: pd.DataFrame, filename: str, x_cut: float):
 
 
 if __name__ == '__main__':
-    # filenames = [
-    #     "facebook_beta_combined",
-    #     "facebook_bernoulli"
-    # ]
     filenames = [
-        # "facebook_bernoulli_impressions",
-        "facebook_beta_impressions",
+        "facebook_beta_combined",
+        "facebook_bernoulli"
     ]
+    # filenames = [
+    #     # "facebook_bernoulli_impressions",
+    #     # "facebook_beta_impressions",
+    # ]
     setting_ids = [
         "FB-Br",
         "FB-Bt"
