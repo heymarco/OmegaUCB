@@ -33,7 +33,7 @@ if __name__ == '__main__':
     # synth_bernoulli = BernoulliExperiment("synth_bernoulli_rest", num_steps=n_steps)
     # execute_experiment(synth_bernoulli, arms, num_reps=n_reps)
     #
-    synth_bernoulli = MultinomialExperiment("synth_multinomial", num_steps=n_steps)
+    synth_bernoulli = MultinomialExperiment("synth_multinomial_rest", num_steps=n_steps)
     execute_experiment(synth_bernoulli, arms, num_reps=n_reps)
     #
     # synth_bernoulli_normal_05 = BernoulliNormalExperiment("synth_bernoulli_normal_05", num_steps=n_steps,
