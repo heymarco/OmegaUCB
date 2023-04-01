@@ -29,8 +29,8 @@ def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.2):
     # df.sort_values(by=[col_var], inplace=True)
     for _, row_df in df.groupby(col_var):
         max_regret = row_df[NORMALIZED_REGRET].max()
-        # min_regret = row_df[NORMALIZED_REGRET].min()
-        lims.append((0, max_regret))
+        min_regret = row_df[NORMALIZED_REGRET].min()
+        lims.append((min_regret * 0.8, max_regret))
     return lims
 
 
@@ -49,12 +49,10 @@ def plot_regret(df: pd.DataFrame, filename: str):
                     kind="line", palette=palette, legend=False,
                     errorbar="ci", err_style="bars",
                     facet_kws={"sharey": False}, style=hue, markers=markers, dashes=False)
-    # g.set(xscale="symlog")
-    # g.set(linthreshx=0.01)
+    # g.set(yscale="log")
+    g.set(xscale="log")
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):
         ax.set_ylim(lim)
-        ax.set_xlim((0.095, 1))
-        ax.set_xscale("symlog", linthresh=.1)
         if i > 0:
             ax.set_ylabel("")
     if filename == "synth_bernoulli":
@@ -71,12 +69,12 @@ def plot_regret(df: pd.DataFrame, filename: str):
 
 if __name__ == '__main__':
     filenames = [
-        "synth_bernoulli",
+        "synth_multinomial",
     ]
     for filename in filenames:
         df = load_df(filename)
         df = prepare_df(df, n_steps=10)
-        df[APPROACH][df[APPROACH] == "B-UCB"] = BUDGET_UCB
+        # df[APPROACH][df[APPROACH] == "B-UCB"] = BUDGET_UCB
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
         df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
@@ -89,9 +87,9 @@ if __name__ == '__main__':
         df = df.loc[df[APPROACH] != ETA_UCB_1_32]
         df = df.loc[df[APPROACH] != ETA_UCB_1_16]
         df = df.loc[df[APPROACH] != ETA_UCB_1_8]
-        df = df.loc[df[APPROACH] != ETA_UCB_1_4]
+        # df = df.loc[df[APPROACH] != ETA_UCB_1_4]
         df = df.loc[df[APPROACH] != ETA_UCB_1_2]
-        df = df.loc[df[APPROACH] != ETA_UCB_1]
+        # df = df.loc[df[APPROACH] != ETA_UCB_1]
         df = df.loc[df[APPROACH] != ETA_UCB_2]
         # df = df.loc[df[APPROACH] != UCB_SC_PLUS]
         # df = df.loc[df[APPROACH] != BUDGET_UCB]

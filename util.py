@@ -125,6 +125,7 @@ def normalize_budget(df: pd.DataFrame):
         df.loc[gdf.index, NORMALIZED_BUDGET] = normalized
     return df
 
+
 def remove_outliers(df: pd.DataFrame):
     for _, gdf in df.groupby([APPROACH, K, NORMALIZED_BUDGET]):
         min_percentile = np.percentile(gdf[NORMALIZED_REGRET], q=1)
@@ -133,6 +134,19 @@ def remove_outliers(df: pd.DataFrame):
         nan_indices = gdf.index[mask]
         df.loc[nan_indices, NORMALIZED_REGRET] = np.nan
     return df
+
+
+def add_zero(df: pd.DataFrame):
+    rows = []
+    for _, gdf in df.groupby([APPROACH, K, REP]):
+        row = gdf.iloc[0]
+        row[NORMALIZED_BUDGET] = 0
+        row[SPENT_BUDGET] = 0
+        row[REGRET] = 0
+        row[NORMALIZED_REGRET] = 0
+        rows.append(row)
+    additional_rows = pd.DataFrame(rows, columns=df.columns).reset_index()
+    return pd.concat([additional_rows, df]).reset_index()
 
 
 def adjust_approach_names(df: pd.DataFrame):
@@ -166,6 +180,7 @@ def prepare_df(df: pd.DataFrame, n_steps=10):
     #     lens.append(len(gdf))
     #     dists.append(gdf[NORMALIZED_REGRET])
     # assert not np.any(np.isnan(df[APPROACH_ORDER]))
+    df = add_zero(df)
     df[K] = df[K].astype(int)
     return df
 

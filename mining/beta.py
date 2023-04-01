@@ -30,7 +30,7 @@ def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.3):
     for _, row_df in df.groupby(col_var):
         max_regret = row_df[NORMALIZED_REGRET].max()
         min_regret = row_df[NORMALIZED_REGRET].min()
-        lims.append((min_regret * 0.9, max_regret))
+        lims.append((0, max_regret))
     return lims
 
 
@@ -49,9 +49,12 @@ def plot_regret(df: pd.DataFrame):
                     markeredgewidth=0.1,
                     kind="line", palette=palette, legend=False, errorbar=None,
                     facet_kws={"sharey": False}, style=hue, markers=markers, dashes=False)
-    g.set(xscale="log")
+    # g.set(xscale="symlog")
+    # g.set(linthreshx=0.01)
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):
         ax.set_ylim(lim)
+        ax.set_xlim((0.095, 1))
+        ax.set_xscale("symlog", linthresh=.1)
         if i > 0:
             ax.set_ylabel("")
     plt.gcf().set_size_inches(cm2inch(20, 6 * 0.75))
@@ -82,7 +85,7 @@ if __name__ == '__main__':
     # df = df.loc[df[APPROACH] != ETA_UCB_1]
     df = df.loc[df[APPROACH] != ETA_UCB_2]
     df = df.loc[df[APPROACH] != UCB_SC_PLUS]
-    df = df.loc[df[APPROACH] != BUDGET_UCB]
+    # df = df.loc[df[APPROACH] != BUDGET_UCB]
     # df = df.loc[df[APPROACH] != BTS]
     # df = df.loc[df[APPROACH] != B_GREEDY]
     # df = df.loc[df[APPROACH] != CUCB]
