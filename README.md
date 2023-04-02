@@ -20,7 +20,7 @@ Simply execute `experiment_runner.py` to reproduce our results. Note that the sc
 ### Graphs
 - To reproduce Figure 1, run `tightness_coverage_comparison.py`.
 - To reproduce Figure 2, run `dominance_matrix.py`.
-- For the graphs in Figure 3, run the scripts `mining/bernoulli.py`, `mining/beta.py`, `mining/multinomial.py`.
+- For the graphs in Figure 3, run the scripts `mining/bernoulli.py`, `mining/beta.py`, `mining/multinomial.py`, and `mining/advertisement_data.py`.
 - For the graphs in Figure 4, run `mining/sensitivity_study.py`
 
 ## Applying $\omega$-UCB in other projects
