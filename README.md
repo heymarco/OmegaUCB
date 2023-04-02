@@ -18,9 +18,10 @@ To do
 Simply execute `experiment_runner.py` to reproduce our results. Note that the script will occupy all but one core on your machine. On our 30-core machine, the runtime is around 20 hours. 
 
 ### Graphs
-- To reproduce Figure 1, run `tightness_coverage_comparison.py` and `ci_comparison.py`.
-- To reproduce Figure X, run `dominance_matrix.py`.
-- For the graphs in Figure 3, run the scripts under `mining/`
+- To reproduce Figure 1, run `tightness_coverage_comparison.py`.
+- To reproduce Figure 2, run `dominance_matrix.py`.
+- For the graphs in Figure 3, run the scripts `mining/bernoulli.py`, `mining/beta.py`, `mining/multinomial.py`.
+- For the graphs in Figure 4, run `mining/sensitivity_study.py`
 
 ## Applying $\omega$-UCB in other projects
 
