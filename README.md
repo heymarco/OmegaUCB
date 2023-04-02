@@ -9,7 +9,7 @@ We focus on the Budgeted Multi-Armed Bandit (MAB) problem, where a player choose
 ## Directory structure
 To do
 
-## Reproducing the experimental results
+## Reproducing our results
 
 ### Installing the dependencies
 To do
