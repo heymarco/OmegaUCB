@@ -15,7 +15,7 @@ To do
 To do
 
 ### Running the experiments
-Simply execute `experiment_runner.py` to reproduce our results. Note that the script will occupy all but one core on your machine. On our 30-core machine, the runtime is around 20 hours. 
+Simply execute `experiment_runner.py` to run the experiments. Note that the script will use all cores on your machine. On our 30-core machine, the experiments take approximately 24 hours. 
 
 ### Graphs
 - To reproduce Figure 1, run `tightness_coverage_comparison.py`.
