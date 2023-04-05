@@ -9,18 +9,19 @@ We focus on the Budgeted Multi-Armed Bandit (MAB) problem, where a player choose
 ## Directory structure
 To do
 
-## Reproducing the experimental results
+## Reproducing our results
 
 ### Installing the dependencies
 To do
 
 ### Running the experiments
-Simply execute `experiment_runner.py` to reproduce our results. Note that the script will occupy all but one core on your machine. On our 30-core machine, the runtime is around 20 hours. 
+Simply execute `experiment_runner.py` to run the experiments. Note that the script will use all cores on your machine. On our 30-core machine, the experiments take approximately 24 hours. 
 
 ### Graphs
-- To reproduce Figure 1, run `tightness_coverage_comparison.py` and `ci_comparison.py`.
-- To reproduce Figure X, run `dominance_matrix.py`.
-- For the graphs in Figure 3, run the scripts under `mining/`
+- To reproduce Figure 1, run `tightness_coverage_comparison.py`.
+- To reproduce Figure 2, run `dominance_matrix.py`.
+- For the graphs in Figure 3, run the scripts `mining/bernoulli.py`, `mining/beta.py`, `mining/multinomial.py`, and `mining/advertisement_data.py`.
+- For the graphs in Figure 4, run `mining/sensitivity_study.py`
 
 ## Applying $\omega$-UCB in other projects
 
