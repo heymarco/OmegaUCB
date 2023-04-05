@@ -23,4 +23,4 @@ To reproduce our experimental results, execute `experiment_runner.py`. The scrip
 
 ## Applying $\omega$-UCB in other projects
 
-To support further research, we will link another repository that contains  $\omega$-UCB$ as a pip-package after paper acceptance.
+To support further research, we will link another repository that contains  $\omega$-UCB as a pip-package after paper acceptance.
