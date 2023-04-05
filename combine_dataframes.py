@@ -27,41 +27,42 @@ def combine_dataframes_exclude_approaches(direcory: str, filenames: list,
 
 if __name__ == '__main__':
     directory = os.path.join(os.getcwd(), "results")
-    final_df_name = "synth_beta_combined.parquet"
+    final_df_name = "synth_multinomial_combined.parquet"
     filenames = [
-        "synth_beta.parquet",
-        "synth_beta_30.parquet"
+        "synth_multinomial.parquet",
+        "synth_multinomial_rest.parquet"
     ]
-    exclude = [
-        [
-            ETA_UCB_1_64,
-            ETA_UCB_1_32,
-            ETA_UCB_1_16,
-            ETA_UCB_1_8,
-            ETA_UCB_1_4,
-            ETA_UCB_1_2,
-            ETA_UCB_1,
-            ETA_UCB_2
-        ],
-        [
-            MUCB,
-            CUCB,
-            IUCB,
-            BTS,
-            UCB_SC,
-            UCB_SC_PLUS,
-            BUDGET_UCB,
-            B_GREEDY,
-            OMEGA_UCB_1_64,
-            OMEGA_UCB_1_32,
-            OMEGA_UCB_1_16,
-            OMEGA_UCB_1_8,
-            OMEGA_UCB_1_4,
-            OMEGA_UCB_1_2,
-            OMEGA_UCB_1,
-            OMEGA_UCB_2,
-        ]
-    ]
+    # exclude = [
+    #     [
+    #         ETA_UCB_1_64,
+    #         ETA_UCB_1_32,
+    #         ETA_UCB_1_16,
+    #         ETA_UCB_1_8,
+    #         ETA_UCB_1_4,
+    #         ETA_UCB_1_2,
+    #         ETA_UCB_1,
+    #         ETA_UCB_2
+    #     ],
+    #     [
+    #         MUCB,
+    #         CUCB,
+    #         IUCB,
+    #         BTS,
+    #         UCB_SC,
+    #         UCB_SC_PLUS,
+    #         BUDGET_UCB,
+    #         B_GREEDY,
+    #         OMEGA_UCB_1_64,
+    #         OMEGA_UCB_1_32,
+    #         OMEGA_UCB_1_16,
+    #         OMEGA_UCB_1_8,
+    #         OMEGA_UCB_1_4,
+    #         OMEGA_UCB_1_2,
+    #         OMEGA_UCB_1,
+    #         OMEGA_UCB_2,
+    #     ]
+    # ]
+    exclude = False
     if not exclude:
         df = combine_dataframes(directory, filenames)
     else:

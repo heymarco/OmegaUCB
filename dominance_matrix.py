@@ -49,6 +49,10 @@ if __name__ == '__main__':
         r"$\omega$-UCB (ours)"
     ]
 
+    empty = [
+        "" for _ in range(len(approaches_with_years))
+    ]
+
     old_matrix = [
         [0, -1, 0, 0, 0, -1, -1, -1, -1, -1, 0, 0, -2],
         [1, 0, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0, -2],
@@ -130,7 +134,11 @@ if __name__ == '__main__':
         # item.set_ha('left')
     for item in ax.get_yticklabels():
         item.set_rotation(0)
-    plt.gcf().set_size_inches(cm2inch((12, 8.5)))
+    ax.set_yticklabels(empty)
+    ax.yaxis.tick_right()
+    ax.yaxis.set_ticks_position('both')
+    plt.gcf().set_size_inches(cm2inch((6, 8)))
     plt.tight_layout(pad=.5)
+    plt.subplots_adjust(bottom=-0.07)
     plt.savefig(os.path.join(os.getcwd(), "figures", "dominance_table.pdf"))
     plt.show()

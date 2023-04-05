@@ -18,11 +18,11 @@ if __name__ == '__main__':
         10,
         50
     ]
-    n_reps = 100
+    n_reps = 1
     n_steps = int(1.5e5)
 
-    # facebook_beta = FacebookBetaExperiment("facebook_beta_impressions", num_steps=n_steps)
-    # execute_experiment(facebook_beta, arms=[0], num_reps=n_reps)
+    facebook_beta = FacebookBetaExperiment("facebook_beta_impressions", num_steps=n_steps)
+    execute_experiment(facebook_beta, arms=[0], num_reps=n_reps)
     #
     # facebook_bernoulli = FacebookBernoulliExperiment("facebook_bernoulli_impressions", num_steps=n_steps)
     # execute_experiment(facebook_bernoulli, arms=[0], num_reps=n_reps)
@@ -33,8 +33,8 @@ if __name__ == '__main__':
     # synth_bernoulli = BernoulliExperiment("synth_bernoulli_rest", num_steps=n_steps)
     # execute_experiment(synth_bernoulli, arms, num_reps=n_reps)
     #
-    synth_bernoulli = MultinomialExperiment("synth_multinomial_rest", num_steps=n_steps)
-    execute_experiment(synth_bernoulli, arms, num_reps=n_reps)
+    # synth_bernoulli = MultinomialExperiment("synth_multinomial_rest", num_steps=n_steps)
+    # execute_experiment(synth_bernoulli, arms, num_reps=n_reps)
     #
     # synth_bernoulli_normal_05 = BernoulliNormalExperiment("synth_bernoulli_normal_05", num_steps=n_steps,
     #                                                       loc=.5, scale=0.05)

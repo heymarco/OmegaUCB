@@ -118,7 +118,7 @@ def normalize_regret(df: pd.DataFrame):
 def normalize_budget(df: pd.DataFrame):
     df = df.sort_values(by=EXPECTED_SPENT_BUDGET)
     for _, gdf in df.groupby([APPROACH, REP, K, MINIMUM_AVERAGE_COST]):
-        expected_spent_budget = gdf[EXPECTED_SPENT_BUDGET]
+        expected_spent_budget = gdf[SPENT_BUDGET]
         budget = np.max(gdf[SPENT_BUDGET])
         expected_spent_budget = expected_spent_budget / np.max(expected_spent_budget) * budget
         normalized = expected_spent_budget / budget
@@ -161,25 +161,17 @@ def prepare_df(df: pd.DataFrame, n_steps=10):
     df.ffill(inplace=True)
     df = normalize_budget(df)
     df = normalize_regret(df)
-    df.sort_values(by=APPROACH, inplace=True)
-    df.loc[:, NORMALIZED_BUDGET] = np.ceil(df[NORMALIZED_BUDGET] * n_steps) / n_steps
+    df.sort_values(by=[NORMALIZED_BUDGET, APPROACH], inplace=True)
+    df.loc[:, NORMALIZED_BUDGET] = np.ceil(df[NORMALIZED_BUDGET] * 10) / 10
+    # df = df[(df[NORMALIZED_BUDGET] * 100) % 10 == 0]
     df = df[df[NORMALIZED_BUDGET] <= 1]
-    df = df.groupby([K, APPROACH, NORMALIZED_BUDGET, REP, MINIMUM_AVERAGE_COST]).max().reset_index()
+    df = df.groupby([K, APPROACH, NORMALIZED_BUDGET, REP, MINIMUM_AVERAGE_COST]).last().reset_index()
     df = remove_outliers(df)
     df.loc[:, RHO] = np.nan
     df.loc[:, RHO] = df[APPROACH].apply(lambda x: extract_rho(x))
     df.loc[:, IS_OUR_APPROACH] = False
     df.loc[:, IS_OUR_APPROACH] = df[APPROACH].apply(lambda x: OMEGA_UCB_ in x)
     df.loc[:, APPROACH_ORDER] = np.nan
-    # df[APPROACH_ORDER] = df[APPROACH].apply(
-    #     lambda x: next(approach_order[key] for key in approach_order.keys() if key in x)
-    # )
-    # lens = []
-    # dists = []
-    # for _, gdf in df[np.logical_and(df[APPROACH] == ETA_UCB_1_4, df[K] == 50)].groupby([NORMALIZED_BUDGET]):
-    #     lens.append(len(gdf))
-    #     dists.append(gdf[NORMALIZED_REGRET])
-    # assert not np.any(np.isnan(df[APPROACH_ORDER]))
     df = add_zero(df)
     df[K] = df[K].astype(int)
     return df

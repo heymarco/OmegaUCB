@@ -40,17 +40,18 @@ def plot_regret(df: pd.DataFrame):
     y = NORMALIZED_REGRET
     hue = APPROACH
     col = K
-    lims = compute_ylims(df, x, hue, col_var=col)
     # df = df.sort_values(by=[APPROACH])
     palette = create_palette(df)
     markers = get_markers_for_approaches(np.unique(df[APPROACH]))
     g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
                     # lw=1, markersize=3,
                     markeredgewidth=0.1,
-                    kind="line", palette=palette, legend=False, errorbar=None,
+                    kind="line", palette=palette, legend=False,
+                    errorbar=None, err_style="bars",
                     facet_kws={"sharey": False}, style=hue, markers=markers, dashes=False)
     # g.set(xscale="symlog")
     # g.set(linthreshx=0.01)
+    lims = [(0, 0.009), (0, 0.09), (0, 0.22)]
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):
         ax.set_ylim(lim)
         ax.set_xlim((0.095, 1))
@@ -68,6 +69,7 @@ if __name__ == '__main__':
     filename = "synth_beta_combined"
     df = load_df(filename)
     df = prepare_df(df, n_steps=10)
+    df.loc[df[APPROACH] == "B-UCB", APPROACH] = BUDGET_UCB
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_32]
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_16]
@@ -84,8 +86,8 @@ if __name__ == '__main__':
     df = df.loc[df[APPROACH] != ETA_UCB_1_2]
     # df = df.loc[df[APPROACH] != ETA_UCB_1]
     df = df.loc[df[APPROACH] != ETA_UCB_2]
-    df = df.loc[df[APPROACH] != UCB_SC_PLUS]
-    # df = df.loc[df[APPROACH] != BUDGET_UCB]
+    # df = df.loc[df[APPROACH] != UCB_SC_PLUS]
+    df = df.loc[df[APPROACH] != BUDGET_UCB]
     # df = df.loc[df[APPROACH] != BTS]
     # df = df.loc[df[APPROACH] != B_GREEDY]
     # df = df.loc[df[APPROACH] != CUCB]

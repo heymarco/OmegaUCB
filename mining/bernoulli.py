@@ -47,7 +47,7 @@ def plot_regret(df: pd.DataFrame, filename: str):
                     # lw=1, markersize=3,
                     markeredgewidth=0.1,
                     kind="line", palette=palette, legend=False,
-                    errorbar="ci", err_style="bars",
+                    errorbar=None, err_style="bars",
                     facet_kws={"sharey": False}, style=hue, markers=markers, dashes=False)
     # g.set(xscale="symlog")
     # g.set(linthreshx=0.01)

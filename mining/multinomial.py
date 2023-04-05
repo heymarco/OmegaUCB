@@ -47,12 +47,14 @@ def plot_regret(df: pd.DataFrame, filename: str):
                     # lw=1, markersize=3,
                     markeredgewidth=0.1,
                     kind="line", palette=palette, legend=False,
-                    errorbar="ci", err_style="bars",
+                    errorbar=None, err_style="bars",
                     facet_kws={"sharey": False}, style=hue, markers=markers, dashes=False)
-    # g.set(yscale="log")
-    g.set(xscale="log")
+    # g.set(xscale="symlog")
+    # g.set(linthreshx=0.01)
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):
         ax.set_ylim(lim)
+        ax.set_xlim((0.095, 1))
+        ax.set_xscale("symlog", linthresh=.1)
         if i > 0:
             ax.set_ylabel("")
     if filename == "synth_bernoulli":
