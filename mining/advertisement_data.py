@@ -31,7 +31,7 @@ def compute_ylims(df: pd.DataFrame, x, hue, x_cut=.7):
     return lims
 
 
-def plot_regret(df: pd.DataFrame, filename: str, x_cut: float):
+def plot_regret(df: pd.DataFrame, filename: str, x_cut: float, with_ci: bool = False):
     df = df.iloc[::-1]
     df.loc[df[APPROACH] == "B-UCB", APPROACH] = BUDGET_UCB
     x = NORMALIZED_BUDGET
@@ -40,14 +40,20 @@ def plot_regret(df: pd.DataFrame, filename: str, x_cut: float):
     lims = compute_ylims(df, x, hue, x_cut=x_cut)
     palette = create_palette(df)
     markers = get_markers_for_approaches(np.unique(df[APPROACH]))
-    g = sns.relplot(data=df, x=x, y=y, hue=hue, lw=1,
-                    # markersize=3,
-                    markeredgewidth=0.1,
-                    kind="line", palette=palette, legend=False,
-                    errorbar=None, err_style="bars",
-                    facet_kws={"sharey": False}, style=hue, markers=markers, dashes=False)
-    # g.set(xscale="symlog")
-    # g.set(linthreshx=0.01)
+    if with_ci:
+        g = sns.relplot(data=df, x=x, y=y, hue=hue, lw=1,
+                        markeredgewidth=0.1,
+                        kind="line", palette=palette, legend=False,
+                        errorbar="ci", err_style="bars", seed=0, n_boot=500, err_kws={"capsize": 2},
+                        solid_capstyle="butt",
+                        facet_kws={"sharey": False}, style=hue, markers=markers, dashes=False)
+    else:
+        g = sns.relplot(data=df, x=x, y=y, hue=hue, lw=1,
+                        markeredgewidth=0.1,
+                        kind="line", palette=palette, legend=False,
+                        errorbar=None,
+                        facet_kws={"sharey": False}, style=hue, markers=markers, dashes=False)
+
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):
         ax.set_ylim((0, 0.05))
         ax.set_xlim((0.095, 1))

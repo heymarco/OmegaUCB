@@ -182,17 +182,19 @@ def move_legend_below_graph(grid, ncol: int, title: str):
     plt.tight_layout()
 
 
-def create_custom_legend(grid: sns.FacetGrid):
+def create_custom_legend(grid: sns.FacetGrid, with_markers: bool = True):
     app_color_list = color_list()
     approaches = [entry[0] for entry in app_color_list]
     marker_dict = get_markers_for_approaches(approaches)
     colors = [entry[1] for entry in app_color_list]
-
-    custom_lines = [Line2D([0], [0], color=color, marker=marker,
-                           # markersize=3, lw=1,
-                           markeredgewidth=0.2)
-                    for color, marker in zip(colors, marker_dict.values())]
-
+    if with_markers:
+        custom_lines = [Line2D([0], [0], color=color, marker=marker,
+                               # markersize=3, lw=1,
+                               markeredgewidth=0.2)
+                        for color, marker in zip(colors, marker_dict.values())]
+    else:
+        custom_lines = [Line2D([0], [0], color=color)
+                        for color, marker in zip(colors, marker_dict.values())]
     axes = grid.axes
     for ax in axes.flatten():
         if ax.legend():

@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib.path import Path
 
 from approach_names import *
 import seaborn as sns
@@ -84,7 +85,22 @@ def get_markers_for_approaches(approaches):
     full_marker_dict = {
         app: marker for app, marker in zip(all_approaches, markers)
     }
+    # full_marker_dict[ETA_UCB_1_4] = _dummy_marker()
     relevant_markers = {
         app: full_marker_dict[app] for app in approaches
     }
     return relevant_markers
+
+
+def _dummy_marker():
+    verts = [
+        (0, 0),  # lower right
+        (0, 1e-10),  # lower left
+    ]
+
+    codes = [
+        Path.MOVETO,  # begin the figure in the lower right
+        Path.LINETO,  # start a 3 point curve with the control point in lower left
+    ]
+
+    return Path(verts, codes)

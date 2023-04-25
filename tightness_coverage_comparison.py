@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 
 from approach_names import *
-from util import cm2inch, move_legend_below_graph
+from util import cm2inch
 
 sns.set_style("ticks")
 
@@ -129,6 +129,7 @@ if __name__ == '__main__':
     df["UCB/expectation"] = np.nan
     df["UCB/expectation"] = df["UCB"] / df["exp. ratio"]
     df = df.groupby(["Samples", r"$\mu_c$", "Approach"]).mean().reset_index()
+    df[r"\% UCB violations"] = df[r"\% UCB violations"] * 100
     df["order"] = np.nan
     for approach in order:
         df["order"].loc[df["Approach"] == approach] = order[approach]
@@ -143,14 +144,13 @@ if __name__ == '__main__':
     g.axes.flatten()[1].set_yscale("log")
     g.axes.flatten()[1].set_ylim(bottom=0.5)
     hlines_ucb = [1, 10, 100]  # [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 50, 100]
-    hlines_cov = [0.8, 0.85, 0.9, 0.95, 1.0]
-    hlines_cov = 1 - np.array(hlines_cov)
+    hlines_cov = [5, 10, 15]
     for hline in hlines_ucb:
         g.axes.flatten()[1].axhline(hline, ls="--", lw=0.7, color="black", zorder=0)
     for hline in hlines_cov:
         g.axes.flatten()[0].axhline(hline, ls="--", lw=0.7, color="black", zorder=0)
     # g.axes.flatten()[0].set_ylim(0, 10.0)
-    g.axes.flatten()[0].set_ylim(0, .18)
+    g.axes.flatten()[0].set_ylim(0, 18)
     g.set(xlabel=None)
     for ax in g.axes.flatten():
         title = ax.get_title()

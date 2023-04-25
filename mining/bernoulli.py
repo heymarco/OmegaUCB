@@ -5,12 +5,12 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from colors import get_markers_for_approaches
+from colors import get_markers_for_approaches, get_palette_for_approaches
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from util import load_df, prepare_df, cm2inch, create_palette, move_legend_below_graph, create_custom_legend
+from util import load_df, prepare_df, cm2inch, create_palette, create_custom_legend
 from components.bandit_logging import *
 from approach_names import *
 
@@ -34,7 +34,7 @@ def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.2):
     return lims
 
 
-def plot_regret(df: pd.DataFrame, filename: str):
+def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
     x = NORMALIZED_BUDGET
     y = NORMALIZED_REGRET
     hue = APPROACH
@@ -43,14 +43,26 @@ def plot_regret(df: pd.DataFrame, filename: str):
     df = df.iloc[::-1]
     palette = create_palette(df)
     markers = get_markers_for_approaches(np.unique(df[APPROACH]))
-    g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
-                    # lw=1, markersize=3,
-                    markeredgewidth=0.1,
-                    kind="line", palette=palette, legend=False,
-                    errorbar=None, err_style="bars",
-                    facet_kws={"sharey": False}, style=hue, markers=markers, dashes=False)
-    # g.set(xscale="symlog")
-    # g.set(linthreshx=0.01)
+    if with_ci:
+        g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
+                        # lw=1, markersize=3,
+                        markeredgewidth=0.1,
+                        kind="line", palette=palette, legend=False,
+                        errorbar="ci", err_style="bars", err_kws={"capsize": 2}, solid_capstyle="butt",
+                        seed=0, n_boot=500,
+                        facet_kws={"sharey": False},
+                        # style=hue, markers=markers,
+                        dashes=False)
+    else:
+        g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
+                        # lw=1, markersize=3,
+                        markeredgewidth=0.1,
+                        kind="line", palette=palette, legend=False,
+                        errorbar=None,
+                        facet_kws={"sharey": False},
+                        style=hue, markers=markers,
+                        dashes=False)
+
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):
         ax.set_ylim(lim)
         ax.set_xlim((0.095, 1))
@@ -59,7 +71,7 @@ def plot_regret(df: pd.DataFrame, filename: str):
             ax.set_ylabel("")
     if filename == "synth_bernoulli":
         plt.gcf().set_size_inches(cm2inch(20, 6))
-        create_custom_legend(g)
+        create_custom_legend(g, with_markers=not with_ci)
         plt.tight_layout(pad=.5)
         plt.subplots_adjust(top=0.65)
     else:
@@ -70,6 +82,7 @@ def plot_regret(df: pd.DataFrame, filename: str):
 
 
 if __name__ == '__main__':
+    with_ci = True
     filenames = [
         "synth_bernoulli",
     ]
@@ -100,4 +113,4 @@ if __name__ == '__main__':
         # df = df.loc[df[APPROACH] != CUCB]
         # df = df.loc[df[APPROACH] != MUCB]
         # df = df.loc[df[APPROACH] != IUCB]
-        plot_regret(df, filename)
+        plot_regret(df, filename, with_ci=with_ci)

@@ -8,14 +8,13 @@ import matplotlib.pyplot as plt
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from util import load_df, prepare_df, cm2inch, create_palette, move_legend_below_graph
+from util import load_df, prepare_df, cm2inch
 from components.bandit_logging import *
 from approach_names import *
-from colors import omega_ucb_base_color, eta_ucb_base_color, other_colors
+from colors import omega_ucb_base_color, eta_ucb_base_color
 
 
 import matplotlib as mpl
-from matplotlib.legend import Legend
 mpl.rcParams['text.usetex'] = True
 mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
@@ -27,19 +26,6 @@ def get_bts_hlines(df: pd.DataFrame):
     lower = bts.groupby(["Distribution", K])[NORMALIZED_REGRET].quantile(q=0.25).reset_index().drop([K, "Distribution"], axis=1)
     median = bts.groupby(["Distribution", K])[NORMALIZED_REGRET].quantile().reset_index().drop([K, "Distribution"], axis=1)
     return lower.to_numpy(), median.to_numpy(), upper.to_numpy()
-
-
-def extend_legend(grid: sns.FacetGrid, line, text):
-    legend = grid.legend
-    title = legend.get_title().get_text()
-    lines = legend.get_patches()
-    lines.append(line)
-    texts = legend.get_texts()
-    texts = [t.get_text() for t in texts]
-    texts.append(text)
-    legend_data = {text: line for text, line in zip(texts, lines)}
-    legend.remove()
-    grid.add_legend(legend_data, title)
 
 
 def plot_regret(df: pd.DataFrame, figsize, figname):
@@ -59,15 +45,10 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
     g = sns.catplot(data=df, kind="bar", x=x, y=y, hue=hue, col=col, row=row, palette=palette,
                     sharey=False, sharex=True, linewidth=.8, errwidth=1)
     g.set(yscale="log")
-    # lims = [0.00008, 0.02, 0.05]
-    bts_line = None
     xtick_labels = [r"$\frac{1}{64}$", r"$\frac{1}{32}$", r"$\frac{1}{16}$", r"$\frac{1}{8}$",
                     r"$\frac{1}{4}$", r"$\frac{1}{2}$", "$1$", "$2$"
                     ]
     for i, ax in enumerate(g.axes.flatten()):
-        # ax.set_ylim(bottom=lims[0])
-        # ax.axhspan(bts_quantiles[0][i], bts_quantiles[2][i], color=palette[-1], alpha=0.25, zorder=0, lw=0)
-        # bts_line = ax.axhline(bts_quantiles[1][i], color=palette[-1], zorder=0, label=BTS)
         ax.set_xticklabels(xtick_labels)
         ax_title = ax.get_title()
         dist_title, K_title = ax_title.split(" | ")
@@ -78,7 +59,6 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
             ax.set_title("")
         if i % 3 == 0:
             ax.set_ylabel(r"Regret ({})".format(dist_title))
-    extend_legend(g, bts_line, BTS)
     plt.gcf().set_size_inches(cm2inch(figsize))
     plt.tight_layout(pad=.7)
     plt.subplots_adjust(right=0.86, wspace=.4, hspace=.13)

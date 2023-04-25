@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from util import load_df, prepare_df, cm2inch, create_palette, move_legend_below_graph, create_custom_legend
+from util import load_df, prepare_df, cm2inch, create_palette
 from components.bandit_logging import *
 from approach_names import *
 from colors import get_markers_for_approaches
@@ -34,7 +34,7 @@ def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.3):
     return lims
 
 
-def plot_regret(df: pd.DataFrame):
+def plot_regret(df: pd.DataFrame, with_ci: bool = False):
     df = df.iloc[::-1]
     x = NORMALIZED_BUDGET
     y = NORMALIZED_REGRET
@@ -43,12 +43,25 @@ def plot_regret(df: pd.DataFrame):
     # df = df.sort_values(by=[APPROACH])
     palette = create_palette(df)
     markers = get_markers_for_approaches(np.unique(df[APPROACH]))
-    g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
-                    # lw=1, markersize=3,
-                    markeredgewidth=0.1,
-                    kind="line", palette=palette, legend=False,
-                    errorbar=None, err_style="bars",
-                    facet_kws={"sharey": False}, style=hue, markers=markers, dashes=False)
+    if with_ci:
+        g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
+                        # lw=1, markersize=3,
+                        markeredgewidth=0.1,
+                        kind="line", palette=palette, legend=False,
+                        errorbar="ci", err_style="bars", err_kws={"capsize": 2}, solid_capstyle="butt",
+                        seed=0, n_boot=500,
+                        facet_kws={"sharey": False},
+                        # style=hue, markers=markers,
+                        dashes=False)
+    else:
+        g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
+                        # lw=1, markersize=3,
+                        markeredgewidth=0.1,
+                        kind="line", palette=palette, legend=False,
+                        errorbar=None,
+                        facet_kws={"sharey": False},
+                        style=hue, markers=markers,
+                        dashes=False)
     # g.set(xscale="symlog")
     # g.set(linthreshx=0.01)
     lims = [(0, 0.009), (0, 0.09), (0, 0.22)]
@@ -66,6 +79,7 @@ def plot_regret(df: pd.DataFrame):
 
 
 if __name__ == '__main__':
+    with_ci = True
     filename = "synth_beta_combined"
     df = load_df(filename)
     df = prepare_df(df, n_steps=10)
@@ -94,4 +108,4 @@ if __name__ == '__main__':
     # df = df.loc[df[APPROACH] != MUCB]
     # df = df.loc[df[APPROACH] != IUCB]
 
-    plot_regret(df)
+    plot_regret(df, with_ci=with_ci)
