@@ -4,8 +4,7 @@ This repository contains code for the paper "Budgeted Multi-Armed Bandits with A
 
 ## Abstract
 
-We focus on the stochastic Budgeted Multi-Armed Bandit (MAB) problem, where a player chooses from $K$ arms with unknown expected rewards and costs. The goal is to maximize the cumulative reward within a given budget by choosing the arm with the highest reward-cost ratio as frequently as possible. We propose a new upper confidence bound (UCB) sampling policy, $\omega$-UCB, that uses asymmetric confidence intervals. The intervals
-scale with the distance between the sample mean and the bounds of a random variable. This leads to a more accurate estimation of the reward-cost ratio and resolves multiple issues of existing UCB sampling policies. We prove that $\omega$-UCB has logarithmic regret and our experiments show that it outperforms the current state of the art, both in synthetic and real settings.
+We focus on the stochastic Budgeted Multi-Armed Bandit (MAB) problem, where a player chooses from $K$ arms with unknown expected rewards and costs. The goal is to maximize the total reward under a budget constraint. A player thus seeks to choose the arm with the highest reward-cost ratio as often as possible. We identify and illustrate multiple issues in the current state of the art. To overcome these issues, we propose a first-of-its-kind upper confidence bound (UCB) sampling policy, $\omega$-UCB, that uses asymmetric confidence intervals. Our intervals scale with the distance between the sample mean and the bounds of a random variable, leading to a more accurate estimation of the reward-cost ratio compared to our competitors. Our approach enjoys provably logarithmic regret and outperforms the current state of the art consistently in diverse synthetic and real settings. 
 
 ## Reproducing our results
 
