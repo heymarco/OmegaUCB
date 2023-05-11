@@ -37,7 +37,7 @@ def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.3):
 def plot_regret(df: pd.DataFrame, with_ci: bool = False):
     df = df.iloc[::-1]
     x = NORMALIZED_BUDGET
-    y = NORMALIZED_REGRET
+    y = REGRET
     hue = APPROACH
     col = K
     # df = df.sort_values(by=[APPROACH])
@@ -64,7 +64,8 @@ def plot_regret(df: pd.DataFrame, with_ci: bool = False):
                         dashes=False)
     # g.set(xscale="symlog")
     # g.set(linthreshx=0.01)
-    lims = [(0, 0.009), (0, 0.09), (0, 0.22)]
+    # lims = [(0, 0.009), (0, 0.09), (0, 0.22)]
+    lims = [(0, 900), (0, 9000), (0, 15000)]
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):
         ax.set_ylim(lim)
         ax.set_xlim((0.095, 1))
@@ -74,13 +75,16 @@ def plot_regret(df: pd.DataFrame, with_ci: bool = False):
     plt.gcf().set_size_inches(cm2inch(20, 6 * 0.75))
     # create_custom_legend(g)
     plt.tight_layout(pad=.8)
-    plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
+    if with_ci:
+        plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + "_ci" + ".pdf"))
+    else:
+        plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
     plt.show()
 
 
 if __name__ == '__main__':
     with_ci = True
-    filename = "synth_beta_combined"
+    filename = "synth_beta"
     df = load_df(filename)
     df = prepare_df(df, n_steps=10)
     df.loc[df[APPROACH] == "B-UCB", APPROACH] = BUDGET_UCB

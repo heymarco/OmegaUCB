@@ -27,15 +27,15 @@ def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.2):
     df = df.groupby([x, hue, col_var]).mean().reset_index()
     df = df[df[x] <= x_cut]
     for _, row_df in df.groupby(col_var):
-        max_regret = row_df[NORMALIZED_REGRET].max()
+        max_regret = row_df[REGRET].max()
         min_regret = row_df[NORMALIZED_REGRET].min()
-        lims.append((min_regret * 0.8, max_regret))
+        lims.append((0, max_regret))
     return lims
 
 
 def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
     x = NORMALIZED_BUDGET
-    y = NORMALIZED_REGRET
+    y = REGRET
     hue = APPROACH
     col = K
     lims = compute_ylims(df, x, hue, col_var=col)
@@ -68,7 +68,10 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
             ax.set_ylabel("")
     plt.gcf().set_size_inches(cm2inch(20, 6 * 0.75))
     plt.tight_layout(pad=.5)
-    plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
+    if with_ci:
+        plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + "_ci" + ".pdf"))
+    else:
+        plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
     plt.show()
 
 

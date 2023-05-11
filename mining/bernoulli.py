@@ -28,7 +28,7 @@ def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.2):
     df = df[df[x] <= x_cut]
     # df.sort_values(by=[col_var], inplace=True)
     for _, row_df in df.groupby(col_var):
-        max_regret = row_df[NORMALIZED_REGRET].max()
+        max_regret = row_df[REGRET].max()
         # min_regret = row_df[NORMALIZED_REGRET].min()
         lims.append((0, max_regret))
     return lims
@@ -36,7 +36,7 @@ def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.2):
 
 def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
     x = NORMALIZED_BUDGET
-    y = NORMALIZED_REGRET
+    y = REGRET
     hue = APPROACH
     col = K
     lims = compute_ylims(df, x, hue, col_var=col)
@@ -69,15 +69,14 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
         ax.set_xscale("symlog", linthresh=.1)
         if i > 0:
             ax.set_ylabel("")
-    if filename == "synth_bernoulli":
-        plt.gcf().set_size_inches(cm2inch(20, 6))
-        create_custom_legend(g, with_markers=not with_ci)
-        plt.tight_layout(pad=.5)
-        plt.subplots_adjust(top=0.65)
+    plt.gcf().set_size_inches(cm2inch(20, 6))
+    create_custom_legend(g, with_markers=not with_ci)
+    plt.tight_layout(pad=.5)
+    plt.subplots_adjust(top=0.65)
+    if with_ci:
+        plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + "_ci" + ".pdf"))
     else:
-        plt.gcf().set_size_inches(cm2inch(20, 6 * 0.75))
-        plt.tight_layout(pad=.5)
-    plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
+        plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
     plt.show()
 
 

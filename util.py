@@ -118,21 +118,11 @@ def normalize_regret(df: pd.DataFrame):
 def normalize_budget(df: pd.DataFrame):
     df = df.sort_values(by=EXPECTED_SPENT_BUDGET)
     for _, gdf in df.groupby([APPROACH, REP, K, MINIMUM_AVERAGE_COST]):
-        expected_spent_budget = gdf[SPENT_BUDGET]
-        budget = np.max(gdf[SPENT_BUDGET])
-        expected_spent_budget = expected_spent_budget / np.max(expected_spent_budget) * budget
+        spent_budget = gdf[EXPECTED_SPENT_BUDGET]
+        budget = np.max(gdf[EXPECTED_SPENT_BUDGET])
+        expected_spent_budget = spent_budget / np.max(spent_budget) * budget
         normalized = expected_spent_budget / budget
         df.loc[gdf.index, NORMALIZED_BUDGET] = normalized
-    return df
-
-
-def remove_outliers(df: pd.DataFrame):
-    for _, gdf in df.groupby([APPROACH, K, NORMALIZED_BUDGET]):
-        min_percentile = np.percentile(gdf[NORMALIZED_REGRET], q=1)
-        max_percentile = np.percentile(gdf[NORMALIZED_REGRET], q=99)
-        mask = np.logical_or(gdf[NORMALIZED_REGRET] <= min_percentile, gdf[NORMALIZED_REGRET] >= max_percentile)
-        nan_indices = gdf.index[mask]
-        df.loc[nan_indices, NORMALIZED_REGRET] = np.nan
     return df
 
 
@@ -163,10 +153,8 @@ def prepare_df(df: pd.DataFrame, n_steps=10):
     df = normalize_regret(df)
     df.sort_values(by=[NORMALIZED_BUDGET, APPROACH], inplace=True)
     df.loc[:, NORMALIZED_BUDGET] = np.ceil(df[NORMALIZED_BUDGET] * 10) / 10
-    # df = df[(df[NORMALIZED_BUDGET] * 100) % 10 == 0]
     df = df[df[NORMALIZED_BUDGET] <= 1]
     df = df.groupby([K, APPROACH, NORMALIZED_BUDGET, REP, MINIMUM_AVERAGE_COST]).last().reset_index()
-    df = remove_outliers(df)
     df.loc[:, RHO] = np.nan
     df.loc[:, RHO] = df[APPROACH].apply(lambda x: extract_rho(x))
     df.loc[:, IS_OUR_APPROACH] = False

@@ -25,7 +25,7 @@ def compute_ylims(df: pd.DataFrame, x, hue, x_cut=.7):
     lims = []
     df = df.groupby([x, hue]).mean().reset_index()
     df = df[df[x] <= x_cut]
-    max_regret = df[NORMALIZED_REGRET].max()
+    max_regret = df[REGRET].max()
     min_regret = df[NORMALIZED_REGRET].min()
     lims.append((0, max_regret))
     return lims
@@ -35,9 +35,9 @@ def plot_regret(df: pd.DataFrame, filename: str, x_cut: float, with_ci: bool = F
     df = df.iloc[::-1]
     df.loc[df[APPROACH] == "B-UCB", APPROACH] = BUDGET_UCB
     x = NORMALIZED_BUDGET
-    y = NORMALIZED_REGRET
+    y = REGRET
     hue = APPROACH
-    lims = compute_ylims(df, x, hue, x_cut=x_cut)
+    lims = [(0, 1500), (0, 1500)]  # compute_ylims(df, x, hue, x_cut=x_cut)
     palette = create_palette(df)
     markers = get_markers_for_approaches(np.unique(df[APPROACH]))
     if with_ci:
@@ -46,7 +46,7 @@ def plot_regret(df: pd.DataFrame, filename: str, x_cut: float, with_ci: bool = F
                         kind="line", palette=palette, legend=False,
                         errorbar="ci", err_style="bars", seed=0, n_boot=500, err_kws={"capsize": 2},
                         solid_capstyle="butt",
-                        facet_kws={"sharey": False}, style=hue, markers=markers, dashes=False)
+                        facet_kws={"sharey": False}, style=hue, markers=False, dashes=False)
     else:
         g = sns.relplot(data=df, x=x, y=y, hue=hue, lw=1,
                         markeredgewidth=0.1,
@@ -55,18 +55,22 @@ def plot_regret(df: pd.DataFrame, filename: str, x_cut: float, with_ci: bool = F
                         facet_kws={"sharey": False}, style=hue, markers=markers, dashes=False)
 
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):
-        ax.set_ylim((0, 0.05))
+        ax.set_ylim(lim)
         ax.set_xlim((0.095, 1))
         ax.set_xscale("symlog", linthresh=.1)
     plt.gcf().set_size_inches(cm2inch((20 / 2.8, 6 * 0.75)))
     plt.tight_layout(pad=.5)
-    plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
+    if with_ci:
+        plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + "_ci" + ".pdf"))
+    else:
+        plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
     plt.show()
 
 
 if __name__ == '__main__':
+    with_ci = True
     filenames = [
-        "facebook_beta_combined",
+        "facebook_beta",
         "facebook_bernoulli"
     ]
     setting_ids = [
@@ -125,4 +129,4 @@ if __name__ == '__main__':
         # df = df.loc[df[APPROACH] != CUCB]
         # df = df.loc[df[APPROACH] != BTS]
         # df = df.loc[df[APPROACH] != B_GREEDY]
-        plot_regret(df, filename, x_cut=cut)
+        plot_regret(df, filename, x_cut=cut, with_ci=with_ci)

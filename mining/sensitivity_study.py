@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from util import load_df, prepare_df, cm2inch
+from util import load_df, prepare_df, cm2inch, remove_outlier
 from components.bandit_logging import *
 from approach_names import *
 from colors import omega_ucb_base_color, eta_ucb_base_color
@@ -29,7 +29,7 @@ def get_bts_hlines(df: pd.DataFrame):
 
 
 def plot_regret(df: pd.DataFrame, figsize, figname):
-    df = df[df[NORMALIZED_BUDGET] == 1]
+    df = df[df[NORMALIZED_BUDGET] == 1.0]
     df = df[df[APPROACH] != BTS]
     df.sort_values(by=["Distribution", K])
     omega_ucb_color = sns.color_palette(omega_ucb_base_color, n_colors=12)[3]
@@ -38,12 +38,15 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
     df[APPROACH] = df[APPROACH].apply(lambda x: ETA_UCB_ if ETA_UCB_ in x else x)
     df[APPROACH] = df[APPROACH].apply(lambda x: OMEGA_UCB_ if OMEGA_UCB_ in x else x)
     x = RHO
-    y = NORMALIZED_REGRET
+    y = REGRET
     hue = APPROACH
     col = K
     row = "Distribution"
-    g = sns.catplot(data=df, kind="bar", x=x, y=y, hue=hue, col=col, row=row, palette=palette,
-                    sharey=False, sharex=True, linewidth=.8, errwidth=1)
+    g = sns.catplot(data=df, kind="bar",
+                    x=x, y=y, hue=hue, col=col, row=row,
+                    palette=palette,
+                    sharey=False, sharex=True,
+                    linewidth=.8, errwidth=1)
     g.set(yscale="log")
     xtick_labels = [r"$\frac{1}{64}$", r"$\frac{1}{32}$", r"$\frac{1}{16}$", r"$\frac{1}{8}$",
                     r"$\frac{1}{4}$", r"$\frac{1}{2}$", "$1$", "$2$"
@@ -70,7 +73,7 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
 
 
 if __name__ == '__main__':
-    filename = "synth_beta_combined"
+    filename = "synth_beta"
     df_beta = load_df(filename)
     df_beta = prepare_df(df_beta, n_steps=10)
     df_beta = df_beta.loc[df_beta[APPROACH] != UCB_SC_PLUS]
@@ -88,6 +91,7 @@ if __name__ == '__main__':
     filename = "synth_bernoulli"
     df_bern = load_df(filename)
     df_bern = prepare_df(df_bern, n_steps=10)
+    df_bern = remove_outlier(df_bern)
     df_bern = df_bern.loc[df_bern[APPROACH] != UCB_SC_PLUS]
     df_bern = df_bern.loc[df_bern[APPROACH] != B_GREEDY]
     df_bern = df_bern.loc[df_bern[APPROACH] != CUCB]
@@ -99,7 +103,7 @@ if __name__ == '__main__':
     # df_bern = df_bern.loc[df_bern[APPROACH] != ETA_UCB_2]
     df_bern["Distribution"] = "Bernoulli"
 
-    filename = "synth_multinomial_combined"
+    filename = "synth_multinomial"
     df_mult = load_df(filename)
     df_mult = prepare_df(df_mult, n_steps=10)
     df_mult = df_mult.loc[df_mult[APPROACH] != UCB_SC_PLUS]

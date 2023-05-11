@@ -49,10 +49,6 @@ if __name__ == '__main__':
         r"$\omega$-UCB (ours)"
     ]
 
-    empty = [
-        "" for _ in range(len(approaches_with_years))
-    ]
-
     old_matrix = [
         [0, -1, 0, 0, 0, -1, -1, -1, -1, -1, 0, 0, -2],
         [1, 0, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0, -2],
@@ -107,6 +103,7 @@ if __name__ == '__main__':
     matrix[:, 8] = col_7
 
     show_full = True
+    remove_ours = True
     grays = sns.color_palette("Greys", n_colors=101)
     grays = [grays[30], grays[10]]
     palette = list(sns.color_palette("vlag_r", n_colors=101))
@@ -114,6 +111,16 @@ if __name__ == '__main__':
     palette = palette if show_full else palette[1:]
     palette = [grays[0]] + palette
 
+    if remove_ours:
+        approaches = approaches[:-1]
+        approaches_with_years = approaches_with_years[:-1]
+        matrix = np.array(matrix)[:-1, :-1]
+        if remove_ours and not show_full:
+            raise NotImplementedError
+
+    empty = [
+        "" for _ in range(len(approaches_with_years))
+    ]
 
     if not show_full:
         df = pd.DataFrame(np.array(matrix_inv), columns=approaches, index=approaches_inv)
@@ -123,6 +130,18 @@ if __name__ == '__main__':
         df = pd.DataFrame(np.array(matrix), columns=approaches, index=approaches_with_years)
         ax = sns.heatmap(df, cmap=palette,
                          linewidth=1, cbar=False, square=True)
+    sns.scatterplot(x=.5 + np.argwhere(df.to_numpy().T == 1).T[0],
+                    y=.5 + np.argwhere(df.to_numpy().T == 1).T[1],
+                    ax=ax, facecolor="none", edgecolor="white", marker="^")
+    sns.scatterplot(x=.5 + np.argwhere(df.to_numpy().T == -1).T[0],
+                    y=.5 + np.argwhere(df.to_numpy().T == -1).T[1],
+                    ax=ax, facecolor="none", edgecolor="white", marker="v")
+    sns.scatterplot(x=.5 + np.argwhere(df.to_numpy().T == 0).T[0],
+                    y=.5 + np.argwhere(df.to_numpy().T == 0).T[1],
+                    ax=ax, edgecolor="gray", facecolor="none", marker="o")
+    sns.scatterplot(x=.5 + np.argwhere(df.to_numpy().T == -2).T[0],
+                    y=.5 + np.argwhere(df.to_numpy().T == -2).T[1],
+                    ax=ax, color="white", marker="_")
     ax.set_xlabel("")
     ax.set_ylabel("")
     ax.xaxis.set_label_position('top')
