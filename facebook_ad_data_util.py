@@ -8,7 +8,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 def load_facebook_data():
     this_dir = pathlib.Path(__file__).parent.resolve()
-    fp = os.path.join(this_dir, "data", "KAG_conversion_adapted.csv")
+    fp = os.path.join(this_dir, "data", "processed.csv")
     if not os.path.exists(fp):
         prepare_raw_data()
         load_facebook_data()
@@ -17,7 +17,8 @@ def load_facebook_data():
 
 def prepare_raw_data():
     this_dir = pathlib.Path(__file__).parent.resolve()
-    fp = os.path.join(this_dir, "data", "KAG_conversion_adapted_raw.csv")
+    fp = os.path.join(this_dir, "data", "data.csv")
+    assert os.path.exists(fp), "It seems that the data.csv file is missing. Please follow the instructions in our readme under 'Downloading advertisement data'."
     raw_data = pd.read_csv(fp)
     raw_data = raw_data[raw_data["spent"] > 0]
     spent = raw_data["spent"]
@@ -29,11 +30,10 @@ def prepare_raw_data():
     raw_data["rpc"] = rpc
     raw_data = raw_data[clicks >= revenue]
     raw_data["reward_cost_ratio"] = raw_data["rpc"] / raw_data["cpc"]
-    raw_data.to_csv(os.path.join("data", "KAG_conversion_adapted.csv"), index=False)
+    raw_data.to_csv(os.path.join("data", "processed.csv"), index=False)
 
 
 def prepare_facebook_data():
-    # prepare_raw_data()
     raw_data = load_facebook_data()
     is_zero_cost = raw_data["spent"] == 0
     has_no_clicks = raw_data["clicks"] == 0
@@ -89,7 +89,6 @@ def get_facebook_ad_data_settings(rng):
     settings = []
     for _, gdf in data.groupby(["campaign_id", "age", "gender"]):
         setting = get_setting(gdf)
-        # setting = scale_randomly(setting, rng)
         setting = normalize_setting(setting)
         setting = sort_setting(setting)
         k = len(setting[0])

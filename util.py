@@ -1,16 +1,13 @@
 import os.path
-import gc
 import pathlib
 from multiprocessing import Pool
 from time import sleep
 
 import numpy as np
-import pandas
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 from scipy import stats
-from tqdm import tqdm
 import seaborn as sns
 
 from colors import color_list, get_palette_for_approaches, get_markers_for_approaches
@@ -176,9 +173,7 @@ def create_custom_legend(grid: sns.FacetGrid, with_markers: bool = True):
     marker_dict = get_markers_for_approaches(approaches)
     colors = [entry[1] for entry in app_color_list]
     if with_markers:
-        custom_lines = [Line2D([0], [0], color=color, marker=marker,
-                               # markersize=3, lw=1,
-                               markeredgewidth=0.2)
+        custom_lines = [Line2D([0], [0], color=color, marker=marker, markeredgewidth=0.2)
                         for color, marker in zip(colors, marker_dict.values())]
     else:
         custom_lines = [Line2D([0], [0], color=color)
