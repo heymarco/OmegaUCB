@@ -68,8 +68,6 @@ if __name__ == '__main__':
     ]
     for filename in filenames:
         df = load_df(filename)
-        # df = df.ffill()  # uncomment if you want to see results for a specific setting.
-        # df = df[df[K] == 33]
         df = prepare_df(df, n_steps=10)
         if "beta" in filename:
             df = df.loc[df[APPROACH] != OMEGA_UCB_1_64]
