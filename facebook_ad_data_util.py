@@ -3,7 +3,6 @@ import pathlib
 
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
 
 
 def load_facebook_data():
@@ -53,18 +52,6 @@ def get_setting(df):
     mean_costs = mean_costs[mean_costs > 0]
     mean_rewards = mean_rewards[mean_costs > 0]
     return mean_rewards, mean_costs
-
-
-def scale_randomly(setting, rng):
-    rew = setting[0]
-    cost = setting[1]
-    min_r = rng.uniform(0, 0.5)
-    max_r = rng.uniform(0.5, 1)
-    min_c = rng.uniform(0, 0.5)
-    max_c = rng.uniform(0.5, 1)
-    rew = MinMaxScaler(feature_range=(min_r, max_r)).fit_transform(np.expand_dims(rew, -1)).flatten()
-    cost = MinMaxScaler(feature_range=(min_c, max_c)).fit_transform(np.expand_dims(cost, -1)).flatten()
-    return rew, cost
 
 
 def sort_setting(setting):
