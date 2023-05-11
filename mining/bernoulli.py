@@ -5,7 +5,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from colors import get_markers_for_approaches, get_palette_for_approaches
+from colors import get_markers_for_approaches
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
@@ -26,10 +26,8 @@ def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.2):
     lims = []
     df = df.groupby([x, hue, col_var]).mean().reset_index()
     df = df[df[x] <= x_cut]
-    # df.sort_values(by=[col_var], inplace=True)
     for _, row_df in df.groupby(col_var):
         max_regret = row_df[REGRET].max()
-        # min_regret = row_df[NORMALIZED_REGRET].min()
         lims.append((0, max_regret))
     return lims
 
@@ -45,17 +43,14 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
     markers = get_markers_for_approaches(np.unique(df[APPROACH]))
     if with_ci:
         g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
-                        # lw=1, markersize=3,
                         markeredgewidth=0.1,
                         kind="line", palette=palette, legend=False,
                         errorbar="ci", err_style="bars", err_kws={"capsize": 2}, solid_capstyle="butt",
                         seed=0, n_boot=500,
                         facet_kws={"sharey": False},
-                        # style=hue, markers=markers,
                         dashes=False)
     else:
         g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
-                        # lw=1, markersize=3,
                         markeredgewidth=0.1,
                         kind="line", palette=palette, legend=False,
                         errorbar=None,

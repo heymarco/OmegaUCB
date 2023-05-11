@@ -35,8 +35,6 @@ def our_method(mu_r, mu_c, n, delta=0.05, eta=1.0, m=0, M=1):
     z = norm.interval(1 - delta / 2)[1]
     lcb_cost = wilson_generalized(mu_c, n, z, eta, m, M)[0]
     ucb_rew = wilson_generalized(mu_r, n, z, eta, m, M)[1]
-    if lcb_cost <= 0:
-        print("error")
     return ucb_rew / lcb_cost
 
 
@@ -149,6 +147,7 @@ if __name__ == '__main__':
         g.axes.flatten()[1].axhline(hline, ls="--", lw=0.7, color="black", zorder=0)
     for hline in hlines_cov:
         g.axes.flatten()[0].axhline(hline, ls="--", lw=0.7, color="black", zorder=0)
+        g.axes.flatten()[0].set_yticks([5, 10, 15], ["5", "10", "15"])
     # g.axes.flatten()[0].set_ylim(0, 10.0)
     g.axes.flatten()[0].set_ylim(0, 18)
     g.set(xlabel=None)
@@ -158,9 +157,10 @@ if __name__ == '__main__':
         ax.set_ylabel(title)
         ax.set_title("")
         ax.set_xticks(ax.get_xticks(), ax.get_xticklabels(), rotation=30, ha='right')
-    plt.gcf().set_size_inches(cm2inch((15, 4.5)))
+    plt.gcf().set_size_inches(cm2inch((15, 5)))
     plt.tight_layout(pad=.5)
     plt.subplots_adjust(right=.82, wspace=.3)
+    sns.move_legend(g, "upper right")
     plt.savefig(os.path.join("figures", "ucb_comparison.pdf"))
     plt.show()
 

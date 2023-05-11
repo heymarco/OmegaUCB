@@ -59,7 +59,6 @@ if __name__ == '__main__':
 
     plt.xlim(-0.2, 1.2)
     plt.ylim(-0.5, 1.5)
-    # plt.xlabel("Cost")
     plt.yticks(np.arange(len(funcs)), funcs.keys())
     plt.xticks([0, 1], [0, 1])
     plt.gcf().set_size_inches(cm2inch((14, 1.8)))

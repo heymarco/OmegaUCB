@@ -28,7 +28,6 @@ def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.2):
     df = df[df[x] <= x_cut]
     for _, row_df in df.groupby(col_var):
         max_regret = row_df[REGRET].max()
-        min_regret = row_df[NORMALIZED_REGRET].min()
         lims.append((0, max_regret))
     return lims
 
@@ -49,7 +48,6 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
                         errorbar="ci", err_style="bars", err_kws={"capsize": 2}, solid_capstyle="butt",
                         seed=0, n_boot=500,
                         facet_kws={"sharey": False},
-                        # style=hue, markers=markers,
                         dashes=False)
     else:
         g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,

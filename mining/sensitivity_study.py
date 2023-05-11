@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from util import load_df, prepare_df, cm2inch, remove_outlier
+from util import load_df, prepare_df, cm2inch
 from components.bandit_logging import *
 from approach_names import *
 from colors import omega_ucb_base_color, eta_ucb_base_color
@@ -18,14 +18,6 @@ import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
 mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
-
-
-def get_bts_hlines(df: pd.DataFrame):
-    bts = df[df[APPROACH] == BTS]
-    upper = bts.groupby(["Distribution", K])[NORMALIZED_REGRET].quantile(q=0.75).reset_index().drop([K, "Distribution"], axis=1)
-    lower = bts.groupby(["Distribution", K])[NORMALIZED_REGRET].quantile(q=0.25).reset_index().drop([K, "Distribution"], axis=1)
-    median = bts.groupby(["Distribution", K])[NORMALIZED_REGRET].quantile().reset_index().drop([K, "Distribution"], axis=1)
-    return lower.to_numpy(), median.to_numpy(), upper.to_numpy()
 
 
 def plot_regret(df: pd.DataFrame, figsize, figname):
@@ -68,9 +60,6 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
     plt.savefig(os.path.join(os.getcwd(), "..", "figures", figname + ".pdf"))
     plt.show()
 
-    df = df.groupby([row, col, hue]).mean().reset_index()
-    print(df)
-
 
 if __name__ == '__main__':
     filename = "synth_beta"
@@ -83,15 +72,11 @@ if __name__ == '__main__':
     df_beta = df_beta.loc[df_beta[APPROACH] != IUCB]
     df_beta = df_beta.loc[df_beta[APPROACH] != BUDGET_UCB]
     df_beta = df_beta.loc[df_beta[APPROACH] != "B-UCB"]
-    # df_beta = df_beta.loc[df_beta[APPROACH] != OMEGA_UCB_2]
-    # df_beta = df_beta.loc[df_beta[APPROACH] != ETA_UCB_2]
-    # plot_regret(df_beta, figsize=(20 * 1.8 / 3, 5), figname="sensitivity_" + filename, legend=True, subplots_adjust_right=0.78)
     df_beta["Distribution"] = "Beta"
 
     filename = "synth_bernoulli"
     df_bern = load_df(filename)
     df_bern = prepare_df(df_bern, n_steps=10)
-    df_bern = remove_outlier(df_bern)
     df_bern = df_bern.loc[df_bern[APPROACH] != UCB_SC_PLUS]
     df_bern = df_bern.loc[df_bern[APPROACH] != B_GREEDY]
     df_bern = df_bern.loc[df_bern[APPROACH] != CUCB]
@@ -99,8 +84,6 @@ if __name__ == '__main__':
     df_bern = df_bern.loc[df_bern[APPROACH] != IUCB]
     df_bern = df_bern.loc[df_bern[APPROACH] != BUDGET_UCB]
     df_bern = df_bern.loc[df_bern[APPROACH] != "B-UCB"]
-    # df_bern = df_bern.loc[df_bern[APPROACH] != OMEGA_UCB_2]
-    # df_bern = df_bern.loc[df_bern[APPROACH] != ETA_UCB_2]
     df_bern["Distribution"] = "Bernoulli"
 
     filename = "synth_multinomial"
@@ -113,8 +96,6 @@ if __name__ == '__main__':
     df_mult = df_mult.loc[df_mult[APPROACH] != IUCB]
     df_mult = df_mult.loc[df_mult[APPROACH] != BUDGET_UCB]
     df_mult = df_mult.loc[df_mult[APPROACH] != "B-UCB"]
-    # df_mult = df_mult.loc[df_mult[APPROACH] != OMEGA_UCB_2]
-    # df_mult = df_mult.loc[df_mult[APPROACH] != ETA_UCB_2]
     df_mult["Distribution"] = "Gen. Bern."
 
     df = pd.concat([df_bern, df_mult, df_beta]).reset_index(drop=True)

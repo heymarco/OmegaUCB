@@ -13,7 +13,6 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 from util import load_df, prepare_df, cm2inch, create_palette
 from components.bandit_logging import *
 from approach_names import *
-from scipy.stats import gmean
 
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
@@ -21,23 +20,13 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
-def compute_ylims(df: pd.DataFrame, x, hue, x_cut=.7):
-    lims = []
-    df = df.groupby([x, hue]).mean().reset_index()
-    df = df[df[x] <= x_cut]
-    max_regret = df[REGRET].max()
-    min_regret = df[NORMALIZED_REGRET].min()
-    lims.append((0, max_regret))
-    return lims
-
-
-def plot_regret(df: pd.DataFrame, filename: str, x_cut: float, with_ci: bool = False):
+def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
     df = df.iloc[::-1]
     df.loc[df[APPROACH] == "B-UCB", APPROACH] = BUDGET_UCB
     x = NORMALIZED_BUDGET
     y = REGRET
     hue = APPROACH
-    lims = [(0, 1500), (0, 1500)]  # compute_ylims(df, x, hue, x_cut=x_cut)
+    lims = [(0, 1500), (0, 1500)]
     palette = create_palette(df)
     markers = get_markers_for_approaches(np.unique(df[APPROACH]))
     if with_ci:
@@ -77,8 +66,7 @@ if __name__ == '__main__':
         "FB-Br",
         "FB-Bt"
     ]
-    x_cuts = [0.3, 0.2]
-    for cut, filename in zip(x_cuts, filenames):
+    for filename in filenames:
         df = load_df(filename)
         # df = df.ffill()  # uncomment if you want to see results for a specific setting.
         # df = df[df[K] == 33]
@@ -129,4 +117,4 @@ if __name__ == '__main__':
         # df = df.loc[df[APPROACH] != CUCB]
         # df = df.loc[df[APPROACH] != BTS]
         # df = df.loc[df[APPROACH] != B_GREEDY]
-        plot_regret(df, filename, x_cut=cut, with_ci=with_ci)
+        plot_regret(df, filename, with_ci=with_ci)

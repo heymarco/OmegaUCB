@@ -22,49 +22,30 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
-def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.3):
-    lims = []
-    df = df.groupby([x, hue, col_var]).mean().reset_index()
-    df = df[df[x] <= x_cut]
-    df.sort_values(by=[col_var], inplace=True)
-    for _, row_df in df.groupby(col_var):
-        max_regret = row_df[NORMALIZED_REGRET].max()
-        min_regret = row_df[NORMALIZED_REGRET].min()
-        lims.append((0, max_regret))
-    return lims
-
-
 def plot_regret(df: pd.DataFrame, with_ci: bool = False):
     df = df.iloc[::-1]
     x = NORMALIZED_BUDGET
     y = REGRET
     hue = APPROACH
     col = K
-    # df = df.sort_values(by=[APPROACH])
     palette = create_palette(df)
     markers = get_markers_for_approaches(np.unique(df[APPROACH]))
     if with_ci:
         g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
-                        # lw=1, markersize=3,
                         markeredgewidth=0.1,
                         kind="line", palette=palette, legend=False,
                         errorbar="ci", err_style="bars", err_kws={"capsize": 2}, solid_capstyle="butt",
                         seed=0, n_boot=500,
                         facet_kws={"sharey": False},
-                        # style=hue, markers=markers,
                         dashes=False)
     else:
         g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
-                        # lw=1, markersize=3,
                         markeredgewidth=0.1,
                         kind="line", palette=palette, legend=False,
                         errorbar=None,
                         facet_kws={"sharey": False},
                         style=hue, markers=markers,
                         dashes=False)
-    # g.set(xscale="symlog")
-    # g.set(linthreshx=0.01)
-    # lims = [(0, 0.009), (0, 0.09), (0, 0.22)]
     lims = [(0, 900), (0, 9000), (0, 15000)]
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):
         ax.set_ylim(lim)
@@ -73,7 +54,6 @@ def plot_regret(df: pd.DataFrame, with_ci: bool = False):
         if i > 0:
             ax.set_ylabel("")
     plt.gcf().set_size_inches(cm2inch(20, 6 * 0.75))
-    # create_custom_legend(g)
     plt.tight_layout(pad=.8)
     if with_ci:
         plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + "_ci" + ".pdf"))
