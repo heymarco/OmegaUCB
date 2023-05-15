@@ -48,6 +48,7 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
                         errorbar="ci", err_style="bars", err_kws={"capsize": 2}, solid_capstyle="butt",
                         seed=0, n_boot=500,
                         facet_kws={"sharey": False},
+                        style=hue, markers=False,
                         dashes=False)
     else:
         g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
@@ -64,7 +65,7 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
         ax.set_xscale("symlog", linthresh=.1)
         if i > 0:
             ax.set_ylabel("")
-    plt.gcf().set_size_inches(cm2inch(20, 6))
+    plt.gcf().set_size_inches(cm2inch(20, 8))
     create_custom_legend(g, with_markers=not with_ci)
     plt.tight_layout(pad=.5)
     plt.subplots_adjust(top=0.65)
@@ -76,7 +77,6 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
 
 
 if __name__ == '__main__':
-    with_ci = True
     filenames = [
         "synth_bernoulli",
     ]
@@ -107,4 +107,6 @@ if __name__ == '__main__':
         # df = df.loc[df[APPROACH] != CUCB]
         # df = df.loc[df[APPROACH] != MUCB]
         # df = df.loc[df[APPROACH] != IUCB]
-        plot_regret(df, filename, with_ci=with_ci)
+
+        plot_regret(df, filename, with_ci=True)
+        plot_regret(df, filename, with_ci=False)

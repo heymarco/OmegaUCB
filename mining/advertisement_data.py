@@ -47,7 +47,7 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
         ax.set_ylim(lim)
         ax.set_xlim((0.095, 1))
         ax.set_xscale("symlog", linthresh=.1)
-    plt.gcf().set_size_inches(cm2inch((20 / 2.8, 6 * 0.75)))
+    plt.gcf().set_size_inches(cm2inch(20 / 2.8, 8 * 0.75))  # ((20 / 2.8, 6 * 0.75)))
     plt.tight_layout(pad=.5)
     if with_ci:
         plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + "_ci" + ".pdf"))
@@ -57,7 +57,6 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
 
 
 if __name__ == '__main__':
-    with_ci = True
     filenames = [
         "facebook_beta",
         "facebook_bernoulli"
@@ -66,6 +65,7 @@ if __name__ == '__main__':
         "FB-Br",
         "FB-Bt"
     ]
+
     for filename in filenames:
         df = load_df(filename)
         df = prepare_df(df, n_steps=10)
@@ -115,4 +115,6 @@ if __name__ == '__main__':
         # df = df.loc[df[APPROACH] != CUCB]
         # df = df.loc[df[APPROACH] != BTS]
         # df = df.loc[df[APPROACH] != B_GREEDY]
-        plot_regret(df, filename, with_ci=with_ci)
+
+        plot_regret(df, filename, with_ci=True)
+        plot_regret(df, filename, with_ci=False)
