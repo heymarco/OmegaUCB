@@ -13,8 +13,8 @@ from components.bandit_logging import *
 from approach_names import *
 from colors import omega_ucb_base_color, eta_ucb_base_color
 
-
 import matplotlib as mpl
+
 mpl.rcParams['text.usetex'] = True
 mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
@@ -27,7 +27,7 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
     omega_ucb_color = sns.color_palette(omega_ucb_base_color, n_colors=12)[3]
     eta_ucb_color = sns.color_palette(eta_ucb_base_color, n_colors=12)[2]
     palette = [omega_ucb_color, eta_ucb_color]
-    df[APPROACH] = df[APPROACH].apply(lambda x: ETA_UCB_ if ETA_UCB_ in x else x)
+    df[APPROACH] = df[APPROACH].apply(lambda x: OMEGA_STAR_UCB_ if OMEGA_STAR_UCB_ in x else x)
     df[APPROACH] = df[APPROACH].apply(lambda x: OMEGA_UCB_ if OMEGA_UCB_ in x else x)
     x = RHO
     y = REGRET
@@ -41,8 +41,7 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
                     linewidth=.8, errwidth=1)
     g.set(yscale="log")
     xtick_labels = [r"$\frac{1}{64}$", r"$\frac{1}{32}$", r"$\frac{1}{16}$", r"$\frac{1}{8}$",
-                    r"$\frac{1}{4}$", r"$\frac{1}{2}$", "$1$", "$2$"
-                    ]
+                    r"$\frac{1}{4}$", r"$\frac{1}{2}$", "$1$", "$2$"]
     for i, ax in enumerate(g.axes.flatten()):
         ax.set_xticklabels(xtick_labels)
         ax_title = ax.get_title()

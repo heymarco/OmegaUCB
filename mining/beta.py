@@ -13,10 +13,10 @@ from components.bandit_logging import *
 from approach_names import *
 from colors import get_markers_for_approaches
 
-
 sns.set_style(style="ticks")
 
 import matplotlib as mpl
+
 mpl.rcParams['text.usetex'] = True
 mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
@@ -76,14 +76,14 @@ if __name__ == '__main__':
     df = df.loc[df[APPROACH] != OMEGA_UCB_1_2]
     # df = df.loc[df[APPROACH] != OMEGA_UCB_1]
     df = df.loc[df[APPROACH] != OMEGA_UCB_2]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_64]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_32]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_16]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_8]
+    df = df.loc[df[APPROACH] != OMEGA_STAR_UCB_1_64]
+    df = df.loc[df[APPROACH] != OMEGA_STAR_UCB_1_32]
+    df = df.loc[df[APPROACH] != OMEGA_STAR_UCB_1_16]
+    df = df.loc[df[APPROACH] != OMEGA_STAR_UCB_1_8]
     # df = df.loc[df[APPROACH] != ETA_UCB_1_4]
-    df = df.loc[df[APPROACH] != ETA_UCB_1_2]
+    df = df.loc[df[APPROACH] != OMEGA_STAR_UCB_1_2]
     # df = df.loc[df[APPROACH] != ETA_UCB_1]
-    df = df.loc[df[APPROACH] != ETA_UCB_2]
+    df = df.loc[df[APPROACH] != OMEGA_STAR_UCB_2]
     # df = df.loc[df[APPROACH] != UCB_SC_PLUS]
     df = df.loc[df[APPROACH] != BUDGET_UCB]
     # df = df.loc[df[APPROACH] != BTS]

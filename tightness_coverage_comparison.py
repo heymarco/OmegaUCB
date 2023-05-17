@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pandas as pd
-from scipy.stats import  norm
+from scipy.stats import norm
 from matplotlib import pyplot as plt
 import seaborn as sns
 
@@ -12,6 +12,7 @@ from util import cm2inch
 sns.set_style("ticks")
 
 import matplotlib as mpl
+
 mpl.rcParams['text.usetex'] = True
 mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
@@ -28,7 +29,7 @@ def wilson_generalized(x, n, z, eta=1.0, m=0.0, M=1.0):
 
 
 def hoeffding_ci(n, delta: float):
-    return np.sqrt(-1/(2 * n) * np.log(delta / 2))
+    return np.sqrt(-1 / (2 * n) * np.log(delta / 2))
 
 
 def our_method(mu_r, mu_c, n, delta=0.05, eta=1.0, m=0, M=1):
@@ -65,7 +66,7 @@ def b_ucb(mu_r, mu_c, n, delta=0.05):
 def ucb_sc(mu_r, mu_c, n, delta=0.05):
     top = mu_r * mu_c + np.sqrt(delta / 2 * (mu_r ** 2 + mu_c ** 2 - delta / 2))
     bottom = mu_c ** 2 - delta / 2
-    return top / max(0.001, bottom) #see eq 2 in the respective paper
+    return top / max(0.001, bottom)  # see eq 2 in the respective paper
 
 
 def evaluate_once(approaches: dict, exp_c, n, seed, delta=0.05):
@@ -132,23 +133,24 @@ if __name__ == '__main__':
     for approach in order:
         df["order"].loc[df["Approach"] == approach] = order[approach]
 
-    df = pd.melt(df, id_vars=["Approach", "Samples", "order"], value_vars=[r"\% UCB violations", "UCB/expectation"],
+    df = pd.melt(df, id_vars=["Approach", "Samples", "order"],
+                 value_vars=[r"\% UCB violations", "UCB/expectation"],
                  value_name="Score", var_name="Metric")
     df = df.sort_values(by="order")
 
     sns.set_palette(sns.cubehelix_palette(n_colors=len(ns)))
-    g = sns.catplot(data=df, kind="bar", x="Approach", y="Score", hue="Samples", col="Metric",
+    g = sns.catplot(data=df, kind="bar", x="Approach", y="Score",
+                    hue="Samples", col="Metric",
                     sharex=True, sharey=False, errwidth=1.0)
     g.axes.flatten()[1].set_yscale("log")
     g.axes.flatten()[1].set_ylim(bottom=0.5)
-    hlines_ucb = [1, 10, 100]  # [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 50, 100]
+    hlines_ucb = [1, 10, 100]
     hlines_cov = [5, 10, 15]
     for hline in hlines_ucb:
         g.axes.flatten()[1].axhline(hline, ls="--", lw=0.7, color="black", zorder=0)
     for hline in hlines_cov:
         g.axes.flatten()[0].axhline(hline, ls="--", lw=0.7, color="black", zorder=0)
         g.axes.flatten()[0].set_yticks([5, 10, 15], ["5", "10", "15"])
-    # g.axes.flatten()[0].set_ylim(0, 10.0)
     g.axes.flatten()[0].set_ylim(0, 18)
     g.set(xlabel=None)
     for ax in g.axes.flatten():
@@ -163,4 +165,3 @@ if __name__ == '__main__':
     sns.move_legend(g, "upper right")
     plt.savefig(os.path.join("figures", "ucb_comparison.pdf"))
     plt.show()
-

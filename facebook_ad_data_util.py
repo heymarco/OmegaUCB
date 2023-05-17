@@ -17,7 +17,8 @@ def load_facebook_data():
 def prepare_raw_data():
     this_dir = pathlib.Path(__file__).parent.resolve()
     fp = os.path.join(this_dir, "data", "data.csv")
-    assert os.path.exists(fp), "It seems that the data.csv file is missing. Please follow the instructions in our readme under 'Downloading advertisement data'."
+    assert os.path.exists(
+        fp), "It seems that the data.csv file is missing. Please follow the instructions in our readme under 'Downloading advertisement data'."
     raw_data = pd.read_csv(fp)
     raw_data = raw_data[raw_data["spent"] > 0]
     spent = raw_data["spent"]
@@ -38,7 +39,8 @@ def prepare_facebook_data():
     has_no_clicks = raw_data["clicks"] == 0
     is_zero_reward = raw_data["total_conversion"] == 0
     is_nan_ratio = np.isnan(raw_data["reward_cost_ratio"])
-    non_informative_rows = np.logical_and(np.logical_and(is_zero_reward, is_zero_cost), has_no_clicks)  # do not include ads for which we have no data
+    non_informative_rows = np.logical_and(np.logical_and(is_zero_reward, is_zero_cost),
+                                          has_no_clicks)  # do not include ads for which we have no data
     corrupted_rows = np.logical_and(np.invert(is_zero_reward), is_zero_cost)  # cost although no clicks occurred
     mask = np.invert(np.logical_or(non_informative_rows, corrupted_rows))
     mask = np.logical_or(mask, np.invert(is_nan_ratio))
@@ -71,7 +73,7 @@ def normalize_setting(setting):
     return norm_rew, norm_cost
 
 
-def get_facebook_ad_data_settings(rng):
+def get_facebook_ad_data_settings():
     data = prepare_facebook_data()
     settings = []
     for _, gdf in data.groupby(["campaign_id", "age", "gender"]):
@@ -82,18 +84,3 @@ def get_facebook_ad_data_settings(rng):
         if k >= 2:
             settings.append(setting)
     return settings
-
-
-def get_facebook_ad_stats():
-    data = prepare_facebook_data()
-    cols = ["campaign_id", "age", "gender", "c_min", "K"]
-    rows = []
-    for (cid, age, gender), gdf in data.groupby(["campaign_id", "age", "gender"]):
-        setting = get_setting(gdf)
-        k = len(setting[0])
-        if k >= 2:
-            rows.append([
-                cid, age, gender, min(setting[-1]), len(setting[0])
-            ])
-    df = pd.DataFrame(rows, columns=cols)
-    print(df.sort_values(by=["age", "gender"]).set_index(["age", "gender"]).to_latex(escape=False, multirow=True))

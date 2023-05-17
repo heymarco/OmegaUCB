@@ -1,7 +1,6 @@
 from approach_names import *
 import seaborn as sns
 
-
 omega_ucb_base_color = "RdBu_r"
 other_colors = "Greys"
 eta_ucb_base_color = "RdBu"
@@ -22,8 +21,8 @@ eta_ucbs = [
     # ETA_UCB_1_16,
     # ETA_UCB_1_8,
     # ETA_UCB_1_2,
-    ETA_UCB_1,
-    ETA_UCB_1_4,
+    OMEGA_STAR_UCB_1,
+    OMEGA_STAR_UCB_1_4,
     # ETA_UCB_2
 ]
 other_ucbs = [

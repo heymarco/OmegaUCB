@@ -15,7 +15,6 @@ mpl.rcParams['text.usetex'] = True
 mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
-
 if __name__ == '__main__':
     SETTING = "Setting"
     K = "K"
@@ -30,7 +29,7 @@ if __name__ == '__main__':
     colors = orig_cmap(np.linspace(min_val, max_val, n))
     cmap = mpl.colors.LinearSegmentedColormap.from_list("mycmap", colors)
 
-    settings = get_facebook_ad_data_settings(rng=None)
+    settings = get_facebook_ad_data_settings()
     df = []
     for i, setting in enumerate(settings):
         rew, cost = setting

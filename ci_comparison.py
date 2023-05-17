@@ -51,8 +51,8 @@ if __name__ == '__main__':
         label = func_name
         func = funcs[func_name]
         low, mean, high = func(x, delta, n)
-        xlow = np.abs(x-low)
-        xhigh = np.abs(x-high)
+        xlow = np.abs(x - low)
+        xhigh = np.abs(x - high)
         plt.scatter(x=x, y=np.ones(len(x)) * i, color="black", s=12)
         plt.errorbar(x=x, y=np.ones(len(x)) * i, xerr=[xlow, xhigh],
                      lw=0, elinewidth=1, capsize=3, color="black")
@@ -66,5 +66,3 @@ if __name__ == '__main__':
     plt.subplots_adjust(top=0.85)
     plt.savefig(os.path.join(os.getcwd(), "figures", "comparison_ci_hoeffding_wilson.pdf"))
     plt.show()
-
-

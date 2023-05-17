@@ -64,7 +64,6 @@ class BetaSamplingEnvironment(Environment):
 
 class RandomBetaSamplingEnvironment(BetaSamplingEnvironment):
     def __init__(self, k: int, rng, min_param=0, max_param=5):
-        # first we sample some parameters
         alpha_r = rng.uniform(min_param, max_param, size=k)
         alpha_c = rng.uniform(min_param, max_param, size=k)
         beta_r = rng.uniform(min_param, max_param, size=k)
@@ -82,7 +81,6 @@ class RandomBetaSamplingEnvironment(BetaSamplingEnvironment):
 
 class FacebookBetaSamplingEnvironment(BetaSamplingEnvironment):
     def __init__(self, mean_rewards: np.ndarray, mean_costs: np.ndarray, rng, min_param=0, max_param=5):
-        # first we sample some parameters
         mean_rewards = mean_rewards * 0.99
         mean_costs = mean_costs * 0.99
         alpha_r = rng.uniform(min_param, max_param, size=mean_rewards.shape)

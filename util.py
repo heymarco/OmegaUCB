@@ -7,13 +7,11 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
-from scipy import stats
 import seaborn as sns
 
 from colors import color_list, get_palette_for_approaches, get_markers_for_approaches
 from components.bandit_logging import *
 from approach_names import *
-
 
 approach_order = {
     BTS: 0,
@@ -24,16 +22,8 @@ approach_order = {
     IUCB: 5,
     MUCB: 6,
     OMEGA_UCB_: 7,
-    ETA_UCB_: 8,
+    OMEGA_STAR_UCB_: 8,
 }
-
-
-def str_to_arr(s, dtype):
-    return np.fromstring(s[1:-1], dtype=dtype, sep=" ")
-
-
-def linear_cost_function(t, c0=1, k=1 / 5, t0=1) -> float:
-    return c0 + k * (t - t0)
 
 
 def run_async(function, args_list, njobs, sleep_time_s=0.05):
@@ -47,12 +37,6 @@ def run_async(function, args_list, njobs, sleep_time_s=0.05):
     return results
 
 
-def reg_beta(x, a, b, k=100):
-    n = a + b
-    reg = k / n ** 2
-    return stats.beta.pdf(x, a + reg, b + reg)
-
-
 def create_palette(df: pd.DataFrame):
     approaches = np.unique(df[APPROACH])
     return get_palette_for_approaches(approaches)
@@ -61,9 +45,9 @@ def create_palette(df: pd.DataFrame):
 def cm2inch(*tupl):
     inch = 2.54
     if isinstance(tupl[0], tuple):
-        return tuple(i/inch for i in tupl[0])
+        return tuple(i / inch for i in tupl[0])
     else:
-        return tuple(i/inch for i in tupl)
+        return tuple(i / inch for i in tupl)
 
 
 def extract_rho(s: str):
@@ -160,11 +144,6 @@ def prepare_df(df: pd.DataFrame, n_steps=10):
     df = add_zero(df)
     df[K] = df[K].astype(int)
     return df
-
-
-def move_legend_below_graph(grid, ncol: int, title: str):
-    sns.move_legend(grid, "lower center", ncols=ncol, title=title)
-    plt.tight_layout()
 
 
 def create_custom_legend(grid: sns.FacetGrid, with_markers: bool = True):

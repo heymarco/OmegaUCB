@@ -12,7 +12,7 @@ from components.bandits.b_greedy import BGreedy
 from components.bandits.w_star_ucb import WStarUCB
 from components.experiments.abstract import Experiment, Environment, execute_bandit_on_env
 from components.experiments.environments import BernoulliSamplingEnvironment, FacebookBetaSamplingEnvironment, RandomBetaSamplingEnvironment, MultinomialSamplingEnvironment
-from facebook_ad_data_util import get_facebook_ad_data_settings, get_facebook_ad_stats
+from facebook_ad_data_util import get_facebook_ad_data_settings
 from util import run_async, create_multinomial_parameters, get_average_multinomial
 
 
@@ -34,14 +34,14 @@ class BernoulliExperiment(Experiment):
             BGreedy(k=k, name="b-greedy", seed=seed),
             UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
             UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
-            WStarUCB(k=k, name=ETA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1, seed=seed, r=1, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_2, seed=seed, r=2, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1, seed=seed, r=1, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_2, seed=seed, r=2, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
@@ -82,14 +82,14 @@ class MultinomialExperiment(Experiment):
             BGreedy(k=k, name="b-greedy", seed=seed),
             UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
             UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
-            WStarUCB(k=k, name=ETA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1, seed=seed, r=1, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_2, seed=seed, r=2, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1, seed=seed, r=1, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_2, seed=seed, r=2, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
@@ -116,14 +116,14 @@ class BetaExperiment(Experiment):
             BGreedy(k=k, name="b-greedy", seed=seed),
             UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
             UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
-            WStarUCB(k=k, name=ETA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1, seed=seed, r=1, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_2, seed=seed, r=2, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1, seed=seed, r=1, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_2, seed=seed, r=2, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
@@ -143,7 +143,7 @@ class FacebookBernoulliExperiment(Experiment):
     def _generate_environments(self, k: int,  # k is derived from the data in this environment
                                seed: int) -> List[Environment]:
         rng = np.random.default_rng(seed)
-        settings = get_facebook_ad_data_settings(rng=rng)
+        settings = get_facebook_ad_data_settings()
         envs = []
         for mean_rewards, mean_costs in settings:
             env = BernoulliSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, rng=rng)
@@ -162,7 +162,6 @@ class FacebookBernoulliExperiment(Experiment):
         return args
 
     def run(self, arms: List[int], num_reps: int) -> pd.DataFrame:
-        get_facebook_ad_stats()
         all_dfs = []
         all_args = self._generate_args(0,  # number of arms inferred from environments directly
                                        num_reps)
@@ -176,14 +175,14 @@ class FacebookBernoulliExperiment(Experiment):
             BGreedy(k=k, name="b-greedy", seed=seed),
             UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
             UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
-            WStarUCB(k=k, name=ETA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1, seed=seed, r=1, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_2, seed=seed, r=2, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1, seed=seed, r=1, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_2, seed=seed, r=2, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
@@ -203,7 +202,7 @@ class FacebookBetaExperiment(Experiment):
     def _generate_environments(self, k: int,  # k is derived from the data in this environment
                                seed: int) -> List[Environment]:
         rng = np.random.default_rng(seed)
-        settings = get_facebook_ad_data_settings(rng=rng)
+        settings = get_facebook_ad_data_settings()
         envs = [
             FacebookBetaSamplingEnvironment(mean_rewards=mean_rewards, mean_costs=mean_costs, rng=rng)
             for mean_rewards, mean_costs in settings
@@ -226,14 +225,14 @@ class FacebookBetaExperiment(Experiment):
             BGreedy(k=k, name="b-greedy", seed=seed),
             UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
             UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
-            WStarUCB(k=k, name=ETA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_1, seed=seed, r=1, adaptive=True),
-            WStarUCB(k=k, name=ETA_UCB_2, seed=seed, r=2, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_8, seed=seed, r=1 / 8, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_4, seed=seed, r=1 / 4, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1_2, seed=seed, r=1 / 2, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_1, seed=seed, r=1, adaptive=True),
+            WStarUCB(k=k, name=OMEGA_STAR_UCB_2, seed=seed, r=2, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_64, seed=seed, r=1 / 64, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_32, seed=seed, r=1 / 32, adaptive=True),
             WUCB(k=k, name=OMEGA_UCB_1_16, seed=seed, r=1 / 16, adaptive=True),
@@ -249,7 +248,6 @@ class FacebookBetaExperiment(Experiment):
         ])
 
     def run(self, arms: List[int], num_reps: int) -> pd.DataFrame:
-        get_facebook_ad_stats()
         all_dfs = []
         all_args = self._generate_args(0,  # number of arms inferred from environments directly
                                        num_reps)
