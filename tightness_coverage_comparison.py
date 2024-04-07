@@ -88,6 +88,7 @@ def evaluate_once(approaches: dict, exp_c, n, seed, delta=0.05):
 
 
 if __name__ == '__main__':
+    narrow = False
     ns = [100, 1000, 10000, 100000]
     repetitions = 10000
     alpha = 0.01
@@ -118,30 +119,37 @@ if __name__ == '__main__':
                 results = result
             else:
                 results += result
-
+                
+    # UCB_EXPECTATION = r"$$\frac{\mathrm{UCB}}{\mathrm{expectation}}$$"
+    UCB_EXPECTATION = "UCB/expect."
     df = pd.DataFrame(results, columns=columns)
     df["exp. ratio"] = np.nan
     df["exp. ratio"] = df[r"$\mu_r$"] / df[r"$\mu_c$"]
     df["UCB > exp. ratio"] = np.nan
     df["Coverage"] = df["UCB"] > df["exp. ratio"]
-    df[r"\% UCB violations"] = df["UCB"] < df["exp. ratio"]
-    df["UCB/expectation"] = np.nan
-    df["UCB/expectation"] = df["UCB"] / df["exp. ratio"]
+    df[r"\% UCB viol."] = df["UCB"] < df["exp. ratio"]
+    df[UCB_EXPECTATION] = np.nan
+    df[UCB_EXPECTATION] = df["UCB"] / df["exp. ratio"]
     df = df.groupby(["Samples", r"$\mu_c$", "Approach"]).mean().reset_index()
-    df[r"\% UCB violations"] = df[r"\% UCB violations"] * 100
+    df[r"\% UCB viol."] = df[r"\% UCB viol."] * 100
     df["order"] = np.nan
     for approach in order:
         df["order"].loc[df["Approach"] == approach] = order[approach]
 
     df = pd.melt(df, id_vars=["Approach", "Samples", "order"],
-                 value_vars=[r"\% UCB violations", "UCB/expectation"],
+                 value_vars=[r"\% UCB viol.", UCB_EXPECTATION],
                  value_name="Score", var_name="Metric")
     df = df.sort_values(by="order")
 
     sns.set_palette(sns.cubehelix_palette(n_colors=len(ns)))
-    g = sns.catplot(data=df, kind="bar", x="Approach", y="Score",
-                    hue="Samples", col="Metric",
-                    sharex=True, sharey=False, errwidth=1.0)
+    if narrow:
+        g = sns.catplot(data=df, kind="bar", x="Approach", y="Score",
+                        hue="Samples", row="Metric",
+                        sharex=True, sharey=False, errwidth=1.0)
+    else:
+        g = sns.catplot(data=df, kind="bar", x="Approach", y="Score",
+                        hue="Samples", col="Metric",
+                        sharex=True, sharey=False, errwidth=1.0)
     g.axes.flatten()[1].set_yscale("log")
     g.axes.flatten()[1].set_ylim(bottom=0.5)
     hlines_ucb = [1, 10, 100]
@@ -153,15 +161,25 @@ if __name__ == '__main__':
         g.axes.flatten()[0].set_yticks([5, 10, 15], ["5", "10", "15"])
     g.axes.flatten()[0].set_ylim(0, 18)
     g.set(xlabel=None)
-    for ax in g.axes.flatten():
+    for ax_index, ax in enumerate(g.axes.flatten()):
         title = ax.get_title()
         title = title.split(" = ")[-1]
         ax.set_ylabel(title)
         ax.set_title("")
-        ax.set_xticks(ax.get_xticks(), ax.get_xticklabels(), rotation=30, ha='right')
-    plt.gcf().set_size_inches(cm2inch((15, 5)))
-    plt.tight_layout(pad=.5)
-    plt.subplots_adjust(right=.82, wspace=.3)
-    sns.move_legend(g, "upper right")
-    plt.savefig(os.path.join("figures", "ucb_comparison.pdf"))
+        if narrow and ax_index == 1:
+            plt.xticks(rotation=18, ha="right")
+        if not narrow:
+            ax.set_xticks(ax.get_xticks(), ax.get_xticklabels(), rotation=30, ha='right')
+    if narrow:
+        sns.move_legend(g, "upper center", ncol=4, frameon=True)
+        plt.gcf().set_size_inches(cm2inch((10, 7.8)))
+        plt.tight_layout(pad=.5)
+        plt.subplots_adjust(top=.8)
+        plt.savefig(os.path.join("figures", "ucb_comparison_narrow.pdf"))
+    else:
+        plt.gcf().set_size_inches(cm2inch((15, 4)))
+        plt.tight_layout(pad=.5)
+        plt.subplots_adjust(right=.82, wspace=.3, top=0.93)
+        sns.move_legend(g, "upper right")
+        plt.savefig(os.path.join("figures", "ucb_comparison.pdf"))
     plt.show()

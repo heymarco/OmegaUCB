@@ -20,9 +20,11 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
 mpl.rc('font', family='serif')
 
 
-def plot_regret(df: pd.DataFrame, figsize, figname):
+def plot_regret(df: pd.DataFrame, figsize, figname, narrow):
     df = df[df[NORMALIZED_BUDGET] == 1.0]
     df = df[df[APPROACH] != BTS]
+    if narrow:
+        df = df[df[K] == 50]
     df.sort_values(by=["Distribution", K])
     omega_ucb_color = sns.color_palette(omega_ucb_base_color, n_colors=12)[3]
     eta_ucb_color = sns.color_palette(eta_ucb_base_color, n_colors=12)[2]
@@ -34,33 +36,68 @@ def plot_regret(df: pd.DataFrame, figsize, figname):
     hue = APPROACH
     col = K
     row = "Distribution"
-    g = sns.catplot(data=df, kind="bar",
-                    x=x, y=y, hue=hue, col=col, row=row,
-                    palette=palette,
-                    sharey=False, sharex=True,
-                    linewidth=.8, errwidth=1)
+    if narrow:
+        g = sns.catplot(data=df, kind="bar",
+                        x=x, y=y, hue=hue, col=row,
+                        palette=palette,
+                        sharey=False, sharex=True,
+                        linewidth=.8, errwidth=1)
+    else:
+        g = sns.catplot(data=df, kind="bar",
+                        x=x, y=y, hue=hue, col=col, row=row,
+                        palette=palette,
+                        sharey=False, sharex=True,
+                        linewidth=.8, errwidth=1)
     g.set(yscale="log")
+    if narrow:
+        sns.move_legend(g, "center right", title="", ncol=1, frameon=True)
+    else:
+        sns.move_legend(g, "upper center", title="", ncol=2, frameon=True)
     xtick_labels = [r"$\frac{1}{64}$", r"$\frac{1}{32}$", r"$\frac{1}{16}$", r"$\frac{1}{8}$",
                     r"$\frac{1}{4}$", r"$\frac{1}{2}$", "$1$", "$2$"]
     for i, ax in enumerate(g.axes.flatten()):
         ax.set_xticklabels(xtick_labels)
         ax_title = ax.get_title()
-        dist_title, K_title = ax_title.split(" | ")
-        dist_title = dist_title.split(" = ")[-1]
-        if i < 3:
-            ax.set_title(K_title)
+        if narrow:
+            dist_title = ax_title.split(" = ")[-1]
+        else:
+            dist_title, K_title = ax_title.split(" | ")
+            dist_title = dist_title.split(" = ")[-1]
+        if not narrow:
+            if i <= 2:
+                ax.set_title(K_title)
+            else:
+                ax.set_title("")
         else:
             ax.set_title("")
-        if i % 3 == 0:
-            ax.set_ylabel(r"Regret ({})".format(dist_title))
+        if dist_title == "Bernoulli":
+            id = "Br"
+        elif dist_title == "Gen. Bern.":
+            id = "GBr"
+        elif dist_title == "Beta":
+            id = "Bt"
+        else:
+            raise ValueError
+        if narrow:
+            ax.set_ylabel(r"Regret ({})".format(id))
+        else:
+            if i % 2 == 0:
+                ax.set_ylabel(r"Regret ({})".format(id))
+        if i % 3 > 0:
+            ax.set_ylabel("")
     plt.gcf().set_size_inches(cm2inch(figsize))
     plt.tight_layout(pad=.7)
-    plt.subplots_adjust(right=0.86, wspace=.4, hspace=.13)
-    plt.savefig(os.path.join(os.getcwd(), "..", "figures", figname + ".pdf"))
+    if narrow:
+        plt.subplots_adjust(right=.85)
+        plt.savefig(os.path.join(os.getcwd(), "..", "figures", figname + "_narrow" + ".pdf"))
+    else:
+        plt.subplots_adjust(wspace=.4, hspace=.13, top=0.8)
+        plt.savefig(os.path.join(os.getcwd(), "..", "figures", figname + ".pdf"))
     plt.show()
 
 
 if __name__ == '__main__':
+    narrow = False
     filename = "synth_beta"
     df_beta = load_df(filename)
     df_beta = prepare_df(df_beta, n_steps=10)
@@ -99,4 +136,7 @@ if __name__ == '__main__':
 
     df = pd.concat([df_bern, df_mult, df_beta]).reset_index(drop=True)
 
-    plot_regret(df, figsize=(20, 7 * 1.5), figname="sensitivity_study")
+    if narrow:
+        plot_regret(df, figsize=(20, 6 * 0.75), figname="sensitivity_study", narrow=narrow)
+    else:
+        plot_regret(df, figsize=(18, 4.8 * 1.5), figname="sensitivity_study", narrow=narrow)

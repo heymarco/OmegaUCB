@@ -3,6 +3,8 @@ import pathlib
 from multiprocessing import Pool
 from time import sleep
 
+from tqdm import tqdm
+
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -27,14 +29,19 @@ approach_order = {
 
 
 def run_async(function, args_list, njobs, sleep_time_s=0.05):
-    pool = Pool(njobs)
-    results = {i: pool.apply_async(function, args=args)
-               for i, args in enumerate(args_list)}
-    while not all(future.ready() for future in results.values()):
-        sleep(sleep_time_s)
-    results = [results[i].get() for i in range(len(results))]
-    pool.close()
+    with Pool(njobs) as pool:
+        with tqdm(total=len(args_list)) as pbar:
+            results = {i: pool.apply_async(function, args=args)
+                       for i, args in enumerate(args_list)}
+            previous_state = 0
+            while not all(future.ready() for future in results.values()):
+                this_state = np.sum([future.ready() for future in results.values()])
+                pbar.update(this_state - previous_state)
+                previous_state = this_state
+                sleep(sleep_time_s)
+            results = [results[i].get() for i in range(len(results))]
     return results
+
 
 
 def create_palette(df: pd.DataFrame):
@@ -162,7 +169,7 @@ def create_custom_legend(grid: sns.FacetGrid, with_markers: bool = True):
         if ax.legend():
             ax.legend().remove()
     plt.figlegend(custom_lines, approaches,
-                  bbox_to_anchor=(0, 0.72, 1, 0.2),
+                  bbox_to_anchor=(0, 0.68, 1, 0.2),
                   loc="lower left",
                   mode="expand",
                   borderaxespad=1,
