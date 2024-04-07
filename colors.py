@@ -28,6 +28,7 @@ eta_ucbs = [
 other_ucbs = [
     UCB_SC_PLUS,
     BUDGET_UCB,
+    UCB_B2_name,
     MUCB,
     CUCB,
     IUCB
@@ -74,7 +75,7 @@ def get_palette_for_approaches(approaches):
 
 def get_markers_for_approaches(approaches):
     markers = [
-        "s", ">", "^", "*", "p",
+        "s", ">", "^", "*", "p", "D",
         "v", "P", "d", "X", "H", "<"
     ]
     assert len(markers) >= len(all_approaches)

@@ -48,7 +48,7 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
         ax.set_ylim(lim)
         ax.set_xlim((0.095, 1))
         ax.set_xscale("symlog", linthresh=.1)
-    plt.gcf().set_size_inches(cm2inch(20 / 2.8, 8 * 0.75))
+    plt.gcf().set_size_inches(cm2inch(18 / 2.8, 5.8 * 0.58))
     plt.tight_layout(pad=.5)
     if with_ci:
         plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + "_ci" + ".pdf"))

@@ -49,13 +49,13 @@ def plot_regret(df: pd.DataFrame, with_ci: bool = False):
                         dashes=False)
     lims = [(0, 900), (0, 9000), (0, 15000)]
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):
-        ax.set_ylim(lim)
+        # ax.set_ylim(lim)
         ax.set_xlim((0.095, 1))
         ax.set_xscale("symlog", linthresh=.1)
         if i > 0:
             ax.set_ylabel("")
-    plt.gcf().set_size_inches(cm2inch(20, 8 * 0.75))
-    plt.tight_layout(pad=.8)
+    plt.gcf().set_size_inches(cm2inch(18, 5.8 * 0.65))
+    plt.tight_layout(pad=.5)
     if with_ci:
         plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + "_ci" + ".pdf"))
     else:
