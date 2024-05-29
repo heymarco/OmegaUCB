@@ -1,6 +1,6 @@
 # Budgeted Multi-Armed Bandits with Asymmetric Confidence Intervals
 
-This repository contains code for the paper "Budgeted Multi-Armed Bandits with Asymmetric Confidence Intervals".
+This repository contains code for the paper "Budgeted Multi-Armed Bandits with Asymmetric Confidence Intervals" published at KDD'24.
 
 ## Abstract
 
@@ -30,7 +30,3 @@ Note that plotting requires a local LaTeX installation. In case LaTeX is not ins
     mpl.rcParams['text.usetex'] = True
     mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
     mpl.rc('font', family='serif')
-
-## Applying $\omega$-UCB in other projects
-
-We will link another repository containing $\omega$-UCB as a pip-package after paper acceptance.
