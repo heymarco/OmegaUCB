@@ -11,7 +11,7 @@ from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
 import seaborn as sns
 
-from colors import color_list, get_palette_for_approaches, get_markers_for_approaches
+from colors import color_list, get_palette_for_approaches, get_markers_for_approaches, get_linestyles_for_approaches
 from components.bandit_logging import *
 from approach_names import *
 
@@ -153,14 +153,18 @@ def prepare_df(df: pd.DataFrame, n_steps=10):
     return df
 
 
-def create_custom_legend(grid: sns.FacetGrid, with_markers: bool = True):
+def create_custom_legend(grid: sns.FacetGrid, with_markers: bool = False, with_dashes: bool = True):
     app_color_list = color_list()
     approaches = [entry[0] for entry in app_color_list]
     marker_dict = get_markers_for_approaches(approaches)
+    dash_dict = get_linestyles_for_approaches(approaches)
     colors = [entry[1] for entry in app_color_list]
     if with_markers:
         custom_lines = [Line2D([0], [0], color=color, marker=marker, markeredgewidth=0.2)
                         for color, marker in zip(colors, marker_dict.values())]
+    elif with_dashes:
+        custom_lines = [Line2D([0], [0], color=color, linestyle=(0, dash), markeredgewidth=0.2)
+                        for color, dash in zip(colors, dash_dict.values())]
     else:
         custom_lines = [Line2D([0], [0], color=color)
                         for color, marker in zip(colors, marker_dict.values())]
@@ -194,3 +198,18 @@ def get_average_multinomial(params: np.ndarray):
     mean = np.mean(weighted_indexes, axis=1)
     assert len(mean) == len(params)
     return mean
+
+
+def concat_dataframes():
+    data_path = os.path.join(os.getcwd(), "results")
+    kdd_submission_path = os.path.join(data_path, "results_kdd_submission")
+    for file in os.listdir(kdd_submission_path):
+        name = os.path.splitext(file)[0]
+        kdd_df = pd.read_parquet(os.path.join(kdd_submission_path, file))
+        ucbb2_df = pd.read_parquet(os.path.join(data_path, name + "_ucbb2.parquet"))
+        df = pd.concat([kdd_df, ucbb2_df], ignore_index=True)
+        df.to_parquet(os.path.join(data_path, name + ".parquet"))
+
+
+if __name__ == '__main__':
+    concat_dataframes()

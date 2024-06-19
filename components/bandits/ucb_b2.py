@@ -56,14 +56,6 @@ class UCBB2Arm(AbstractArm):
         if alpha is not None:
             self.alpha = alpha
 
-    def update_eta(self):
-        variance = self._cost_aggregate.variance()
-        n = self.pulls
-
-        root = np.sqrt(2 * variance * np.log(self.t ** self.alpha) / n)
-        addition = 3 * 1 * np.log(self.t ** self.alpha) / n
-        self._eta = root + addition
-
     def update_epsilon(self):
         variance = self._rew_aggregate.variance()
         n = self.pulls
@@ -72,12 +64,20 @@ class UCBB2Arm(AbstractArm):
         addition = 3 * 1 * np.log(self.t ** self.alpha) / n
         self._epsilon = root + addition
 
+    def update_eta(self):
+        variance = self._cost_aggregate.variance()
+        n = self.pulls
+
+        root = np.sqrt(2 * variance * np.log(self.t ** self.alpha) / n)
+        addition = 3 * 1 * np.log(self.t ** self.alpha) / n
+        self._eta = root + addition
+
     def sample(self, c_min: float):
         eta = self._eta
         eps = self._epsilon
 
         r = max(0.0, self._rew_aggregate.mean()) / max(c_min, self._cost_aggregate.mean())
-        if self.check_condition_7(eta):
+        if eta < self._rew_aggregate.mean():  # self.check_condition_7(eta):
             c = 1.4 * (eps + r * eta) / max(self._cost_aggregate.mean(), 1e-10)
         else:
             c = np.infty

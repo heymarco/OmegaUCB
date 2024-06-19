@@ -14,7 +14,7 @@ sns.set_style("ticks")
 import matplotlib as mpl
 
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{libertine}'
 mpl.rc('font', family='serif')
 
 
@@ -69,6 +69,18 @@ def ucb_sc(mu_r, mu_c, n, delta=0.05):
     return top / max(0.001, bottom)  # see eq 2 in the respective paper
 
 
+def ucb_b2(mu_r, mu_c, n, delta=0.05):
+    r_hat = mu_r / np.maximum(mu_c, 1e-10)
+    vr = (1 - mu_r) * mu_r
+    vc = (1 - mu_c) * mu_c
+    x = -np.log(delta / 2)
+    eps = np.sqrt(2 * vr * x / n) + 3 * x / n
+    eta = np.sqrt(2 * vc * x / n) + 3 * x / n
+    c = 1.4 * (eps + r_hat * eta) / np.maximum(mu_c, 1e-10)
+    ucb = r_hat + c
+    return ucb
+
+
 def evaluate_once(approaches: dict, exp_c, n, seed, delta=0.05):
     rng = np.random.default_rng(seed)
     exp_r = rng.uniform()
@@ -88,7 +100,7 @@ def evaluate_once(approaches: dict, exp_c, n, seed, delta=0.05):
 
 
 if __name__ == '__main__':
-    narrow = False
+    narrow = True
     ns = [100, 1000, 10000, 100000]
     repetitions = 10000
     alpha = 0.01
@@ -100,7 +112,8 @@ if __name__ == '__main__':
         MUCB + " (c)": m_ucb,
         IUCB + " (u)": i_ucb,
         BUDGET_UCB + " (h)": b_ucb,
-        UCB_SC + " (u)": ucb_sc
+        UCB_SC + " (u)": ucb_sc,
+        UCB_B2_name + " (u)": ucb_b2,
     }
     order = {
         OMEGA_UCB_ + " (c, ours)": 1,
@@ -108,7 +121,8 @@ if __name__ == '__main__':
         BUDGET_UCB + " (h)": 3,
         CUCB + " (h)": 4,
         IUCB + " (u)": 5,
-        UCB_SC + " (u)": 6
+        UCB_SC + " (u)": 6,
+        UCB_B2_name + " (u)": 7,
     }
     cost_rng = np.random.default_rng(seed=0)
     for n in ns:

@@ -2,7 +2,7 @@ from approach_names import *
 import seaborn as sns
 
 omega_ucb_base_color = "RdBu_r"
-other_colors = "Greys"
+other_colors = "pastel6"
 eta_ucb_base_color = "RdBu"
 
 omega_ucbs = [
@@ -63,6 +63,10 @@ def color_list():
         for color, approach in zip(palette[:len(approaches)], approaches):
             final_list.append((approach, color))
 
+    chp = sns.color_palette("cubehelix", n_colors=len(final_list), as_cmap=False)
+    chp = chp[::-1]
+    # chp = sns.cubehelix_palette(n_colors=len(final_list), as_cmap=False)
+    return [(key, c) for (key, _), c in zip(final_list, chp)]
     return final_list
 
 
@@ -86,3 +90,43 @@ def get_markers_for_approaches(approaches):
         app: full_marker_dict[app] for app in approaches
     }
     return relevant_markers
+
+
+def get_linestyles_for_approaches(approaches):
+    longdash = 5
+    dash = 3
+    dot = 1
+    pause = 1
+    styles = [
+        "",
+        (dash, pause),
+        (dash, pause, dot, pause),
+        (dash, pause, dot, pause, dot, pause),
+        (dash, pause, dot, pause, dot, pause, dot, pause),
+        (dot, pause),
+        (longdash, pause),
+        (longdash, pause, dot, pause),
+        (longdash, pause, dash, pause),
+        (longdash, pause, dash, pause, dot, pause),
+        (dot, pause, dash, pause, dot, pause, dot, pause, dash, pause, dash, pause),
+        (longdash, pause, dot, pause, dash, pause)
+        # (.5, .5),
+        # (dash, pause),
+        # (dash, pause, 2, 1),
+        # (dash, pause, dot, pause, dot, pause),
+        # (3, 2, 1, 2, 1, 2),
+        # (5, 1),
+        # (dash, pause, dot, pause),
+        # (5, 2),
+        # (dot, pause),
+        # (dash, pause, 2, 1),
+        # (dash, pause, dot, pause, dot, pause)
+    ]
+    assert len(styles) >= len(all_approaches)
+    full_styles_dict = {
+        app: style for app, style in zip(all_approaches, styles)
+    }
+    relevant_styles = {
+        app: full_styles_dict[app] for app in approaches
+    }
+    return relevant_styles

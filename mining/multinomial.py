@@ -19,7 +19,7 @@ sns.set_style(style="ticks")
 import matplotlib as mpl
 
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{libertine}'
 mpl.rc('font', family='serif')
 
 
@@ -38,7 +38,8 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
     y = REGRET
     hue = APPROACH
     col = K
-    lims = compute_ylims(df, x, hue, col_var=col)
+    # lims = compute_ylims(df, x, hue, col_var=col)
+    lims = [(0, 2000), (0, 4000), (0, 4000)]
     df = df.iloc[::-1]
     palette = create_palette(df)
     markers = get_markers_for_approaches(np.unique(df[APPROACH]))

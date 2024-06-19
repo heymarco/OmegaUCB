@@ -5,7 +5,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from colors import get_markers_for_approaches
+from colors import get_markers_for_approaches, get_linestyles_for_approaches
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
@@ -19,7 +19,7 @@ sns.set_style(style="ticks")
 import matplotlib as mpl
 
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{libertine}'
 mpl.rc('font', family='serif')
 
 
@@ -38,10 +38,12 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
     y = REGRET
     hue = APPROACH
     col = K
-    lims = compute_ylims(df, x, hue, col_var=col)
+    # lims = compute_ylims(df, x, hue, col_var=col)
+    lims = [(0, 2500), (0, 8000), (0, 14000)]
     df = df.iloc[::-1]
     palette = create_palette(df)
-    markers = get_markers_for_approaches(np.unique(df[APPROACH]))
+    # markers = get_markers_for_approaches(np.unique(df[APPROACH]))
+    styles = get_linestyles_for_approaches(np.unique(df[APPROACH]))
     if with_ci:
         g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
                         markeredgewidth=0.1,
@@ -49,16 +51,14 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
                         errorbar="ci", err_style="bars", err_kws={"capsize": 2}, solid_capstyle="butt",
                         seed=0, n_boot=500,
                         facet_kws={"sharey": False},
-                        style=hue, markers=False,
-                        dashes=False)
+                        style=hue, dashes=False)
     else:
         g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
                         markeredgewidth=0.1,
                         kind="line", palette=palette, legend=False,
                         errorbar=None,
                         facet_kws={"sharey": False},
-                        style=hue, markers=markers,
-                        dashes=False)
+                        style=hue, dashes=False)
 
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):
         ax.set_ylim(lim)
@@ -67,7 +67,7 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
         if i > 0:
             ax.set_ylabel("")
     plt.gcf().set_size_inches(cm2inch(18, 5.8 * 0.875))
-    create_custom_legend(g, with_markers=not with_ci)
+    create_custom_legend(g, with_dashes=False)
     plt.tight_layout(pad=.5)
     plt.subplots_adjust(top=0.62)
     if with_ci:

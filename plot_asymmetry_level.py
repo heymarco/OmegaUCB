@@ -9,7 +9,7 @@ from util import cm2inch
 
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{libertine}'
 mpl.rc('font', family='serif')
 
 
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
     plt.gcf().set_size_inches(cm2inch(10, 3.5))
     plt.tight_layout(pad=.5)
-    plt.subplots_adjust(right=.73)
+    plt.subplots_adjust(right=.73, left=.1)
     plt.savefig(os.path.join(os.getcwd(), "figures", "asymmetry.pdf"))
     plt.show()
 
