@@ -9,6 +9,7 @@ from components.bandit_logging import *
 from components.bandits.abstract import AbstractBandit
 from components.bandits.b_greedy import BGreedy
 from components.bandits.bts import BudgetedThompsonSampling
+from components.bandits.ucb_b2 import UCBB2
 from components.bandits.ucb_variants import UCB
 from components.bandits.ucbsc import UCBSC
 from components.bandits.wucb import WUCB
@@ -78,7 +79,7 @@ class Experiment(ABC):
 
 
 def iterate(bandit: AbstractBandit, env: Environment, rng):
-    if isinstance(bandit, UCB):
+    if isinstance(bandit, UCB) or isinstance(bandit, UCBB2):
         c_min = env.get_stats()[MINIMUM_AVERAGE_COST]
         arm = bandit.sample(c_min=c_min)
     else:

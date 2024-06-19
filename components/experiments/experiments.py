@@ -5,6 +5,7 @@ from typing import List
 from approach_names import *
 from components.bandit_logging import *
 from components.bandits.bts import BudgetedThompsonSampling
+from components.bandits.ucb_b2 import UCBB2
 from components.bandits.ucb_variants import UCB
 from components.bandits.ucbsc import UCBSC
 from components.bandits.wucb import WUCB
@@ -31,6 +32,7 @@ class BernoulliExperiment(Experiment):
 
     def _create_bandits(self, k: int, seed: int):
         return np.array([
+            UCBB2(k=k, name=UCB_B2_name, seed=seed),
             BGreedy(k=k, name="b-greedy", seed=seed),
             UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
             UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
@@ -79,6 +81,7 @@ class MultinomialExperiment(Experiment):
 
     def _create_bandits(self, k: int, seed: int):
         return np.array([
+            UCBB2(k=k, name=UCB_B2_name, seed=seed),
             BGreedy(k=k, name="b-greedy", seed=seed),
             UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
             UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
@@ -113,6 +116,7 @@ class BetaExperiment(Experiment):
 
     def _create_bandits(self, k: int, seed: int):
         return np.array([
+            UCBB2(k=k, name=UCB_B2_name, seed=seed),
             BGreedy(k=k, name="b-greedy", seed=seed),
             UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
             UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
@@ -172,6 +176,7 @@ class FacebookBernoulliExperiment(Experiment):
 
     def _create_bandits(self, k: int, seed: int):
         return np.array([
+            UCBB2(k=k, name=UCB_B2_name, seed=seed),
             BGreedy(k=k, name="b-greedy", seed=seed),
             UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
             UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),
@@ -222,6 +227,7 @@ class FacebookBetaExperiment(Experiment):
 
     def _create_bandits(self, k: int, seed: int):
         return np.array([
+            UCBB2(k=k, name=UCB_B2_name, seed=seed),
             BGreedy(k=k, name="b-greedy", seed=seed),
             UCB(k=k, name=BUDGET_UCB, type="b", seed=seed),
             UCBSC(k=k, name=UCB_SC_PLUS, seed=seed),

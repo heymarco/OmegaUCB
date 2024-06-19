@@ -18,7 +18,7 @@ sns.set_style(style="ticks")
 import matplotlib as mpl
 
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{libertine}'
 mpl.rc('font', family='serif')
 
 
@@ -47,21 +47,20 @@ def plot_regret(df: pd.DataFrame, with_ci: bool = False):
                         facet_kws={"sharey": False},
                         style=hue, markers=markers,
                         dashes=False)
-    lims = [(0, 900), (0, 9000), (0, 15000)]
+    lims = [(0, 1000), (0, 7000), (0, 12000)]
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):
         ax.set_ylim(lim)
         ax.set_xlim((0.095, 1))
         ax.set_xscale("symlog", linthresh=.1)
         if i > 0:
             ax.set_ylabel("")
-    plt.gcf().set_size_inches(cm2inch(20, 8 * 0.75))
-    plt.tight_layout(pad=.8)
+    plt.gcf().set_size_inches(cm2inch(18, 5.8 * 0.65))
+    plt.tight_layout(pad=.5)
     if with_ci:
         plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + "_ci" + ".pdf"))
     else:
         plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + ".pdf"))
     plt.show()
-
 
 if __name__ == '__main__':
     filename = "synth_beta"
@@ -85,7 +84,7 @@ if __name__ == '__main__':
     # df = df.loc[df[APPROACH] != ETA_UCB_1]
     df = df.loc[df[APPROACH] != OMEGA_STAR_UCB_2]
     # df = df.loc[df[APPROACH] != UCB_SC_PLUS]
-    df = df.loc[df[APPROACH] != BUDGET_UCB]
+    # df = df.loc[df[APPROACH] != BUDGET_UCB]
     # df = df.loc[df[APPROACH] != BTS]
     # df = df.loc[df[APPROACH] != B_GREEDY]
     # df = df.loc[df[APPROACH] != CUCB]
