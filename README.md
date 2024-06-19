@@ -28,5 +28,5 @@ Note that plotting requires a local LaTeX installation. In case LaTeX is not ins
     import matplotlib as mpl
 
     mpl.rcParams['text.usetex'] = True
-    mpl.rcParams['text.latex.preamble'] = r'\usepackage{mathptmx}'
+    mpl.rcParams['text.latex.preamble'] = r'\usepackage{libertine}'
     mpl.rc('font', family='serif')
