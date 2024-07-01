@@ -23,9 +23,6 @@ To reproduce our experimental results, execute `experiment_runner.py`. The scrip
 - For the graphs in Figure 3, run the scripts `mining/bernoulli.py`, `mining/beta.py`, `mining/multinomial.py`, `mining/advertisement_data.py`, and `ad_data_arms_histogram.py`.
 - For the graphs in Figure 4, run `mining/sensitivity_study.py`
 
-### Examples in the paper
-- For example 2, run `example_two.py`
-
 Note that plotting requires a local LaTeX installation. In case LaTeX is not installed or if you encounter other LaTeX-related problems, please try commenting out the following lines in the scripts above:
     
     import matplotlib as mpl
@@ -33,3 +30,6 @@ Note that plotting requires a local LaTeX installation. In case LaTeX is not ins
     mpl.rcParams['text.usetex'] = True
     mpl.rcParams['text.latex.preamble'] = r'\usepackage{libertine}'
     mpl.rc('font', family='serif')
+
+### Examples in the paper
+- For example 2, run `example_two.py`
