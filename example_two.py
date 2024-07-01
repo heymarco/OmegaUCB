@@ -20,17 +20,25 @@ def ci_hoeffding(x, t, n, alpha=1.0):
     )
     return x - eps, x, x + eps
 
-
 if __name__ == '__main__':
+    # See example 2 in the paper
     t = 10000
     n = 1000
-    delta = 1 - np.sqrt(1 - t**-1)
-    lcb2, _, ucb2 = ci_wilson(0.1, delta, n)
+    rho = 1
+
+    # Compute significance level
+    delta = 1 - np.sqrt(1 - t**-rho)
+
+    # compute reward ucb and cost lcb for both arms using out method
     lcb1, _, _ = ci_wilson(0.2, delta, n)
     _, _, ucb1 = ci_wilson(0.8, delta, n)
-    print(ucb1 / lcb1, ucb2 / lcb2)
+    lcb2, _, ucb2 = ci_wilson(0.1, delta, n)
 
+    # print the ucb for the ratio as computed by our approach
+    print("UCBs for arms 1 and 2 using our method:", ucb1 / lcb1, ucb2 / lcb2)
+
+    # do the same with the Hoeffding based CI (as used by m-UCB)
     lcb2_mucb, _, ucb2_mucb = ci_hoeffding(0.1, t, n)
     lcb1_mucb, _, _ = ci_hoeffding(0.2, t, n)
     _, _, ucb1_mucb = ci_hoeffding(0.8, t, n)
-    print(ucb1_mucb / lcb1_mucb, ucb2_mucb / lcb2_mucb)
+    print("UCBs for arms 1 and 2 using m-UCB:", ucb1_mucb / lcb1_mucb, ucb2_mucb / lcb2_mucb)

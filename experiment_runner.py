@@ -13,14 +13,19 @@ def execute_experiment(exp: Experiment, arms: List[int], num_reps: int):
 
 
 if __name__ == '__main__':
+    # Specify the numbers of arms the synthetic mab environments should have
     arms = [
         10,
         50,
         100,
     ]
+    # Specify the number of experiment repetitions
     n_reps = 100
+    # Specify the approximate time horizon if one would always choose the cheapest arm
+    # (remember that the actual time horizon is a random variable)
     n_steps = int(1.5e5)
 
+    # Setup and run the experiments
     synth_beta = BetaExperiment("synth_beta", num_steps=n_steps)
     execute_experiment(synth_beta, arms, num_reps=n_reps)
 

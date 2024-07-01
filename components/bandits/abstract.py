@@ -6,14 +6,23 @@ import numpy as np
 class AbstractArm(ABC):
     @abstractmethod
     def sample(self, *args, **kwargs):
+        """
+        Compute the index (e.g., ucb) of an arm
+        """
         raise NotImplementedError
 
     @abstractmethod
     def set(self, *args, **kwargs):
+        """
+        Use this method to set parameters after initialization
+        """
         raise NotImplementedError
 
     @abstractmethod
     def update(self, *args, **kwargs):
+        """
+        Update the arm
+        """
         raise NotImplementedError
 
 
@@ -25,16 +34,22 @@ class AbstractBandit(ABC):
 
     @abstractmethod
     def sample(self, *args, **kwargs):
+        """
+        Get the arm with the highest index
+        :return: an integer
+        """
         raise NotImplementedError
 
     @abstractmethod
     def update(self, *args, **kwargs):
+        """Update the algorithm with information from the environment"""
         raise NotImplementedError
 
     @abstractmethod
     def set(self, *args, **kwargs):
+        """Update the parameters of the algorithm after initialization"""
         raise NotImplementedError
 
-    @abstractmethod
     def __len__(self):
-        raise NotImplementedError
+        """The number of arms"""
+        return self.k

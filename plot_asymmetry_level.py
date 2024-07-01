@@ -14,13 +14,21 @@ mpl.rc('font', family='serif')
 
 
 if __name__ == '__main__':
+    # See Figure 3 in the paper
 
     def asymmetry(mu, n, z):
+        """
+        Computes the asymmetry of the confidence interval. See eq. 7 in the paper
+        :param mu: sample mean
+        :param n:
+        :param z:
+        :return:
+        """
         nom = (2 * mu - 1) ** 2 * z ** 2
         denom = 4 * n * mu * (1 - mu) + z ** 2
         return nom / denom
 
-    MU = r"$\mu$"
+    MU = r"$\hat \mu$"
     ASYMMETRY = "Asymmetry"
     N = r"$n$"
     Z = r"$z$"
@@ -33,17 +41,18 @@ if __name__ == '__main__':
 
     df = []
 
+    # build the dataframe
     for z in z_range:
         for n in n_range:
             asym = asymmetry(mu, n, z)
             for m, a in zip(mu, asym):
                 df.append([m, a, n, z])
-
     df = pd.DataFrame(df, columns=cols)
+
+    # plot the data
     g = sns.relplot(df,
                     x=MU, y=ASYMMETRY,
                     hue=N,
-                    # col=Z,
                     kind="line",
                     palette=sns.cubehelix_palette(n_colors=len(n_range)))
     sns.move_legend(g, "upper right", ncol=1, frameon=True)

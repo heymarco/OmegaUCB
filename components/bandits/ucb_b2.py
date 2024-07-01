@@ -2,42 +2,7 @@ import numpy as np
 from scipy.stats import norm
 
 from components.bandits.abstract import AbstractArm, AbstractBandit
-
-
-class Aggregate:
-    def __init__(self):
-        self._count = 0
-        self._mean = 0.0
-        self._m2 = 0
-
-    def update(self, newval: float):
-        self._count += 1
-        delta = newval - self._mean
-        self._mean += delta / self._count
-        delta2 = newval - self._mean
-        self._m2 += delta * delta2
-
-    def variance(self):
-        if self._count < 2:
-            return 1 / 4
-        return self._m2 / (self._count - 1)
-
-    def mean(self):
-        return self._mean
-
-    def std(self):
-        return np.sqrt(self.variance())
-
-
-def compute_eta(mean: float, variance: float, n: int, m=0, M=1, min_samples=30) -> float:
-    if n < min_samples:
-        return 1.0
-    bernoulli_variance = (M - mean) * (mean - m)
-    bernoulli_sample_variance = n / (n - 1) * bernoulli_variance
-    if bernoulli_variance == 0:
-        return 1.0
-    eta = variance / bernoulli_sample_variance
-    return min(eta, 1.0)
+from components.bandits.bandit_util import Aggregate
 
 
 class UCBB2Arm(AbstractArm):
@@ -129,9 +94,6 @@ class UCBB2(AbstractBandit):
 
     def set(self, *args, **kwargs):
         raise NotImplementedError
-
-    def __len__(self):
-        return len(self.arms)
 
     def startup_complete(self):
         return np.alltrue([a.startup_complete() for a in self.arms])
