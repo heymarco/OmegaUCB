@@ -1,20 +1,15 @@
 import multiprocessing
-from copy import deepcopy
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from typing import Tuple, List
 
 from tqdm import tqdm
 
 from components.bandit_logging import *
 from components.bandits.abstract import AbstractBandit
-from components.bandits.b_greedy import BGreedy
-from components.bandits.bts import BudgetedThompsonSampling
 from components.bandits.ucb_b2 import UCBB2
 from components.bandits.ucb_variants import UCB
-from components.bandits.ucbsc import UCBSC
-from components.bandits.wucb import WUCB
 from util import run_async, incremental_regret
-from approach_names import *
 
 
 class Environment(ABC):

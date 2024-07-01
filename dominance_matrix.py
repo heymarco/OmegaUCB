@@ -14,6 +14,9 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{libertine}'
 mpl.rc('font', family='serif')
 
 if __name__ == '__main__':
+    # This code will reproduce figure 2 in the paper
+
+    # Define the names of the approaches
     approaches = [
         r"$\varepsilon$-first",
         "KUBE",
@@ -32,24 +35,10 @@ if __name__ == '__main__':
         r"$\omega$-UCB"
     ]
 
-    approaches_with_years = [
-        r"$\varepsilon$-first (2010)",
-        "KUBE (2012)",
-        "UCB-BV1 (2013)",
-        "PD-BwK (2013)",
-        "Budget-UCB (2015)",
-        "BTS (2015)",
-        "MRCB (2016)",
-        "m-UCB (2017)",
-        "b-greedy (2017)",
-        "c-UCB (2017)",
-        "i-UCB (2017)",
-        "KL-UCB-SC+ (2017)",
-        "UCB-SC+ (2018)",
-        "UCB-B2 (2020)",
-        r"$\omega$-UCB (ours)"
-    ]
-
+    # 0: approaches perform similarly
+    # 1: approach in row was better than approach in column
+    # -1: approach in column was better than approach in row
+    # -2: approaches were not compared
     matrix = [
         [0, -1, 0, 0, 0, -1, -1, -1, -1, -1, -1, 0, 0, -2, -2],
         [1, 0, -1, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, -2, -2],
@@ -70,6 +59,7 @@ if __name__ == '__main__':
 
     matrix = np.array(matrix)
 
+    ###### This corrects some of the information that got messed up while extending the matrix above between iterations of the paper
     for row in range(len(matrix)):
         for col in range(len(matrix[row])):
             if matrix[row][col] == -2:
@@ -78,7 +68,7 @@ if __name__ == '__main__':
     matrix_inv = [matrix[-i - 1] for i in range(len(matrix))]
     mask = np.triu(np.ones_like(matrix_inv))
     mask = np.array([mask[-(i + 1)] for i in range(len(mask))])
-    approaches_inv = [approaches_with_years[-(i + 1)] for i in range(len(approaches_with_years))]
+    approaches_inv = [approaches[-(i + 1)] for i in range(len(approaches))]
 
     first_row = matrix[7, :].copy()
     matrix[7, :] = matrix[8, :]
@@ -87,6 +77,7 @@ if __name__ == '__main__':
     col_7 = matrix[:, 7].copy()
     matrix[:, 7] = matrix[:, 8]
     matrix[:, 8] = col_7
+    ######
 
     show_full = True
     remove_ours = True
@@ -99,16 +90,15 @@ if __name__ == '__main__':
 
     if remove_ours:
         approaches = approaches[:-1]
-        approaches_with_years = approaches_with_years[:-1]
         matrix = np.array(matrix)[:-1, :-1]
         if remove_ours and not show_full:
             raise NotImplementedError
 
     empty = [
-        "" for _ in range(len(approaches_with_years))
+        "" for _ in range(len(approaches))
     ]
 
-    df = pd.DataFrame(np.array(matrix), columns=approaches, index=approaches_with_years)
+    df = pd.DataFrame(np.array(matrix), columns=approaches, index=approaches)
     ax = sns.heatmap(df, cmap=palette, linewidth=1, cbar=False, square=True)
     sns.scatterplot(x=.5 + np.argwhere(df.to_numpy().T == 1).T[0],
                     y=.5 + np.argwhere(df.to_numpy().T == 1).T[1],

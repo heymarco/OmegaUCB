@@ -38,8 +38,5 @@ class BGreedy(AbstractBandit):
     def set(self, *args, **kwargs):
         raise NotImplementedError
 
-    def __len__(self):
-        return self.k
-
     def startup_complete(self):
         return np.alltrue([self.pulls > 0])

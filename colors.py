@@ -48,6 +48,10 @@ others_palette = sns.color_palette(other_colors, n_colors=len(other_ucbs) + len(
 
 
 def color_list():
+    """
+    Get the colors for all approaches
+    :return: A list of tuples of the form (approach name, color)
+    """
     final_list = []
 
     omega_ucb_n_colors = len(omega_ucbs)
@@ -71,6 +75,10 @@ def color_list():
 
 
 def get_palette_for_approaches(approaches):
+    """
+    Creates a dictionary mapping approach names to colors
+    :param approaches: A list of approach names for which one requires line styles
+    """
     apps_colors = color_list()
     app_color_dict = {app: col for app, col in apps_colors}
     colors = {approach: app_color_dict[approach] for approach in approaches}
@@ -78,6 +86,10 @@ def get_palette_for_approaches(approaches):
 
 
 def get_markers_for_approaches(approaches):
+    """
+    Creates a dictionary mapping approach names to markers
+    :param approaches: A list of approach names for which one requires line styles
+    """
     markers = [
         "s", ">", "^", "*", "p", "D",
         "v", "P", "d", "X", "H", "<"
@@ -93,6 +105,10 @@ def get_markers_for_approaches(approaches):
 
 
 def get_linestyles_for_approaches(approaches):
+    """
+    Creates a dictionary mapping approach names to line styles
+    :param approaches: A list of approach names for which one requires line styles
+    """
     longdash = 5
     dash = 3
     dot = 1
@@ -110,17 +126,6 @@ def get_linestyles_for_approaches(approaches):
         (longdash, pause, dash, pause, dot, pause),
         (dot, pause, dash, pause, dot, pause, dot, pause, dash, pause, dash, pause),
         (longdash, pause, dot, pause, dash, pause)
-        # (.5, .5),
-        # (dash, pause),
-        # (dash, pause, 2, 1),
-        # (dash, pause, dot, pause, dot, pause),
-        # (3, 2, 1, 2, 1, 2),
-        # (5, 1),
-        # (dash, pause, dot, pause),
-        # (5, 2),
-        # (dot, pause),
-        # (dash, pause, 2, 1),
-        # (dash, pause, dot, pause, dot, pause)
     ]
     assert len(styles) >= len(all_approaches)
     full_styles_dict = {

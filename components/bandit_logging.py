@@ -54,6 +54,9 @@ all_ids = [
 
 
 class BanditLogger:
+    """
+    Logger class to track the statistics of the bandits during execution
+    """
 
     def __init__(self):
         self._columns = all_ids
@@ -116,10 +119,16 @@ class BanditLogger:
         self._track_value(value, AVG_COST_OF_CURRENT_ARM)
 
     def finalize_round(self):
+        """
+        Add the current row to the data that will later become a data frame
+        """
         self._data.append(self._current_row)
         self._current_row = [np.nan for _ in range(len(self._columns))]
 
     def get_dataframe(self) -> pd.DataFrame:
+        """
+        Creates and returns the data frame based on the currently tracked results and the provided columns
+        """
         df = pd.DataFrame(self._data, columns=self._columns)
         self._reset()
         return df
@@ -129,6 +138,7 @@ class BanditLogger:
         self._track_value(current_time, "time")
 
     def _track_value(self, newval, id):
+        # Sets the value 'newval' for 'id' in the current row of the data frame
         self._current_row[self._index_of(id)] = newval
 
     def _index_of(self, id):

@@ -5,20 +5,27 @@ import numpy as np
 import pandas as pd
 
 
-def load_facebook_data():
+def _load_facebook_data():
+    """
+    Loads the dataset that contains the ad campaigns
+    If the processed data set does not yet exist, this method calls _prepare_raw_data(), which creates it.
+    :return: the dataframe with the processed facebook advertisement data
+    """
     this_dir = pathlib.Path(__file__).parent.resolve()
     fp = os.path.join(this_dir, "data", "processed.csv")
     if not os.path.exists(fp):
-        prepare_raw_data()
-        load_facebook_data()
+        _prepare_raw_data()
+        _load_facebook_data()
     return pd.read_csv(fp)
 
 
-def prepare_raw_data():
+def _prepare_raw_data():
+    """
+    Extracts the statistics for the advertisement campaigns from the raw data set
+    """
     this_dir = pathlib.Path(__file__).parent.resolve()
     fp = os.path.join(this_dir, "data", "data.csv")
-    assert os.path.exists(
-        fp), "It seems that the data.csv file is missing. Please follow the instructions in our readme under 'Downloading advertisement data'."
+    assert os.path.exists(fp), "It seems that the data.csv file is missing. Please follow the instructions in our readme under 'Downloading advertisement data'."
     raw_data = pd.read_csv(fp)
     raw_data = raw_data[raw_data["spent"] > 0]
     spent = raw_data["spent"]
@@ -33,8 +40,11 @@ def prepare_raw_data():
     raw_data.to_csv(os.path.join("data", "processed.csv"), index=False)
 
 
-def prepare_facebook_data():
-    raw_data = load_facebook_data()
+def _prepare_facebook_data():
+    """
+    Loads and cleans the facebook data set
+    """
+    raw_data = _load_facebook_data()
     is_zero_cost = raw_data["spent"] == 0
     has_no_clicks = raw_data["clicks"] == 0
     is_zero_reward = raw_data["total_conversion"] == 0
@@ -48,7 +58,10 @@ def prepare_facebook_data():
     return filtered_df
 
 
-def get_setting(df):
+def _get_setting(df):
+    """
+    Get the arms' mean rewards and costs
+    """
     mean_rewards = np.array(df["rpc"])
     mean_costs = np.array(df["cpc"])
     mean_costs = mean_costs[mean_costs > 0]
@@ -56,7 +69,10 @@ def get_setting(df):
     return mean_rewards, mean_costs
 
 
-def sort_setting(setting):
+def _sort_setting(setting):
+    """
+    Sort the arms by the reward cost ratio in descending order (s.th. the best arm comes at position 0)
+    """
     rew = setting[0]
     cost = setting[1]
     efficiency_inv = [c / r if r > 0 else np.infty for c, r in zip(cost, rew)]
@@ -64,7 +80,10 @@ def sort_setting(setting):
     return rew[argsort], cost[argsort]
 
 
-def normalize_setting(setting):
+def _normalize_setting(setting):
+    """
+    Scale the settings to the range [0.01, 0.99]
+    """
     rew, cost = setting
     rew[rew == 0] = 0.01
     cost[cost == 0] = 0.01
@@ -74,12 +93,16 @@ def normalize_setting(setting):
 
 
 def get_facebook_ad_data_settings():
-    data = prepare_facebook_data()
+    """
+    Returns all ad campaigns with at least two arms.
+    The settings are sorted and normalized.
+    """
+    data = _prepare_facebook_data()
     settings = []
     for _, gdf in data.groupby(["campaign_id", "age", "gender"]):
-        setting = get_setting(gdf)
-        setting = normalize_setting(setting)
-        setting = sort_setting(setting)
+        setting = _get_setting(gdf)
+        setting = _normalize_setting(setting)
+        setting = _sort_setting(setting)
         k = len(setting[0])
         if k >= 2:
             settings.append(setting)

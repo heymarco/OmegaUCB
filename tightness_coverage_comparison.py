@@ -18,19 +18,37 @@ mpl.rcParams['text.latex.preamble'] = r'\usepackage{libertine}'
 mpl.rc('font', family='serif')
 
 
-def wilson_generalized(x, n, z, eta=1.0, m=0.0, M=1.0):
+def wilson_generalized(mu, n, z, eta=1.0, m=0.0, M=1.0):
+    """
+    Returns the lower and upper confidence bound of our confidence interval
+    :param mu: sample mean
+    :param n: sample size
+    :param z: number of standard deviations
+    :param eta: variance scaling parameter
+    :param m: lower bound of random variable
+    :param M: upper bound of random variable
+    :return: lower and upper confidence bound
+    """
     K = eta * (z ** 2)
     A = (n + K)
-    B = (2 * n * x + K * (M + m))
-    C = (n * x ** 2 + K * M * m)
+    B = (2 * n * mu + K * (M + m))
+    C = (n * mu ** 2 + K * M * m)
     lcb = B / (2 * A) - np.sqrt((B / (2 * A)) ** 2 - C / A)
     ucb = B / (2 * A) + np.sqrt((B / (2 * A)) ** 2 - C / A)
     return lcb, ucb
 
 
 def hoeffding_ci(n, delta: float):
+    """
+    Computes half the width of the confidence interval for a random variable in [0,1] using Hoeffding's inequality
+    :param n: sample size
+    :param delta: confidence level
+    :return: half the width of the confidence interval
+    """
     return np.sqrt(-1 / (2 * n) * np.log(delta / 2))
 
+
+# Confidence bounds for our method and its competitors
 
 def our_method(mu_r, mu_c, n, delta=0.05, eta=1.0, m=0, M=1):
     z = norm.interval(1 - delta / 2)[1]
@@ -82,6 +100,17 @@ def ucb_b2(mu_r, mu_c, n, delta=0.05):
 
 
 def evaluate_once(approaches: dict, exp_c, n, seed, delta=0.05):
+    """
+    Performs one evaluation of the approaches
+    on a bernoulli cost distribution with known expected value exp_c and
+    randomly parameterized reward distribution
+    :param approaches: dictionary mapping the name of the approach to a function that computes the ucb for the reward-cost ratio
+    :param exp_c: expected cost
+    :param n: sample size
+    :param seed: random seed
+    :param delta: confidence level (values closer to 0 -> more confident)
+    :return: list of lists where each row corresponds to the results of the approach on the sampled data. The columns represent name, sample size, expected rewards, expected costs, and the ucb
+    """
     rng = np.random.default_rng(seed)
     exp_r = rng.uniform()
     rewards = rng.uniform(size=n) < exp_r
@@ -100,12 +129,23 @@ def evaluate_once(approaches: dict, exp_c, n, seed, delta=0.05):
 
 
 if __name__ == '__main__':
+    # If the figure should be narrow or wide
     narrow = True
+    # sample sizes
     ns = [100, 1000, 10000, 100000]
+    # number of repetitions (number that evaluate_once is called)
     repetitions = 10000
-    alpha = 0.01
+    # confidence level
+    delta = 0.01
+    # will hold the results
     results = None
-    columns = ["Approach", "Samples", r"$\mu_r$", r"$\mu_c$", "UCB"]
+
+    # define the column strings
+    APPROACH, SAMPLES, MU_R, MU_C, UCB = "Approach", "Samples", r"$\mu_r$", r"$\mu_c$", "UCB"
+    EXP_VALUE_RATIO, UCB_EXPECTATION, UCB_VIOLATIONS = "exp. ratio", "UCB/expect.", r"\% UCB viol."
+    columns = [APPROACH, SAMPLES, MU_R, MU_C, UCB]
+
+    # define the names of the approaches as they should appear in the figure
     approaches = {
         OMEGA_UCB_ + " (c, ours)": our_method,
         CUCB + " (h)": c_ucb,
@@ -115,6 +155,7 @@ if __name__ == '__main__':
         UCB_SC + " (u)": ucb_sc,
         UCB_B2_name + " (u)": ucb_b2,
     }
+    # define the order in which the approaches should appear in the figure
     order = {
         OMEGA_UCB_ + " (c, ours)": 1,
         MUCB + " (c)": 2,
@@ -124,44 +165,46 @@ if __name__ == '__main__':
         UCB_SC + " (u)": 6,
         UCB_B2_name + " (u)": 7,
     }
+
+    # for all sample sizes, for all experiment repetitions:
+    # evaluate the approaches and append the results to the 'result' list
     cost_rng = np.random.default_rng(seed=0)
     for n in ns:
         for rep in range(repetitions):
             exp_c = cost_rng.uniform()
-            result = evaluate_once(approaches, exp_c, n, seed=rep + 1, delta=alpha)
+            result = evaluate_once(approaches, exp_c, n, seed=rep + 1, delta=delta)
             if results is None:
                 results = result
             else:
                 results += result
-                
-    # UCB_EXPECTATION = r"$$\frac{\mathrm{UCB}}{\mathrm{expectation}}$$"
-    UCB_EXPECTATION = "UCB/expect."
+    # create the data frame from the results
     df = pd.DataFrame(results, columns=columns)
-    df["exp. ratio"] = np.nan
-    df["exp. ratio"] = df[r"$\mu_r$"] / df[r"$\mu_c$"]
+
+    # compute the metrics shown in the figure
+    df[EXP_VALUE_RATIO] = np.nan
+    df[EXP_VALUE_RATIO] = df[MU_R] / df[MU_C]
     df["UCB > exp. ratio"] = np.nan
-    df["Coverage"] = df["UCB"] > df["exp. ratio"]
-    df[r"\% UCB viol."] = df["UCB"] < df["exp. ratio"]
+    df["Coverage"] = df[UCB] > df[EXP_VALUE_RATIO]
+    df[UCB_VIOLATIONS] = df[UCB] < df[EXP_VALUE_RATIO]
     df[UCB_EXPECTATION] = np.nan
-    df[UCB_EXPECTATION] = df["UCB"] / df["exp. ratio"]
-    df = df.groupby(["Samples", r"$\mu_c$", "Approach"]).mean().reset_index()
-    df[r"\% UCB viol."] = df[r"\% UCB viol."] * 100
+    df[UCB_EXPECTATION] = df[UCB] / df[EXP_VALUE_RATIO]
+    df[UCB_VIOLATIONS] = df[UCB_VIOLATIONS] * 100
     df["order"] = np.nan
     for approach in order:
-        df["order"].loc[df["Approach"] == approach] = order[approach]
+        df.loc[df[APPROACH] == approach, "order"] = order[approach]
 
-    df = pd.melt(df, id_vars=["Approach", "Samples", "order"],
-                 value_vars=[r"\% UCB viol.", UCB_EXPECTATION],
+    df = pd.melt(df, id_vars=[APPROACH, SAMPLES, "order"],
+                 value_vars=[UCB_VIOLATIONS, UCB_EXPECTATION],
                  value_name="Score", var_name="Metric")
     df = df.sort_values(by="order")
 
     sns.set_palette(sns.cubehelix_palette(n_colors=len(ns)))
     if narrow:
-        g = sns.catplot(data=df, kind="bar", x="Approach", y="Score",
+        g = sns.catplot(data=df, kind="bar", x=APPROACH, y="Score",
                         hue="Samples", row="Metric",
                         sharex=True, sharey=False, errwidth=1.0)
     else:
-        g = sns.catplot(data=df, kind="bar", x="Approach", y="Score",
+        g = sns.catplot(data=df, kind="bar", x=APPROACH, y="Score",
                         hue="Samples", col="Metric",
                         sharex=True, sharey=False, errwidth=1.0)
     g.axes.flatten()[1].set_yscale("log")
