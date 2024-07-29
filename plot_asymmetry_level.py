@@ -9,8 +9,8 @@ from util import cm2inch
 
 import matplotlib as mpl
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{libertine}'
-mpl.rc('font', family='serif')
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{helvet}'
+mpl.rc('font', family='sans-serif')
 
 
 if __name__ == '__main__':

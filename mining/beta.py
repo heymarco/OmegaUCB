@@ -18,8 +18,8 @@ sns.set_style(style="ticks")
 import matplotlib as mpl
 
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{libertine}'
-mpl.rc('font', family='serif')
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{helvet}\renewcommand{\familydefault}{\sfdefault}\usepackage[helvet]{sfmath}\everymath={\sf}'
+mpl.rc('font', family='sans-serif')
 
 
 def plot_regret(df: pd.DataFrame, with_ci: bool = False):
@@ -54,7 +54,7 @@ def plot_regret(df: pd.DataFrame, with_ci: bool = False):
         ax.set_xscale("symlog", linthresh=.1)
         if i > 0:
             ax.set_ylabel("")
-    plt.gcf().set_size_inches(cm2inch(18, 5.8 * 0.65))
+    plt.gcf().set_size_inches(cm2inch(18, 4.2))
     plt.tight_layout(pad=.5)
     if with_ci:
         plt.savefig(os.path.join(os.getcwd(), "..", "figures", filename + "_ci" + ".pdf"))
@@ -91,5 +91,5 @@ if __name__ == '__main__':
     # df = df.loc[df[APPROACH] != MUCB]
     # df = df.loc[df[APPROACH] != IUCB]
 
-    plot_regret(df, with_ci=True)
+    # plot_regret(df, with_ci=True)
     plot_regret(df, with_ci=False)

@@ -123,7 +123,7 @@ class BudgetUCBArm(AbstractArm):
 
 
 class UCB(AbstractBandit):
-    def __init__(self, k: int, name: str, type: str, seed: int, adaptive: bool = False):
+    def __init__(self, k: int, name: str, type: str, seed: int, adaptive: bool = False, alpha=None):
         super(UCB, self).__init__(k, name, seed)
         self.type = type
         self.adaptive = adaptive
@@ -131,7 +131,7 @@ class UCB(AbstractBandit):
         if type == "b":
             self.arms: List[BudgetUCBArm] = [BudgetUCBArm() for _ in range(k)]
         else:
-            self.arms: List[UCBArm] = [UCBArm(type, adaptive=adaptive) for _ in range(k)]
+            self.arms: List[UCBArm] = [UCBArm(type, adaptive=adaptive, alpha=alpha) for _ in range(k)]
 
     def sample(self, c_min=None):
         if not self._startup_complete:

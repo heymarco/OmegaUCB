@@ -14,8 +14,8 @@ sns.set_style("ticks")
 import matplotlib as mpl
 
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{libertine}'
-mpl.rc('font', family='serif')
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{helvet}'
+mpl.rc('font', family='sans-serif')
 
 
 def wilson_generalized(mu, n, z, eta=1.0, m=0.0, M=1.0):
@@ -130,7 +130,7 @@ def evaluate_once(approaches: dict, exp_c, n, seed, delta=0.05):
 
 if __name__ == '__main__':
     # If the figure should be narrow or wide
-    narrow = True
+    narrow = False
     # sample sizes
     ns = [100, 1000, 10000, 100000]
     # number of repetitions (number that evaluate_once is called)
@@ -147,23 +147,23 @@ if __name__ == '__main__':
 
     # define the names of the approaches as they should appear in the figure
     approaches = {
-        OMEGA_UCB_ + " (c, ours)": our_method,
-        CUCB + " (h)": c_ucb,
-        MUCB + " (c)": m_ucb,
-        IUCB + " (u)": i_ucb,
-        BUDGET_UCB + " (h)": b_ucb,
-        UCB_SC + " (u)": ucb_sc,
-        UCB_B2_name + " (u)": ucb_b2,
+        OMEGA_UCB_ + " (ours)": our_method,
+        CUCB: c_ucb,
+        MUCB: m_ucb,
+        IUCB: i_ucb,
+        BUDGET_UCB: b_ucb,
+        UCB_SC: ucb_sc,
+        UCB_B2_name: ucb_b2,
     }
     # define the order in which the approaches should appear in the figure
     order = {
-        OMEGA_UCB_ + " (c, ours)": 1,
-        MUCB + " (c)": 2,
-        BUDGET_UCB + " (h)": 3,
-        CUCB + " (h)": 4,
-        IUCB + " (u)": 5,
-        UCB_SC + " (u)": 6,
-        UCB_B2_name + " (u)": 7,
+        OMEGA_UCB_ + " (ours)": 1,
+        MUCB: 2,
+        BUDGET_UCB: 3,
+        CUCB: 4,
+        IUCB: 5,
+        UCB_SC: 6,
+        UCB_B2_name: 7,
     }
 
     # for all sample sizes, for all experiment repetitions:

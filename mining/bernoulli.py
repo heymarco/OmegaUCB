@@ -19,8 +19,8 @@ sns.set_style(style="ticks")
 import matplotlib as mpl
 
 mpl.rcParams['text.usetex'] = True
-mpl.rcParams['text.latex.preamble'] = r'\usepackage{libertine}'
-mpl.rc('font', family='serif')
+mpl.rcParams['text.latex.preamble'] = r'\usepackage{helvet}\renewcommand{\familydefault}{\sfdefault}\usepackage[helvet]{sfmath}\everymath={\sf}'
+mpl.rc('font', family='sans-serif')
 
 
 def compute_ylims(df: pd.DataFrame, x, hue, col_var, x_cut=.2):
@@ -42,8 +42,8 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
     lims = [(0, 2500), (0, 8000), (0, 14000)]
     df = df.iloc[::-1]
     palette = create_palette(df)
-    # markers = get_markers_for_approaches(np.unique(df[APPROACH]))
-    styles = get_linestyles_for_approaches(np.unique(df[APPROACH]))
+    markers = get_markers_for_approaches(np.unique(df[APPROACH]))
+    # styles = get_linestyles_for_approaches(np.unique(df[APPROACH]))
     if with_ci:
         g = sns.relplot(data=df, x=x, y=y, hue=hue, col=col,
                         markeredgewidth=0.1,
@@ -58,7 +58,7 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
                         kind="line", palette=palette, legend=False,
                         errorbar=None,
                         facet_kws={"sharey": False},
-                        style=hue, dashes=False)
+                        style=hue, dashes=False, markers=markers)
 
     for i, (lim, ax) in enumerate(zip(lims, g.axes.flatten())):
         ax.set_ylim(lim)
@@ -66,8 +66,8 @@ def plot_regret(df: pd.DataFrame, filename: str, with_ci: bool = False):
         ax.set_xscale("symlog", linthresh=.1)
         if i > 0:
             ax.set_ylabel("")
-    plt.gcf().set_size_inches(cm2inch(18, 5.8 * 0.875))
-    create_custom_legend(g, with_dashes=False)
+    plt.gcf().set_size_inches(cm2inch((18, 6)))
+    create_custom_legend(g, with_dashes=False, with_markers=not with_ci)
     plt.tight_layout(pad=.5)
     plt.subplots_adjust(top=0.62)
     if with_ci:
@@ -109,5 +109,5 @@ if __name__ == '__main__':
         # df = df.loc[df[APPROACH] != MUCB]
         # df = df.loc[df[APPROACH] != IUCB]
 
-        plot_regret(df, filename, with_ci=True)
+        # plot_regret(df, filename, with_ci=True)
         plot_regret(df, filename, with_ci=False)

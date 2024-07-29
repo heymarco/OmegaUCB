@@ -90,7 +90,7 @@ class WUCBArm(AbstractArm):
 
 
 class WUCB(AbstractBandit):
-    def __init__(self, k: int, name: str, seed: int, r: float = 4.0, adaptive: bool = False):
+    def __init__(self, k: int, name: str, seed: int, r: float = 4.0, adaptive: bool = True):
         super(WUCB, self).__init__(k, name, seed)
         self.r = r
         self.adaptive = adaptive
@@ -102,6 +102,7 @@ class WUCB(AbstractBandit):
             result = [i for i, a in enumerate(self.arms) if not a.startup_complete()][0]
             return result
         samples = [a.sample() for a in self.arms]
+        # print(samples)
         return self.rng.choice(
             np.flatnonzero(samples == np.max(samples))
         )
