@@ -96,9 +96,9 @@ if __name__ == '__main__':
     plt.xscale("log")
     plt.ylim((0, 1200))
     plt.xlim((2, 10 ** 5))
-    plt.gcf().set_size_inches(cm2inch((15, 4.8)))
+    plt.gcf().set_size_inches(cm2inch((10, 4.2)))
     plt.tight_layout(pad=.7)
-    plt.subplots_adjust(right=.83)
+    plt.subplots_adjust(right=.75)
     ax = g.axes.flatten()[0]
     ax.patch.set_edgecolor('black')
     ax.patch.set_linewidth(.9)
